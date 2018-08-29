@@ -10,6 +10,8 @@ import { useRavenLogging } from '@signageos/lib/dist/Logging/logger';
 import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
 const TinyWorker = require('tiny-worker');
+import FileSystem from './FileSystem/FileSystem';
+import FileSystemCache from './Cache/FileSystemCache';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -21,7 +23,13 @@ if (parameters.raven.enabled) {
 }
 
 (async () => {
-	const nativeDriver = new ManagementDriver();
+	const fileSystem = new FileSystem(parameters.fileSystem.root);
+	const cache = new FileSystemCache(fileSystem);
+
+	const nativeDriver = new ManagementDriver(
+		parameters.url.socketUri,
+		cache,
+	);
 
 	if (raven) {
 		try {

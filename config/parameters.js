@@ -64,4 +64,7 @@ exports = module.exports = {
 		url: process.env.server_url,
 		port: process.env.server_port,
 	},
+	fileSystem: {
+		root: process.env.fs_root_path,
+	},
 };

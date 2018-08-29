@@ -1,21 +1,20 @@
-import * as childProcess from 'child_process';
+import { execChildProcess } from './childProcess';
+
+export async function getSerialNumber() {
+	return await execChildProcess("cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2");
+}
+
+export async function getModel() {
+	return await execChildProcess("lshw | grep product | head -1 | cut -c 14-");
+}
+
+export async function getCpuTemperature() {
+	const temperatureInMiliCelsiusString = await execChildProcess('cat /sys/class/thermal/thermal_zone0/temp');
+	const temperatureInMiliCelsius = parseInt(temperatureInMiliCelsiusString, 10);
+	return temperatureInMiliCelsius / 1000;
+}
 
 export async function reboot() {
-	await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-		console.log('reboot device');
-		childProcess.exec('sudo /sbin/shutdown -r now', (error: Error, stdout: string, stderr: string) => {
-			if (stdout) {
-				console.log(stdout);
-			}
-			if (stderr) {
-				console.error(stderr);
-			}
-
-			if (error) {
-				reject(error);
-			} else {
-				resolve();
-			}
-		});
-	});
+	console.log("reboot device");
+	await execChildProcess("sudo /sbin/shutdown -r now");
 }
