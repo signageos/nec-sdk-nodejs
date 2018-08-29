@@ -1,0 +1,6 @@
+node_modules/
+dist/*
+cache/*
+!.gitkeep
+config/env.*.json
+!config/env.{environment}.json

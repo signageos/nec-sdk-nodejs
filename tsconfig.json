@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "outDir": "dist",
+        "target": "es6",
+        "declaration": false,
+        "sourceMap": true,
+        "moduleResolution": "node",
+        "jsx": "react",
+        "pretty": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "noImplicitThis": true,
+        "noUnusedParameters": true,
+        "noUnusedLocals": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "typeRoots": [
+            "node_modules/@types/"
+        ]
+    },
+    "include": [
+        "src/**/*.ts",
+        "node_modules/@types/**/index.d.ts"
+    ]
+}

@@ -1,0 +1,122 @@
+image: $CI_REGISTRY/signageos/docker-node:8.9.0-alpine-zip
+services:
+  - docker:dind
+
+stages:
+  - prepare
+  - test
+  - build
+  - publish
+  - release
+
+cache:
+  untracked: true
+  key: "$CI_PROJECT_ID"
+  paths:
+    - node_modules/
+
+before_script:
+  - TAG=$([ "$CI_COMMIT_TAG" == "" ] && echo $CI_COMMIT_REF_NAME || echo "latest")
+  - VERSION=`cat ./VERSION`
+  - tools/npm-login.sh
+  - npx @signageos/lib@just-tools version-upgrade $VERSION
+  - mkdir -p dist
+  - npm install --tag $TAG
+
+prepare:
+  stage: prepare
+  before_script: []
+  script:
+    - VERSION=$([ "$CI_COMMIT_TAG" == "" ] && echo `git describe --abbrev=0 --tags`-$CI_COMMIT_REF_NAME.$CI_PIPELINE_ID || echo $CI_COMMIT_TAG)
+    - VERSION=${VERSION:1}
+    - echo -n $VERSION > ./VERSION
+  artifacts:
+    when: on_success
+    paths:
+      - ./VERSION
+
+test:general:
+  stage: test
+  except:
+    - tags
+  script:
+    - npm test
+
+test:lint:
+  stage: test
+  except:
+    - tags
+  script:
+    - npm run lint
+
+build:
+  stage: build
+  dependencies:
+    - prepare
+  script:
+    - npm run prepare --production
+  artifacts:
+    when: on_success
+    paths:
+      - dist/
+
+publish:npm:
+  stage: publish
+  dependencies:
+    - prepare
+    - build
+  script:
+    - npm publish --ignore-scripts --tag $TAG
+
+release:tag:
+  stage: release
+  only:
+    - master
+  when: manual
+  allow_failure: false
+  before_script: []
+  script:
+    - LAST_RELEASE_TAG=`git describe --abbrev=0 --tags`
+    - RELEASE_LEVEL=`cat ./CHANGELOG.md | npx @signageos/lib@just-tools detect-semver-level`
+    - RELEASE_VERSION=`npx semver -i $RELEASE_LEVEL ${LAST_RELEASE_TAG:1}`
+    - git config user.email "$GITLAB_USER_EMAIL"
+    - git config user.name "$GITLAB_USER_EMAIL"
+    - git remote set-url origin ${CI_REPOSITORY_URL/"gitlab-ci-token:$CI_JOB_TOKEN"/"$CI_REPOSITORY_PUSH_USERNAME:$CI_REPOSITORY_PUSH_TOKEN"}
+    - npx @signageos/lib@just-tools version-upgrade $RELEASE_VERSION
+    - sed -i "/## \[Unreleased\]/c\## [$RELEASE_VERSION] - $(date +'%Y-%m-%d')" ./CHANGELOG.md
+    - git commit -m "Release v$RELEASE_VERSION" -a
+    - git push origin HEAD:refs/heads/master
+    - git tag v${RELEASE_VERSION} -a -m "$(git log --pretty="%s" `git describe --abbrev=0 --tags`...HEAD)"
+    - git push origin refs/tags/v${RELEASE_VERSION}
+
+release:notes:
+  stage: release
+  only:
+    - tags
+  script:
+    - NAME=`npm info . name`
+    - LAST_RELEASE_TAG=`git describe --abbrev=0 --tags v$VERSION~1`
+    - JSON_RELEASE_NOTES=`cat ./CHANGELOG.md | npx @signageos/lib@just-tools get-release-log $VERSION`
+    - JSON_RELEASE_NOTES_GROUPS=`cat ./CHANGELOG.md | npx @signageos/lib@just-tools get-release-log $VERSION groups`
+    - >
+      curl -XPOST \
+        --header "PRIVATE-TOKEN:$CI_REPOSITORY_PUSH_TOKEN" \
+        --header "Content-Type:application/json" \
+        "$CI_GITLAB_API_URL/projects/$CI_PROJECT_ID/repository/tags/v$VERSION/release" \
+        --data "{\"tag_name\":\"v$VERSION\",\"description\":$JSON_RELEASE_NOTES}"
+    - SLACK_MESSAGE=`node -e "process.stdout.write(JSON.stringify('$NAME [$VERSION]\n' + $JSON_RELEASE_NOTES))"`
+    - >
+      DOCS_URI=`curl -XPOST \
+        --header "Content-Type:application/json" \
+        "$CI_SOS_DOCUMENTATION_URI" \
+        --data "{\"version\":\"$VERSION\",\"name\":\"$NAME\",\"groups\":$JSON_RELEASE_NOTES_GROUPS}"`
+    - >
+      curl -XPOST \
+        --data-urlencode "payload={\"channel\":\"#sos\",\"username\":\"Release log\",\
+          \"attachments\":[\
+            {\"fallback\":$SLACK_MESSAGE,\"color\":\"#36a64f\",\"title\":\"$NAME [$VERSION]\",\"title_link\":\"$CI_PROJECT_URL/tags/v$VERSION\",\"text\":$JSON_RELEASE_NOTES},\
+            {\"fallback\":\"Show pipeline $CI_PROJECT_URL/pipelines/$CI_PIPELINE_ID\",\"actions\":[{\"type\":\"button\",\"text\":\"Show pipeline on GitLab\",\"url\":\"$CI_PROJECT_URL/pipelines/$CI_PIPELINE_ID\"}]},\
+            {\"fallback\":\"Show DOCs $DOCS_URI\",\"actions\":[{\"type\":\"button\",\"text\":\"Show DOCs\",\"url\":\"$DOCS_URI\"}]}\
+          ],\
+          \"icon_emoji\":\":signageos:\"}" \
+        $CI_SLACK_URI
