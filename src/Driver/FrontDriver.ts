@@ -18,7 +18,12 @@ import VideoOrientation from "@signageos/front-display/es6/Video/Orientation";
 import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver';
 import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheStorageInfo';
 import ProprietaryStreamPlayer from '@signageos/front-display/es6/Stream/ProprietaryStreamPlayer';
+import { KeyMap } from '@signageos/front-display/es6/NativeDevice/Default/DefaultHelper';
 import { APPLICATION_TYPE } from './constants';
+import BridgeClient from '../Bridge/BridgeClient';
+import {
+	SystemReboot,
+} from '../Bridge/bridgeMessages';
 
 export default class FrontDriver implements IDriver, ICacheDriver {
 
@@ -37,7 +42,13 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	private lock: AsyncLock;
 	private cache: ICache;
 
-	constructor(private window: Window) {
+	private isDisplayOn: boolean = true;
+
+	constructor(
+		private window: Window,
+		private applicationVersion: string,
+		private bridge: BridgeClient,
+	) {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
 		this.lock = new AsyncLock({
 			timeout: 5000,
@@ -69,11 +80,11 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async appReboot(): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
+		await this.bridge.invoke<SystemReboot, {}>({ type: SystemReboot });
 	}
 
 	public appRestart() {
-		throw new Error("Not implemented"); // TODO : implement
+		this.window.location.reload();
 	}
 
 	public async appUpgrade(_baseUrl: string, _version: string): Promise<void> {
@@ -85,7 +96,7 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async getApplicationVersion(): Promise<string> {
-		throw new Error("Not implemented"); // TODO : implement
+		return this.applicationVersion;
 	}
 
 	public start() {
@@ -112,7 +123,7 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async displayIsPowerOn(): Promise<boolean> {
-		throw new Error("Not implemented"); // TODO : implement
+		return this.isDisplayOn;
 	}
 
 	public async displayPowerOn(): Promise<void> {
@@ -123,8 +134,14 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 		throw new Error("Not implemented"); // TODO : implement
 	}
 
-	public bindKeyUp(_keyUpListener: (keyUpEvent: IKeyUpEvent) => void) {
-		throw new Error("Not implemented"); // TODO : implement
+	public bindKeyUp(keyUpListener: (keyUpEvent: IKeyUpEvent) => void) {
+		this.window.addEventListener('keyup', (event: KeyboardEvent) => {
+			if (typeof KeyMap[event.keyCode as keyof typeof KeyMap] !== 'undefined') {
+				keyUpListener({ keyCode: KeyMap[event.keyCode as keyof typeof KeyMap] });
+			} else {
+				console.warn(new Error('Not supported keyCode ' + event.keyCode));
+			}
+		});
 	}
 
 	public fileSystemCleanup() {
@@ -188,7 +205,7 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async isConnected(): Promise<boolean> {
-		throw new Error("Not implemented"); // TODO : implement
+		return navigator.onLine;
 	}
 
 	public async screenResize(
@@ -214,22 +231,20 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 		this.resourceManager.clearAll();
 	}
 
-	public areTimersSupported(_powerTimerLevel: TimerLevel) {
-		return false; // TODO : implement
+	public areTimersSupported(powerTimerLevel: TimerLevel) {
+		switch (powerTimerLevel) {
+			case TimerLevel.NATIVE: return false;
+			case TimerLevel.PROPRIETARY: return true;
+			default: return false;
+		}
 	}
 
-	public async setTimer(
-		_type: TimerType,
-		_timeOn: string | null,
-		_timeOff: string | null,
-		_weekdays: TimerWeekday[],
-		_volume: number,
-	): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
+	public async setTimer(_type: TimerType, _timeOn: string | null, _timeOff: string | null, _weekdays: TimerWeekday[], _volume: number) {
+		throw new Error('setTimer not implemented');
 	}
 
-	public async timerSetOnOffTimeHoliday(_type: TimerType, _onAtHoliday: boolean, _offAtHoliday: boolean): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
+	public async timerSetOnOffTimeHoliday(_type: TimerType, _onAtHoliday: boolean, _offAtHoliday: boolean) {
+		throw new Error('timerSetOnOffTimeHoliday not implemented');
 	}
 
 	public async screenSetBrightness(_timeFrom1: string, _brightness1: number, _timeFrom2: string, _brightness2: number): Promise<void> {
@@ -253,11 +268,11 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async controlSetPin(_pin: string): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
+		throw new Error('controlSetPin not implemented');
 	}
 
 	public async browserOpenLink(_uri: string): Promise<void> {
-		console.warn(new Error('Not implemented browser openLink'));
+		throw new Error('browserOpenLink not implemented');
 	}
 
 	public async setDebug(_enabled: boolean): Promise<void> {

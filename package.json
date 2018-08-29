@@ -30,6 +30,7 @@
   "author": "signageOS.io <dev@signageos.io>",
   "devDependencies": {
     "@types/async-lock": "0.0.19",
+    "@types/express": "^4.16.0",
     "@types/lodash": "^4.14.116",
     "@types/mocha": "^2.2.48",
     "@types/moment-timezone": "^0.5.8",
@@ -76,6 +77,7 @@
   "dependencies": {
     "@signageos/front-display": "^3.1.0-ma-fixNodejsManagement.29279439",
     "@signageos/lib": "^1.1.1",
+    "express": "^4.16.3",
     "lodash": "^4.17.10",
     "raven": "^1.2.1",
     "tiny-worker": "^2.1.2",

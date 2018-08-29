@@ -60,4 +60,8 @@ exports = module.exports = {
 		weinreServerUrl: process.env.weinre_server_url,
 		synchronizerServerUrl: process.env.synchronizer_server_url,
 	},
+	server: {
+		url: process.env.server_url,
+		port: process.env.server_port,
+	},
 };

@@ -2,6 +2,7 @@
 require('util').promisify = require('util.promisify');
 
 import * as AsyncLock from 'async-lock';
+import BridgeClient from './Bridge/BridgeClient';
 import FrontDriver from './Driver/FrontDriver';
 import front from '@signageos/front-display/es6/Front/front';
 import { createSocketSynchronizer } from '@signageos/front-display/es6/Front/Applet/Sync/synchronizerFactory';
@@ -19,7 +20,8 @@ if (parameters.raven.enabled) {
 }
 
 (async () => {
-	const nativeDriver = new FrontDriver(window);
+	const bridge = new BridgeClient(parameters.server.url);
+	const nativeDriver = new FrontDriver(window, parameters.app.version, bridge);
 	const synchronizer = createSocketSynchronizer(
 		parameters.url.synchronizerServerUrl,
 		() => nativeDriver,

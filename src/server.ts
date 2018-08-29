@@ -4,6 +4,7 @@ require('util').promisify = require('util.promisify');
 import * as AsyncLock from 'async-lock';
 import ManagementDriver from './Driver/ManagementDriver';
 import management from '@signageos/front-display/es6/Management/management';
+import BridgeServer from './Bridge/BridgeServer';
 import * as Raven from 'raven';
 import { useRavenLogging } from '@signageos/lib/dist/Logging/logger';
 import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
@@ -52,4 +53,7 @@ if (parameters.raven.enabled) {
 		offlineStorageLock,
 		webWorkerFactory,
 	);
+
+	const bridgeServer = new BridgeServer(parameters.server.port);
+	await bridgeServer.start();
 })().catch((error: any) => console.error(error));
