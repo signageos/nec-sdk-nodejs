@@ -2,13 +2,14 @@ import * as http from 'http';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import handleMessage, { InvalidMessageError } from './handleMessage';
+import IFileSystem from '../FileSystem/IFileSystem';
 
 export default class BridgeServer {
 
 	private readonly expressApp: express.Application;
 	private readonly httpServer: http.Server;
 
-	constructor(private port: number) {
+	constructor(private port: number, private fileSystem: IFileSystem) {
 		this.expressApp = express();
 		this.httpServer = http.createServer(this.expressApp);
 		this.defineRoutes();
@@ -33,7 +34,7 @@ export default class BridgeServer {
 		this.expressApp.use(bodyParser.json());
 		this.expressApp.post('/message', async (request: express.Request, response: express.Response) => {
 			try {
-				const responseMessage = await handleMessage(request.body);
+				const responseMessage = await handleMessage(this.fileSystem, request.body);
 				response.send(responseMessage);
 			} catch (error) {
 				if (error instanceof InvalidMessageError) {

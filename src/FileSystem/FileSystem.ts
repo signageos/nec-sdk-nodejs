@@ -2,18 +2,19 @@ import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
 import IFileSystem, { FileOrDirectoryNotFound } from './IFileSystem';
+import { downloadFile } from './downloadFile';
 
 export default class FileSystem implements IFileSystem {
 
 	constructor(private baseDirectory: string) {}
 
 	public async readFile(fileName: string): Promise<string> {
-		const fullPath = this.getFullPath(fileName);
-		const fileExists = await this.pathExists(fullPath);
+		const fileExists = await this.pathExists(fileName);
 		if (!fileExists) {
 			throw new FileOrDirectoryNotFound();
 		}
 
+		const fullPath = this.getFullPath(fileName);
 		const contents = await promisify(fs.readFile)(fullPath);
 		return contents.toString();
 	}
@@ -28,13 +29,19 @@ export default class FileSystem implements IFileSystem {
 		await promisify(fs.unlink)(fullPath);
 	}
 
+	public async downloadFile(destinationPath: string, uri: string, headers?: { [key: string]: string }) {
+		const fullDestinationPath = this.getFullPath(destinationPath);
+		const file = fs.createWriteStream(fullDestinationPath);
+		await downloadFile(file, uri, headers);
+	}
+
 	public async getFilesInDirectory(directory: string) {
-		const directoryFullPath = this.getFullPath(directory);
-		const directoryExists = await this.pathExists(directoryFullPath);
+		const directoryExists = await this.pathExists(directory);
 		if (!directoryExists) {
 			throw new FileOrDirectoryNotFound();
 		}
 
+		const directoryFullPath = this.getFullPath(directory);
 		const filenames: string[] = await promisify(fs.readdir)(directoryFullPath);
 		const result: string[] = [];
 
@@ -66,16 +73,18 @@ export default class FileSystem implements IFileSystem {
 		return result;
 	}
 
-	private getFullPath(relativePath: string) {
+	public getFullPath(relativePath: string) {
 		return path.join(this.baseDirectory, relativePath);
 	}
 
-	private async isFile(fullFilePath: string) {
-		const stats = await promisify(fs.lstat)(fullFilePath);
+	public async isFile(fileName: string) {
+		const fullPath = this.getFullPath(fileName);
+		const stats = await promisify(fs.lstat)(fullPath);
 		return stats.isFile();
 	}
 
-	private async pathExists(fullPath: string) {
+	public async pathExists(relativePath: string) {
+		const fullPath = this.getFullPath(relativePath);
 		return await promisify(fs.exists)(fullPath);
 	}
 }

@@ -62,6 +62,6 @@ if (parameters.raven.enabled) {
 		webWorkerFactory,
 	);
 
-	const bridgeServer = new BridgeServer(parameters.server.port);
+	const bridgeServer = new BridgeServer(parameters.server.port, fileSystem);
 	await bridgeServer.start();
 })().catch((error: any) => console.error(error));

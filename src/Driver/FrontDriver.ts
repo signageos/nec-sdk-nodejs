@@ -23,7 +23,14 @@ import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
 import {
 	SystemReboot,
+	GetModel,
+	FileSystemGetFiles,
+	FileSystemGetFile,
+	FileSystemDownloadFile,
+	FileSystemDeleteFile,
 } from '../Bridge/bridgeMessages';
+
+const FS_NAMESPACE = 'front';
 
 export default class FrontDriver implements IDriver, ICacheDriver {
 
@@ -68,7 +75,8 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async getModel(): Promise<string> {
-		throw new Error("Not implemented"); // TODO : implement
+		const response = await this.bridge.invoke<GetModel, { model: string }>({ type: GetModel });
+		return response.model;
 	}
 
 	public async onLoad(callback: () => void) {
@@ -149,23 +157,55 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async fileSystemGetFileUids(): Promise<string[]> {
-		throw new Error("Not implemented"); // TODO : implement
+		const { files } = await this.bridge.invoke<FileSystemGetFiles, { files: { [uid: string]: string } }>({
+			type: FileSystemGetFiles,
+			path: FS_NAMESPACE,
+		});
+
+		return Object.keys(files);
 	}
 
 	public async fileSystemGetFiles(): Promise<{ [uid: string]: IFileSystemFile }> {
-		throw new Error("Not implemented"); // TODO : implement
+		const { files } = await this.bridge.invoke<FileSystemGetFiles, { files: { [uid: string]: string } }>({
+			type: FileSystemGetFiles,
+			path: FS_NAMESPACE,
+		});
+
+		const result: { [uid: string]: IFileSystemFile } = {};
+		for (let uid of Object.keys(files)) {
+			result[uid] = {
+				filePath: this.getFileUri(files[uid]),
+			};
+		}
+
+		return result;
 	}
 
-	public async fileSystemGetFile(_uid: string): Promise<IFileSystemFile> {
-		throw new Error("Not implemented"); // TODO : implement
+	public async fileSystemGetFile(uid: string): Promise<IFileSystemFile> {
+		const { file } = await this.bridge.invoke<FileSystemGetFile, { file: string }>({
+			type: FileSystemGetFile,
+			path: FS_NAMESPACE + '/' + uid,
+		});
+
+		return {
+			filePath: this.getFileUri(file),
+		};
 	}
 
-	public fileSystemDeleteFile(_uid: string): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
+	public async fileSystemDeleteFile(uid: string): Promise<void> {
+		await this.bridge.invoke<FileSystemDeleteFile, undefined>({
+			type: FileSystemDeleteFile,
+			path: FS_NAMESPACE + '/' + uid,
+		});
 	}
 
-	public async fileSystemSaveFile(_uid: string, _uri: string, _headers?: { [key: string]: string }): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
+	public async fileSystemSaveFile(uid: string, uri: string, headers?: { [key: string]: string }): Promise<void> {
+		await this.bridge.invoke<FileSystemDownloadFile, undefined>({
+			type: FileSystemDownloadFile,
+			path: FS_NAMESPACE + '/' + uid,
+			uri,
+			headers,
+		});
 	}
 
 	public cacheGetUids() {
@@ -301,5 +341,9 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 
 	protected createStreamPlayer() {
 		return new ProprietaryStreamPlayer(this.video);
+	}
+
+	private getFileUri(filePath: string) {
+		return 'file://' + filePath;
 	}
 }
