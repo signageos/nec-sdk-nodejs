@@ -1,6 +1,7 @@
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as mkdirp from 'mkdirp';
 import IFileSystem, { FileOrDirectoryNotFound } from './IFileSystem';
 import { downloadFile } from './downloadFile';
 
@@ -21,16 +22,25 @@ export default class FileSystem implements IFileSystem {
 
 	public async saveToFile(fileName: string, contents: string) {
 		const fullPath = this.getFullPath(fileName);
+		const directory = path.dirname(fullPath);
+		await promisify(mkdirp)(directory);
 		return await promisify(fs.writeFile)(fullPath, contents);
 	}
 
 	public async deleteFile(fileName: string) {
+		const fileExists = await this.pathExists(fileName);
+		if (!fileExists) {
+			throw new FileOrDirectoryNotFound();
+		}
+
 		const fullPath = this.getFullPath(fileName);
 		await promisify(fs.unlink)(fullPath);
 	}
 
 	public async downloadFile(destinationPath: string, uri: string, headers?: { [key: string]: string }) {
 		const fullDestinationPath = this.getFullPath(destinationPath);
+		const destinationDirectory = path.dirname(fullDestinationPath);
+		await promisify(mkdirp)(destinationDirectory);
 		const file = fs.createWriteStream(fullDestinationPath);
 		await downloadFile(file, uri, headers);
 	}
@@ -46,8 +56,8 @@ export default class FileSystem implements IFileSystem {
 		const result: string[] = [];
 
 		for (let filename of filenames) {
-			const fullFilePath = path.join(directoryFullPath, filename);
-			if (await this.isFile(fullFilePath)) {
+			const relativeFilePath = path.join(directory, filename);
+			if (await this.isFile(relativeFilePath)) {
 				result.push(filename);
 			}
 		}
@@ -56,8 +66,7 @@ export default class FileSystem implements IFileSystem {
 	}
 
 	public async readFilesInDirectory(directory: string) {
-		const directoryFullPath = this.getFullPath(directory);
-		const filenames = await this.getFilesInDirectory(directoryFullPath);
+		const filenames = await this.getFilesInDirectory(directory);
 
 		const resultPromises: { [filename: string]: Promise<string> } = {};
 		for (let filename of filenames) {

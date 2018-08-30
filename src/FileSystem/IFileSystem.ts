@@ -2,6 +2,7 @@ export default interface IFileSystem {
 	/* @throws FileOrDirectoryNotFound */
 	readFile(fileName: string): Promise<string>;
 	saveToFile(fileName: string, contents: string): Promise<void>;
+	/* @throws FileOrDirectoryNotFound */
 	deleteFile(fileName: string): Promise<void>;
 	downloadFile(destinationPath: string, uri: string, headers?: { [key: string]: string }): Promise<void>;
 	/* @throws FileOrDirectoryNotFound */

@@ -39,6 +39,8 @@ test:general:
   stage: test
   except:
     - tags
+  variables:
+    fs_root_path: /test_fs
   script:
     - npm test
 
