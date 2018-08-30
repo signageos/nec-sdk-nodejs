@@ -23,6 +23,7 @@ import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
 import {
 	SystemReboot,
+	GetDeviceUid,
 	GetModel,
 	FileSystemGetFiles,
 	FileSystemGetFile,
@@ -46,6 +47,7 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	public readonly video: ProprietaryVideoPlayer;
 	public readonly stream: ProprietaryStreamPlayer;
 
+	private deviceUid: string;
 	private lock: AsyncLock;
 	private cache: ICache;
 
@@ -241,7 +243,12 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async getDeviceUid(): Promise<string> {
-		throw new Error("Not implemented"); // TODO : implement
+		if (!this.deviceUid) {
+			const { deviceUid } = await this.bridge.invoke<GetDeviceUid, { deviceUid: string }>({ type: GetDeviceUid });
+			this.deviceUid = deviceUid;
+		}
+
+		return this.deviceUid;
 	}
 
 	public async isConnected(): Promise<boolean> {

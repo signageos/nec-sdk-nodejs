@@ -2,6 +2,7 @@ import 'should';
 import * as sinon from 'sinon';
 import handleMessage, { InvalidMessageError } from '../../../src/Bridge/handleMessage';
 import {
+	GetDeviceUid,
 	FileSystemGetFiles,
 	FileSystemGetFile,
 	FileSystemDownloadFile,
@@ -10,12 +11,20 @@ import {
 
 describe('Bridge.handleMessage', function () {
 
+	it('should process GetDeviceUid message and return device uid', async function () {
+		const nativeDriver = {
+			getDeviceUid: sinon.stub().resolves('deviceUid1'),
+		};
+		const result = await handleMessage({} as any, nativeDriver as any, { type: GetDeviceUid } as GetDeviceUid);
+		result.should.deepEqual({ deviceUid: 'deviceUid1' });
+	});
+
 	it('should process FileSystemGetFiles message and return map of full paths to files', async function () {
 		const fileSystem = {
 			getFilesInDirectory: sinon.stub().withArgs('dir1').resolves(['file1', 'file2', 'file3']),
 			getFullPath: sinon.stub().withArgs('dir1').returns('/absolute/path/dir1'),
 		};
-		const result = await handleMessage(fileSystem as any, { type: FileSystemGetFiles, path: 'dir1' } as FileSystemGetFiles);
+		const result = await handleMessage(fileSystem as any, {} as any, { type: FileSystemGetFiles, path: 'dir1' } as FileSystemGetFiles);
 		result.should.deepEqual({
 			files: {
 				file1: '/absolute/path/dir1/file1',
@@ -29,7 +38,7 @@ describe('Bridge.handleMessage', function () {
 		const fileSystem = {
 			getFullPath: sinon.stub().withArgs('file1').returns('/absolute/path/file1'),
 		};
-		const result = await handleMessage(fileSystem as any, { type: FileSystemGetFile, path: 'file1' } as FileSystemGetFile);
+		const result = await handleMessage(fileSystem as any, {} as any, { type: FileSystemGetFile, path: 'file1' } as FileSystemGetFile);
 		result.should.deepEqual({ file: '/absolute/path/file1' });
 	});
 
@@ -39,6 +48,7 @@ describe('Bridge.handleMessage', function () {
 		};
 		await handleMessage(
 			fileSystem as any,
+			{} as any,
 			{
 				type: FileSystemDownloadFile,
 				path: 'destination',
@@ -56,13 +66,13 @@ describe('Bridge.handleMessage', function () {
 		const fileSystem = {
 			deleteFile: sinon.spy(),
 		};
-		await handleMessage(fileSystem as any, { type: FileSystemDeleteFile, path: 'file1' } as FileSystemDeleteFile);
+		await handleMessage(fileSystem as any, {} as any, { type: FileSystemDeleteFile, path: 'file1' } as FileSystemDeleteFile);
 		fileSystem.deleteFile.callCount.should.equal(1);
 		fileSystem.deleteFile.getCall(0).args[0].should.equal('file1');
 	});
 
 	it('should throw InvalidMessageError exception for invalid message', async function () {
 		const fileSystem = {} as any;
-		await handleMessage(fileSystem, {} as any).should.be.rejectedWith(InvalidMessageError);
+		await handleMessage(fileSystem, {} as any, {} as any).should.be.rejectedWith(InvalidMessageError);
 	});
 });

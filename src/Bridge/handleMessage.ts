@@ -1,6 +1,8 @@
 import * as path from 'path';
+import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import {
 	SystemReboot,
+	GetDeviceUid,
 	GetModel,
 	FileSystemGetFiles,
 	FileSystemGetFile,
@@ -14,8 +16,10 @@ export class InvalidMessageError extends Error {}
 
 export default async function handleMessage(
 	fileSystem: IFileSystem,
+	nativeDriver: IBasicDriver,
 	message:
 		SystemReboot |
+		GetDeviceUid |
 		GetModel |
 		FileSystemGetFiles |
 		FileSystemGetFile |
@@ -26,6 +30,10 @@ export default async function handleMessage(
 		case SystemReboot:
 			await SystemAPI.reboot();
 			return {};
+
+		case GetDeviceUid:
+			const deviceUid = await nativeDriver.getDeviceUid();
+			return { deviceUid };
 
 		case GetModel:
 			const model = await SystemAPI.getModel();

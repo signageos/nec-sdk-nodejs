@@ -3,6 +3,11 @@ export interface SystemReboot {
 	type: typeof SystemReboot;
 }
 
+export const GetDeviceUid = 'System.GetDeviceUid';
+export interface GetDeviceUid {
+	type: typeof GetDeviceUid;
+}
+
 export const GetModel = 'System.GetModel';
 export interface GetModel {
 	type: typeof GetModel;
