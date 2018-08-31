@@ -1,6 +1,7 @@
 import * as url from 'url';
 import * as http from 'http';
 import * as express from 'express';
+import * as cors from 'cors';
 import * as bodyParser from 'body-parser';
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import handleMessage, { InvalidMessageError } from './handleMessage';
@@ -34,6 +35,7 @@ export default class BridgeServer {
 	}
 
 	private defineRoutes() {
+		this.expressApp.use(cors());
 		this.expressApp.use(bodyParser.json());
 		this.expressApp.post('/message', async (request: express.Request, response: express.Response) => {
 			try {
