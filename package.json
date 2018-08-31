@@ -40,6 +40,7 @@
     "@types/raven": "^1.2.1",
     "@types/raven-js": "^3.10.0",
     "@types/request": "^2.47.1",
+    "@types/request-promise-native": "^1.0.15",
     "@types/sinon": "^4.3.0",
     "@types/socket.io-client": "^1.4.32",
     "awesome-typescript-loader": "^3.4.1",
@@ -87,6 +88,7 @@
     "mkdirp": "^0.5.1",
     "raven": "^1.2.1",
     "request": "^2.88.0",
+    "request-promise-native": "^1.0.5",
     "tiny-worker": "^2.1.2",
     "util.promisify": "^1.0.0"
   }

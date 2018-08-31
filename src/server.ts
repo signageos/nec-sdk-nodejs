@@ -8,10 +8,10 @@ import BridgeServer from './Bridge/BridgeServer';
 import * as Raven from 'raven';
 import { useRavenLogging } from '@signageos/lib/dist/Logging/logger';
 import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
-import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
-const TinyWorker = require('tiny-worker');
+import { createSameThreadWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
 import FileSystem from './FileSystem/FileSystem';
 import FileSystemCache from './Cache/FileSystemCache';
+import { fetch } from './WebWorker/serverFetch';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -46,10 +46,7 @@ if (parameters.raven.enabled) {
 		timeout: 2 * MINUTE_IN_MS,
 	});
 
-	const webWorkerFile = parameters.paths.distPath + '/server/webWorker.js';
-	const webWorkerFactory = createWebWorkerFactory(
-		() => new TinyWorker(webWorkerFile) as Worker,
-	);
+	const webWorkerFactory = createSameThreadWebWorkerFactory(fetch);
 
 	await management(
 		parameters.url.baseUrl,
