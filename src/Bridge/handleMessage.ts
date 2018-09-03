@@ -1,11 +1,10 @@
-import * as path from 'path';
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import {
 	SystemReboot,
 	GetDeviceUid,
 	GetModel,
 	FileSystemGetFiles,
-	FileSystemGetFile,
+	FileSystemFileExists,
 	FileSystemDownloadFile,
 	FileSystemDeleteFile,
 } from './bridgeMessages';
@@ -22,7 +21,7 @@ export default async function handleMessage(
 		GetDeviceUid |
 		GetModel |
 		FileSystemGetFiles |
-		FileSystemGetFile |
+		FileSystemFileExists |
 		FileSystemDownloadFile |
 		FileSystemDeleteFile,
 ): Promise<object> {
@@ -40,17 +39,13 @@ export default async function handleMessage(
 			return { model };
 
 		case FileSystemGetFiles:
-			const filenames = await fileSystem.getFilesInDirectory(message.path);
-			const fullDirectoryPath = fileSystem.getFullPath(message.path);
-			const files: { [filename: string]: string } = {};
-			for (let filename of filenames) {
-				files[filename] = path.join(fullDirectoryPath, filename);
-			}
+			const files = await fileSystem.getFilesInDirectory(message.path);
 			return { files };
 
-		case FileSystemGetFile:
-			const fileFullPath = fileSystem.getFullPath(message.path);
-			return { file: fileFullPath };
+		case FileSystemFileExists:
+			const pathExists = await fileSystem.pathExists(message.path);
+			const isFile = pathExists && await fileSystem.isFile(message.path);
+			return { fileExists: isFile };
 
 		case FileSystemDownloadFile:
 			await fileSystem.downloadFile(message.path, message.uri, message.headers);

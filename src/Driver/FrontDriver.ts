@@ -26,7 +26,7 @@ import {
 	GetDeviceUid,
 	GetModel,
 	FileSystemGetFiles,
-	FileSystemGetFile,
+	FileSystemFileExists,
 	FileSystemDownloadFile,
 	FileSystemDeleteFile,
 } from '../Bridge/bridgeMessages';
@@ -57,6 +57,7 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 		private window: Window,
 		private applicationVersion: string,
 		private bridge: BridgeClient,
+		private fileSystemUrl: string,
 	) {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
 		this.lock = new AsyncLock({
@@ -159,24 +160,21 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async fileSystemGetFileUids(): Promise<string[]> {
-		const { files } = await this.bridge.invoke<FileSystemGetFiles, { files: { [uid: string]: string } }>({
+		const { files } = await this.bridge.invoke<FileSystemGetFiles, { files: string[] }>({
 			type: FileSystemGetFiles,
 			path: FS_NAMESPACE,
 		});
 
-		return Object.keys(files);
+		return files;
 	}
 
 	public async fileSystemGetFiles(): Promise<{ [uid: string]: IFileSystemFile }> {
-		const { files } = await this.bridge.invoke<FileSystemGetFiles, { files: { [uid: string]: string } }>({
-			type: FileSystemGetFiles,
-			path: FS_NAMESPACE,
-		});
-
+		const files = await this.fileSystemGetFileUids();
 		const result: { [uid: string]: IFileSystemFile } = {};
-		for (let uid of Object.keys(files)) {
-			result[uid] = {
-				filePath: this.getFileUri(files[uid]),
+		for (let fileUid of files) {
+			const filePath = FS_NAMESPACE + '/' + fileUid;
+			result[fileUid] = {
+				filePath: this.getFileUri(filePath),
 			};
 		}
 
@@ -184,13 +182,18 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async fileSystemGetFile(uid: string): Promise<IFileSystemFile> {
-		const { file } = await this.bridge.invoke<FileSystemGetFile, { file: string }>({
-			type: FileSystemGetFile,
-			path: FS_NAMESPACE + '/' + uid,
+		const filePath = FS_NAMESPACE + '/' + uid;
+		const { fileExists } = await this.bridge.invoke<FileSystemFileExists, { fileExists: boolean }>({
+			type: FileSystemFileExists,
+			path: filePath,
 		});
 
+		if (!fileExists) {
+			throw new Error('File ' + uid + ' doesn\'t exist');
+		}
+
 		return {
-			filePath: this.getFileUri(file),
+			filePath: this.getFileUri(filePath),
 		};
 	}
 
@@ -351,6 +354,6 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	private getFileUri(filePath: string) {
-		return 'file://' + filePath;
+		return this.fileSystemUrl + '/' + filePath;
 	}
 }

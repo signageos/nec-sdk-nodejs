@@ -21,7 +21,7 @@ if (parameters.raven.enabled) {
 
 (async () => {
 	const bridge = new BridgeClient(parameters.server.bridge_url);
-	const nativeDriver = new FrontDriver(window, parameters.app.version, bridge);
+	const nativeDriver = new FrontDriver(window, parameters.app.version, bridge, parameters.server.file_system_url);
 	const synchronizer = createSocketSynchronizer(
 		parameters.url.synchronizerServerUrl,
 		() => nativeDriver,

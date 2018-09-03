@@ -7,7 +7,7 @@ import {
 	GetModel,
 	SystemReboot,
 	FileSystemGetFiles,
-	FileSystemGetFile,
+	FileSystemFileExists,
 	FileSystemDownloadFile,
 	FileSystemDeleteFile,
 } from '../../../src/Bridge/bridgeMessages';
@@ -23,7 +23,7 @@ describe('Driver.FrontDriver', function () {
 					.resolves({ model: 'model1' }),
 			};
 
-			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any);
+			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
 			const model = await frontDriver.getModel();
 			model.should.equal('model1');
 		});
@@ -36,7 +36,7 @@ describe('Driver.FrontDriver', function () {
 				invoke: sinon.spy(),
 			};
 
-			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any);
+			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
 			await frontDriver.appReboot();
 			bridge.invoke.callCount.should.equal(1);
 			bridge.invoke.getCall(0).args[0].should.deepEqual({ type: SystemReboot });
@@ -52,7 +52,7 @@ describe('Driver.FrontDriver', function () {
 				},
 			};
 
-			const frontDriver = new FrontDriver(window as any, '1.0.0', {} as any);
+			const frontDriver = new FrontDriver(window as any, '1.0.0', {} as any, 'http://localhost:8081');
 			await frontDriver.appRestart();
 			window.location.reload.callCount.should.equal(1);
 		});
@@ -61,7 +61,7 @@ describe('Driver.FrontDriver', function () {
 	describe('getApplicationVersion', function () {
 
 		it('should invoke restarting of the application', async function () {
-			const frontDriver = new FrontDriver({} as any, '1.0.0', {} as any);
+			const frontDriver = new FrontDriver({} as any, '1.0.0', {} as any, 'http://localhost:8081');
 			const applicationVersion = await frontDriver.getApplicationVersion();
 			applicationVersion.should.equal('1.0.0');
 		});
@@ -75,7 +75,7 @@ describe('Driver.FrontDriver', function () {
 				addEventListener: (type: string, listener: any) => eventEmitter.addListener(type, listener),
 			};
 
-			const frontDriver = new FrontDriver(window as any, '1.0.0', {} as any);
+			const frontDriver = new FrontDriver(window as any, '1.0.0', {} as any, 'http://localhost:8081');
 			const callback = sinon.spy();
 			frontDriver.bindKeyUp(callback);
 			eventEmitter.emit('keyup', { keyCode: 0x25 });
@@ -91,16 +91,11 @@ describe('Driver.FrontDriver', function () {
 				invoke: sinon.stub()
 					.withArgs({ type: FileSystemGetFiles, path: 'front' })
 					.resolves({
-						files: {
-							file1: '/absolute/path/to/file1',
-							file2: '/absolute/path/to/file2',
-							file3: '/absolute/path/to/file3',
-							file4: '/absolute/path/to/file4',
-						},
+						files: ['file1', 'file2', 'file3', 'file4'],
 					}),
 			};
 
-			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any);
+			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
 			const fileUids = await frontDriver.fileSystemGetFileUids();
 			fileUids.should.deepEqual(['file1', 'file2', 'file3', 'file4']);
 		});
@@ -113,22 +108,17 @@ describe('Driver.FrontDriver', function () {
 				invoke: sinon.stub()
 					.withArgs({ type: FileSystemGetFiles, path: 'front' })
 					.resolves({
-						files: {
-							file1: '/absolute/path/to/file1',
-							file2: '/absolute/path/to/file2',
-							file3: '/absolute/path/to/file3',
-							file4: '/absolute/path/to/file4',
-						},
+						files: ['file1', 'file2', 'file3', 'file4'],
 					}),
 			};
 
-			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any);
+			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
 			const files = await frontDriver.fileSystemGetFiles();
 			files.should.deepEqual({
-				file1: { filePath: 'file:///absolute/path/to/file1' },
-				file2: { filePath: 'file:///absolute/path/to/file2' },
-				file3: { filePath: 'file:///absolute/path/to/file3' },
-				file4: { filePath: 'file:///absolute/path/to/file4' },
+				file1: { filePath: 'http://localhost:8081/front/file1' },
+				file2: { filePath: 'http://localhost:8081/front/file2' },
+				file3: { filePath: 'http://localhost:8081/front/file3' },
+				file4: { filePath: 'http://localhost:8081/front/file4' },
 			});
 		});
 	});
@@ -138,13 +128,24 @@ describe('Driver.FrontDriver', function () {
 		it('should return file full path', async function () {
 			const bridge = {
 				invoke: sinon.stub()
-					.withArgs({ type: FileSystemGetFile, path: 'front/file1' })
-					.resolves({ file: '/absolute/path/to/front/file1' }),
+					.withArgs({ type: FileSystemFileExists, path: 'front/file1' })
+					.resolves({ fileExists: true }),
 			};
 
-			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any);
+			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
 			const file = await frontDriver.fileSystemGetFile('file1');
-			file.should.deepEqual({ filePath: 'file:///absolute/path/to/front/file1' });
+			file.should.deepEqual({ filePath: 'http://localhost:8081/front/file1' });
+		});
+
+		it('should fail for non-existent file', async function () {
+			const bridge = {
+				invoke: sinon.stub()
+					.withArgs({ type: FileSystemFileExists, path: 'front/file1' })
+					.resolves({ fileExists: false }),
+			};
+
+			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
+			await frontDriver.fileSystemGetFile('file1').should.be.rejected();
 		});
 	});
 
@@ -155,7 +156,7 @@ describe('Driver.FrontDriver', function () {
 				invoke: sinon.spy(),
 			};
 
-			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any);
+			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
 			await frontDriver.fileSystemDeleteFile('file1');
 			bridge.invoke.callCount.should.equal(1);
 			bridge.invoke.getCall(0).args[0].should.deepEqual({
@@ -172,7 +173,7 @@ describe('Driver.FrontDriver', function () {
 				invoke: sinon.spy(),
 			};
 
-			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any);
+			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
 			await frontDriver.fileSystemSaveFile('file1', 'http://some_uri.test', { header1: 'value1', header2: 'value2' });
 			bridge.invoke.callCount.should.equal(1);
 			bridge.invoke.getCall(0).args[0].should.deepEqual({

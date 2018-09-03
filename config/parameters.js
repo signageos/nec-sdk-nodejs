@@ -62,6 +62,7 @@ exports = module.exports = {
 	},
 	server: {
 		bridge_url: 'http://localhost:8080',
+		file_system_url: 'http://localhost:8081',
 	},
 	fileSystem: {
 		root: process.env.fs_root_path,

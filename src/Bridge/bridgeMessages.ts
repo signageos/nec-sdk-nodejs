@@ -19,9 +19,9 @@ export interface FileSystemGetFiles {
 	path: string;
 }
 
-export const FileSystemGetFile = 'FileSystem.GetFile';
-export interface FileSystemGetFile {
-	type: typeof FileSystemGetFile;
+export const FileSystemFileExists = 'FileSystem.FileExists';
+export interface FileSystemFileExists {
+	type: typeof FileSystemFileExists;
 	path: string;
 }
 

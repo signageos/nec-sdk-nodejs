@@ -4,7 +4,7 @@ import handleMessage, { InvalidMessageError } from '../../../src/Bridge/handleMe
 import {
 	GetDeviceUid,
 	FileSystemGetFiles,
-	FileSystemGetFile,
+	FileSystemFileExists,
 	FileSystemDownloadFile,
 	FileSystemDeleteFile,
 } from '../../../src/Bridge/bridgeMessages';
@@ -25,21 +25,49 @@ describe('Bridge.handleMessage', function () {
 			getFullPath: sinon.stub().withArgs('dir1').returns('/absolute/path/dir1'),
 		};
 		const result = await handleMessage(fileSystem as any, {} as any, { type: FileSystemGetFiles, path: 'dir1' } as FileSystemGetFiles);
-		result.should.deepEqual({
-			files: {
-				file1: '/absolute/path/dir1/file1',
-				file2: '/absolute/path/dir1/file2',
-				file3: '/absolute/path/dir1/file3',
-			},
-		});
+		result.should.deepEqual({ files: ['file1', 'file2', 'file3'] });
 	});
 
-	it('should process FileSystemGetFile message and return full path to file', async function () {
+	it('should process FileSystemFileExists message and return true if the file exists or false if it doesn\'t', async function () {
 		const fileSystem = {
-			getFullPath: sinon.stub().withArgs('file1').returns('/absolute/path/file1'),
+			pathExists: sinon.stub().callsFake(async (path: string) => {
+				switch (path) {
+					case 'file1': return true;
+					case 'file2': return true;
+					case 'file3': return false;
+					default: throw new Error('invalid path:' + path);
+				}
+			}),
+			isFile: sinon.stub().callsFake(async (path: string) => {
+				switch (path) {
+					case 'file1': return true;
+					case 'file2': return false;
+					case 'file3': return true;
+					default: throw new Error('invalid path:' + path);
+				}
+			})
 		};
-		const result = await handleMessage(fileSystem as any, {} as any, { type: FileSystemGetFile, path: 'file1' } as FileSystemGetFile);
-		result.should.deepEqual({ file: '/absolute/path/file1' });
+
+		const result1 = await handleMessage(
+			fileSystem as any,
+			{} as any,
+			{ type: FileSystemFileExists, path: 'file1' } as FileSystemFileExists,
+		);
+		result1.should.deepEqual({ fileExists: true });
+
+		const result2 = await handleMessage(
+			fileSystem as any,
+			{} as any,
+			{ type: FileSystemFileExists, path: 'file2' } as FileSystemFileExists,
+		);
+		result2.should.deepEqual({ fileExists: false });
+
+		const result3 = await handleMessage(
+			fileSystem as any,
+			{} as any,
+			{ type: FileSystemFileExists, path: 'file3' } as FileSystemFileExists,
+		);
+		result3.should.deepEqual({ fileExists: false });
 	});
 
 	it('should process FileSystemDownloadFile message', async function () {
