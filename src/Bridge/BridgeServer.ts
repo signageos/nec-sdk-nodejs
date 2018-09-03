@@ -1,3 +1,4 @@
+import * as url from 'url';
 import * as http from 'http';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
@@ -10,7 +11,7 @@ export default class BridgeServer {
 	private readonly expressApp: express.Application;
 	private readonly httpServer: http.Server;
 
-	constructor(private port: number, private fileSystem: IFileSystem, private nativeDriver: IBasicDriver) {
+	constructor(private serverUrl: string, private fileSystem: IFileSystem, private nativeDriver: IBasicDriver) {
 		this.expressApp = express();
 		this.httpServer = http.createServer(this.expressApp);
 		this.defineRoutes();
@@ -18,7 +19,8 @@ export default class BridgeServer {
 
 	public async start() {
 		return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-			this.httpServer.listen(this.port, (error: any) => {
+			const port = url.parse(this.serverUrl).port;
+			this.httpServer.listen(port, (error: any) => {
 				if (error) {
 					console.error('failed to start BridgeServer', error);
 					reject(new Error('Failed to start BridgeServer'));

@@ -61,8 +61,7 @@ exports = module.exports = {
 		synchronizerServerUrl: process.env.synchronizer_server_url,
 	},
 	server: {
-		url: process.env.server_url,
-		port: process.env.server_port,
+		bridge_url: 'http://localhost:8080',
 	},
 	fileSystem: {
 		root: process.env.fs_root_path,
