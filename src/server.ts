@@ -53,7 +53,7 @@ if (parameters.raven.enabled) {
 		parameters.url.socketUri,
 		parameters.url.staticBaseUrl,
 		parameters.url.uploadBaseUrl,
-		parameters.app.sessionIdKey,
+		parameters.frontDisplay.sessionIdKey,
 		nativeDriver,
 		offlineStorageLock,
 		webWorkerFactory,
