@@ -43,6 +43,7 @@
     "@types/request-promise-native": "^1.0.15",
     "@types/sinon": "^4.3.0",
     "@types/socket.io-client": "^1.4.32",
+    "@types/ws": "^6.0.0",
     "awesome-typescript-loader": "^3.4.1",
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
@@ -90,6 +91,7 @@
     "request": "^2.88.0",
     "request-promise-native": "^1.0.5",
     "tiny-worker": "^2.1.2",
-    "util.promisify": "^1.0.0"
+    "util.promisify": "^1.0.0",
+    "ws": "^6.0.0"
   }
 }

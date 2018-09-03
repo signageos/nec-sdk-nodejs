@@ -1,5 +1,7 @@
 // polyfill promisify for node.js 5
 require('util').promisify = require('util.promisify');
+// polyfill WebSocket for node.js
+(global as any).WebSocket = require('ws');
 
 import * as AsyncLock from 'async-lock';
 import ManagementDriver from './Driver/ManagementDriver';
