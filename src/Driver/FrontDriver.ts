@@ -11,13 +11,12 @@ import TimerLevel from '@signageos/front-display/es6/NativeDevice/Timer/TimerLev
 import IBrightness from '@signageos/front-display/es6/NativeDevice/IBrightness';
 import ProprietaryCache from '@signageos/front-display/es6/Cache/ProprietaryCache';
 import ICache from '@signageos/front-display/es6/Cache/ICache';
-import ProprietaryVideoPlayer from '@signageos/front-display/es6/Video/ProprietaryVideoPlayer';
 import ProprietaryResourceManager from '@signageos/front-display/es6/Video/ProprietaryResourceManager';
 import ISignature from '@signageos/front-display/es6/NativeDevice/ISignature';
 import VideoOrientation from "@signageos/front-display/es6/Video/Orientation";
 import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver';
 import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheStorageInfo';
-import ProprietaryStreamPlayer from '@signageos/front-display/es6/Stream/ProprietaryStreamPlayer';
+import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
 import { KeyMap } from '@signageos/front-display/es6/NativeDevice/Default/DefaultHelper';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
@@ -29,7 +28,8 @@ import {
 	FileSystemFileExists,
 	FileSystemDownloadFile,
 	FileSystemDeleteFile,
-} from '../Bridge/bridgeMessages';
+} from '../Bridge/bridgeSystemMessages';
+import BridgeVideoPlayer from './Video/BridgeVideoPlayer';
 
 const FS_NAMESPACE = 'front';
 
@@ -44,8 +44,8 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	};
 
 	public readonly resourceManager: ProprietaryResourceManager;
-	public readonly video: ProprietaryVideoPlayer;
-	public readonly stream: ProprietaryStreamPlayer;
+	public readonly video: BridgeVideoPlayer;
+	public readonly stream: IStreamPlayer;
 
 	private deviceUid: string;
 	private lock: AsyncLock;
@@ -64,9 +64,7 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 			timeout: 5000,
 		});
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
-		this.resourceManager = this.createResourceManager();
-		this.video = this.createVideoPlayer();
-		this.stream = this.createStreamPlayer();
+		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.lock, this.bridge);
 	}
 
 	public async getConfigurationBaseUrl(): Promise<string | null> {
@@ -277,8 +275,6 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 
 	public async restoreDisplayArea() {
 		await this.video.clearAll();
-		await this.stream.clearAll();
-		this.resourceManager.clearAll();
 	}
 
 	public areTimersSupported(powerTimerLevel: TimerLevel) {
@@ -339,18 +335,6 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 
 	public async setVolume(_volume: number): Promise<void> {
 		throw new Error("Not implemented"); // TODO : implement
-	}
-
-	protected createResourceManager() {
-		return new ProprietaryResourceManager(1);
-	}
-
-	protected createVideoPlayer() {
-		return new ProprietaryVideoPlayer(this.resourceManager, this.window, this.lock);
-	}
-
-	protected createStreamPlayer() {
-		return new ProprietaryStreamPlayer(this.video);
 	}
 
 	private getFileUri(filePath: string) {

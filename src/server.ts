@@ -5,11 +5,12 @@ require('util').promisify = require('util.promisify');
 
 import * as AsyncLock from 'async-lock';
 import ManagementDriver from './Driver/ManagementDriver';
+import OmxplayerVideoPlayer from './Driver/Video/OmxplayerVideoPlayer';
 import management from '@signageos/front-display/es6/Management/management';
 import BridgeServer from './Bridge/BridgeServer';
 import * as Raven from 'raven';
 import { useRavenLogging } from '@signageos/lib/dist/Logging/logger';
-import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
+import { SECOND_IN_MS, MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { createSameThreadWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
 import FileSystem from './FileSystem/FileSystem';
 import FileSystemCache from './Cache/FileSystemCache';
@@ -61,6 +62,9 @@ if (parameters.raven.enabled) {
 		webWorkerFactory,
 	);
 
-	const bridgeServer = new BridgeServer(parameters.server.bridge_url, fileSystem, nativeDriver);
+	const videoPlayerLock = new AsyncLock({ timeout: 30 * SECOND_IN_MS });
+	const videoPlayer = new OmxplayerVideoPlayer(videoPlayerLock, fileSystem);
+
+	const bridgeServer = new BridgeServer(parameters.server.bridge_url, fileSystem, nativeDriver, videoPlayer);
 	await bridgeServer.start();
 })().catch((error: any) => console.error(error));

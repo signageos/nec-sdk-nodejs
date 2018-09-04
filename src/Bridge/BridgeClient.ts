@@ -1,6 +1,11 @@
+import ISocket from '@signageos/front-display/es6/Socket/ISocket';
+
 export default class BridgeClient {
 
-	constructor(private serverUri: string) {}
+	constructor(
+		private serverUri: string,
+		public readonly socketClient: ISocket,
+	) {}
 
 	public async invoke<TMessage extends { type: string }, TResult>(message: TMessage): Promise<TResult> {
 		const response = await fetch(

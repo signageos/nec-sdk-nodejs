@@ -7,7 +7,7 @@ import {
 	FileSystemFileExists,
 	FileSystemDownloadFile,
 	FileSystemDeleteFile,
-} from './bridgeMessages';
+} from './bridgeSystemMessages';
 import * as SystemAPI from '../API/SystemAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
 

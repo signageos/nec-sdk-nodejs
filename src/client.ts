@@ -12,6 +12,7 @@ import "whatwg-fetch";
 import { useRavenLogging } from '@signageos/front-display/es6/Logging/logger';
 import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
+import createSocket from '@signageos/front-display/es6/Socket/WS/createWSSocket';
 const parameters = require('../config/parameters');
 
 if (parameters.raven.enabled) {
@@ -20,7 +21,13 @@ if (parameters.raven.enabled) {
 }
 
 (async () => {
-	const bridge = new BridgeClient(parameters.server.bridge_url);
+	const socketClient = createSocket(
+		parameters.server.bridge_url,
+		() => console.log('Bridge socket connected'),
+		() => console.log('Bridge socket disconnected'),
+		(error: any) => console.error('Bridge socket error', error),
+	);
+	const bridge = new BridgeClient(parameters.server.bridge_url, socketClient);
 	const nativeDriver = new FrontDriver(window, parameters.app.version, bridge, parameters.server.file_system_url);
 	const synchronizer = createSocketSynchronizer(
 		parameters.url.synchronizerServerUrl,

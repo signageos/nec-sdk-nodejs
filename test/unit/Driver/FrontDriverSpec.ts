@@ -1,6 +1,6 @@
 import 'should';
-import * as sinon from 'sinon';
 import { EventEmitter } from 'events';
+import * as sinon from 'sinon';
 import KeyCode from '@signageos/front-display/es6/NativeDevice/Input/KeyCode';
 import FrontDriver from '../../../src/Driver/FrontDriver';
 import {
@@ -10,7 +10,7 @@ import {
 	FileSystemFileExists,
 	FileSystemDownloadFile,
 	FileSystemDeleteFile,
-} from '../../../src/Bridge/bridgeMessages';
+} from '../../../src/Bridge/bridgeSystemMessages';
 
 describe('Driver.FrontDriver', function () {
 
@@ -21,6 +21,7 @@ describe('Driver.FrontDriver', function () {
 				invoke: sinon.stub()
 					.withArgs({ type: GetModel })
 					.resolves({ model: 'model1' }),
+				socketClient: new EventEmitter(),
 			};
 
 			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
@@ -34,6 +35,7 @@ describe('Driver.FrontDriver', function () {
 		it('should invoke device reboot', async function () {
 			const bridge = {
 				invoke: sinon.spy(),
+				socketClient: new EventEmitter(),
 			};
 
 			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
@@ -51,8 +53,11 @@ describe('Driver.FrontDriver', function () {
 					reload: sinon.spy(),
 				},
 			};
+			const bridge = {
+				socketClient: new EventEmitter(),
+			};
 
-			const frontDriver = new FrontDriver(window as any, '1.0.0', {} as any, 'http://localhost:8081');
+			const frontDriver = new FrontDriver(window as any, '1.0.0', bridge as any, 'http://localhost:8081');
 			await frontDriver.appRestart();
 			window.location.reload.callCount.should.equal(1);
 		});
@@ -61,7 +66,8 @@ describe('Driver.FrontDriver', function () {
 	describe('getApplicationVersion', function () {
 
 		it('should invoke restarting of the application', async function () {
-			const frontDriver = new FrontDriver({} as any, '1.0.0', {} as any, 'http://localhost:8081');
+			const bridge = { socketClient: new EventEmitter() };
+			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
 			const applicationVersion = await frontDriver.getApplicationVersion();
 			applicationVersion.should.equal('1.0.0');
 		});
@@ -74,8 +80,11 @@ describe('Driver.FrontDriver', function () {
 			const window = {
 				addEventListener: (type: string, listener: any) => eventEmitter.addListener(type, listener),
 			};
+			const bridge = {
+				socketClient: new EventEmitter(),
+			};
 
-			const frontDriver = new FrontDriver(window as any, '1.0.0', {} as any, 'http://localhost:8081');
+			const frontDriver = new FrontDriver(window as any, '1.0.0', bridge as any, 'http://localhost:8081');
 			const callback = sinon.spy();
 			frontDriver.bindKeyUp(callback);
 			eventEmitter.emit('keyup', { keyCode: 0x25 });
@@ -93,6 +102,7 @@ describe('Driver.FrontDriver', function () {
 					.resolves({
 						files: ['file1', 'file2', 'file3', 'file4'],
 					}),
+				socketClient: new EventEmitter(),
 			};
 
 			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
@@ -110,6 +120,7 @@ describe('Driver.FrontDriver', function () {
 					.resolves({
 						files: ['file1', 'file2', 'file3', 'file4'],
 					}),
+				socketClient: new EventEmitter(),
 			};
 
 			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
@@ -130,6 +141,7 @@ describe('Driver.FrontDriver', function () {
 				invoke: sinon.stub()
 					.withArgs({ type: FileSystemFileExists, path: 'front/file1' })
 					.resolves({ fileExists: true }),
+				socketClient: new EventEmitter(),
 			};
 
 			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
@@ -142,6 +154,7 @@ describe('Driver.FrontDriver', function () {
 				invoke: sinon.stub()
 					.withArgs({ type: FileSystemFileExists, path: 'front/file1' })
 					.resolves({ fileExists: false }),
+				socketClient: new EventEmitter(),
 			};
 
 			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
@@ -154,6 +167,7 @@ describe('Driver.FrontDriver', function () {
 		it('should delete file', async function () {
 			const bridge = {
 				invoke: sinon.spy(),
+				socketClient: new EventEmitter(),
 			};
 
 			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');
@@ -171,6 +185,7 @@ describe('Driver.FrontDriver', function () {
 		it('should delete file', async function () {
 			const bridge = {
 				invoke: sinon.spy(),
+				socketClient: new EventEmitter(),
 			};
 
 			const frontDriver = new FrontDriver({} as any, '1.0.0', bridge as any, 'http://localhost:8081');

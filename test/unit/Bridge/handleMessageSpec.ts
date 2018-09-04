@@ -7,7 +7,7 @@ import {
 	FileSystemFileExists,
 	FileSystemDownloadFile,
 	FileSystemDeleteFile,
-} from '../../../src/Bridge/bridgeMessages';
+} from '../../../src/Bridge/bridgeSystemMessages';
 
 describe('Bridge.handleMessage', function () {
 
