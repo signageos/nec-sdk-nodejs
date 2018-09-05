@@ -3,9 +3,11 @@ import { ISocket } from '@signageos/lib/dist/WebSocket/socketServer';
 import IVideoPlayer from '@signageos/front-display/es6/Video/IVideoPlayer';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import {
+	PrepareVideo,
 	PlayVideo,
 	StopVideo,
 	StopAllVideos,
+	VideoPrepared,
 	VideoStarted,
 	VideoEnded,
 	VideoStopped,
@@ -37,9 +39,34 @@ function forwardEventEmitterToSocket(socket: ISocket) {
 }
 
 function listenToVideoEventsFromClient(socket: ISocket, videoPlayer: IVideoPlayer) {
+	listenToPrepareVideoEventFromClient(socket, videoPlayer);
 	listenToPlayVideoEventFromClient(socket, videoPlayer);
 	listenToStopVideoEventFromClient(socket, videoPlayer);
 	listenToStopAllVideosEventFromClient(socket, videoPlayer);
+}
+
+function listenToPrepareVideoEventFromClient(socket: ISocket, videoPlayer: IVideoPlayer) {
+	socket.on(PrepareVideo, async (message: PrepareVideo) => {
+		const { uri, x, y, width, height } = message;
+		try {
+			await videoPlayer.prepare(uri, x, y, width, height);
+
+			eventEmitter.emit('video_event', {
+				type: VideoPrepared,
+				payload: {
+					uri, x, y, width, height,
+				},
+			});
+		} catch (error) {
+			eventEmitter.emit('video_event', {
+				type: VideoError,
+				payload: {
+					uri, x, y, width, height,
+					data: { message: 'Failed to prepare video' },
+				},
+			});
+		}
+	});
 }
 
 function listenToPlayVideoEventFromClient(socket: ISocket, videoPlayer: IVideoPlayer) {

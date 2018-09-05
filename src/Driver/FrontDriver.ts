@@ -64,7 +64,7 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 			timeout: 5000,
 		});
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
-		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.lock, this.bridge);
+		this.video = new BridgeVideoPlayer(window, this.fileSystemUrl, this.lock, this.bridge);
 	}
 
 	public async getConfigurationBaseUrl(): Promise<string | null> {

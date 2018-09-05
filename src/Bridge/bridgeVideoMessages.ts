@@ -1,3 +1,13 @@
+export const PrepareVideo = 'Video.PrepareVideo';
+export interface PrepareVideo {
+	type: typeof PrepareVideo;
+	uri: string;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
 export const PlayVideo = 'Video.PlayVideo';
 export interface PlayVideo {
 	type: typeof PlayVideo;
@@ -21,6 +31,16 @@ export interface StopVideo {
 export const StopAllVideos = 'Video.StopAllVideos';
 export interface StopAllVideos {
 	type: typeof StopAllVideos;
+}
+
+export const VideoPrepared = 'Video.VideoPrepared';
+export interface VideoPrepared {
+	type: typeof VideoPrepared;
+	uri: string;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
 }
 
 export const VideoStarted = 'Video.VideoStarted';

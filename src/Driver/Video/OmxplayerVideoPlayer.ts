@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
-import { ChildProcess, spawn } from "child_process";
+import { promisify } from 'util';
+import { ChildProcess, spawn, exec } from "child_process";
 import * as AsyncLock from 'async-lock';
 import { checksumString } from '@signageos/front-display/es6/Hash/checksum';
 import IVideoPlayer from '@signageos/front-display/es6/Video/IVideoPlayer';
@@ -7,6 +8,7 @@ import IVideo from '@signageos/front-display/es6/Video/IVideo';
 import wait from '@signageos/lib/dist/Timer/wait';
 import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import IFileSystem from '../../FileSystem/IFileSystem';
+import { getLastFramePathFromVideoPath } from './helper';
 
 export default class OmxplayerVideoPlayer implements IVideoPlayer {
 
@@ -26,10 +28,22 @@ export default class OmxplayerVideoPlayer implements IVideoPlayer {
 		return checksumString(uri) + '_' + x + 'x' + y + '-' + width + 'x' + height;
 	}
 
-	public constructor(private lock: AsyncLock, private fileSystem: IFileSystem) {}
+	public constructor(private distDirectory: string, private lock: AsyncLock, private fileSystem: IFileSystem) {}
 
-	public async prepare(_uri: string, _x: number, _y: number, _width: number, _height: number): Promise<void> {
-		// do nothing
+	public async prepare(uri: string, _x: number, _y: number, _width: number, _height: number): Promise<void> {
+		if (!(await this.fileSystem.pathExists(uri)) ||
+			!(await this.fileSystem.isFile(uri))
+		) {
+			throw new Error('Video not found');
+		}
+
+		const command = this.distDirectory + '/ffmpeg-extract-video-last-frame.sh';
+		const videoFullPath = this.fileSystem.getFullPath(uri);
+		const lastFrameFullPath = getLastFramePathFromVideoPath(videoFullPath);
+
+		if (!(await this.fileSystem.pathExists(lastFrameFullPath))) {
+			await promisify(exec)(command + ' ' + videoFullPath + ' ' + lastFrameFullPath);
+		}
 	}
 
 	public async play(uri: string, x: number, y: number, width: number, height: number): Promise<IVideo> {
@@ -92,8 +106,8 @@ export default class OmxplayerVideoPlayer implements IVideoPlayer {
 				new Promise<void>((resolve: () => void) => videoProcess.once('close', resolve)),
 				new Promise<void>((resolve: () => void) => videoProcess.once('error', resolve)),
 				(async () => {
-					// after 5s send a SIGKILL signal to force the process to close
-					await wait(5 * SECOND_IN_MS);
+					// after 2s send a SIGKILL signal to force the process to close
+					await wait(2 * SECOND_IN_MS);
 					videoProcess.kill('SIGKILL');
 				})(),
 			] as Promise<void>[]);
@@ -110,6 +124,10 @@ export default class OmxplayerVideoPlayer implements IVideoPlayer {
 		const videoProcess = spawn(
 			'omxplayer',
 			[
+				'--threshold',
+				'1',
+				'--aspect-mode',
+				'letterbox',
 				'--win',
 				`${x},${y},${width},${height}`,
 				videoFullPath,
@@ -133,6 +151,7 @@ export default class OmxplayerVideoPlayer implements IVideoPlayer {
 			new Promise<void>((resolve: () => void) => videoProcess.stdout.once('data', resolve)),
 			new Promise<void>((resolve: () => void) => videoProcess.stderr.once('data', resolve)),
 			new Promise<void>((resolve: () => void) => videoProcess.once('close', resolve)),
+			wait(1500),
 		] as Promise<void>[]);
 
 		return videoEventEmitter;
