@@ -18,6 +18,7 @@ import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver
 import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheStorageInfo';
 import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
 import { KeyMap } from '@signageos/front-display/es6/NativeDevice/Default/DefaultHelper';
+import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
 import {
@@ -61,7 +62,7 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	) {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
 		this.lock = new AsyncLock({
-			timeout: 5000,
+			timeout: 30 * SECOND_IN_MS,
 		});
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
 		this.video = new BridgeVideoPlayer(window, this.fileSystemUrl, this.lock, this.bridge);
