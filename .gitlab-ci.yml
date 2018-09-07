@@ -53,9 +53,11 @@ test:lint:
 
 build:
   stage: build
+  image: $CI_REGISTRY/signageos/docker-node:8.9.0-debian-build
   dependencies:
     - prepare
   script:
+    - export VERSION
     - npm run prepare --production
   artifacts:
     when: on_success

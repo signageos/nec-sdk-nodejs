@@ -1,0 +1,8 @@
+Package: signageos-display-linux
+Version: $VERSION
+Section: javascript
+Architecture: armhf
+Depends: nodejs (>= 8.9), omxplayer, ffmpeg
+Maintainer: signageOS.io <dev@signageos.io>
+Description: SignageOS client
+Homepage: https://signageos.io
