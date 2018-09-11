@@ -9,6 +9,7 @@ import IBasicDriver from '../../node_modules/@signageos/front-display/es6/Native
 import * as SystemAPI from '../API/SystemAPI';
 import * as NetworkAPI from '../API/NetworkAPI';
 import ICache from '../Cache/ICache';
+import IFileSystem from '../FileSystem/IFileSystem';
 
 export default class ManagementDriver implements IBasicDriver, IManagementDriver {
 
@@ -17,6 +18,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	constructor(
 		private remoteServerUrl: string,
 		private cache: ICache,
+		private fileSystem: IFileSystem,
 	) {}
 
 	public start() {
@@ -39,6 +41,27 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		const serialNumber = await this.getSerialNumber();
 		this.deviceUid = checksumString(serialNumber);
 		return this.deviceUid;
+	}
+
+	public async appUpgrade(baseUrl: string, version: string) {
+		const APP_SUBDIR = '__apps';
+		const destinationFile = APP_SUBDIR + '/' + version + '.deb';
+		const sourcePath = `/app/linux/${version}/signageos-display-linux.deb`;
+		const sourceUrl = baseUrl + sourcePath;
+
+		console.log('downloading new app ' + version);
+		await this.fileSystem.downloadFile(destinationFile, sourceUrl);
+		console.log(`app ${version} downloaded`);
+
+		try {
+			const fullFilePath = this.fileSystem.getFullPath(destinationFile);
+			await SystemAPI.upgradeApp(fullFilePath);
+			console.log('upgraded to version ' + version);
+		} finally {
+			await this.fileSystem.deleteFile(destinationFile);
+		}
+
+		return () => SystemAPI.reboot();
 	}
 
 	public async getModel(): Promise<string> {

@@ -97,10 +97,6 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 		this.window.location.reload();
 	}
 
-	public async appUpgrade(_baseUrl: string, _version: string): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
-	}
-
 	public async packageInstall(_baseUrl: string, _packageName: string, _version: string, _build: string | null): Promise<void> {
 		throw new Error("Not implemented"); // TODO : implement
 	}

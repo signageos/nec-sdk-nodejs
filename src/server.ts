@@ -32,6 +32,7 @@ if (parameters.raven.enabled) {
 	const nativeDriver = new ManagementDriver(
 		parameters.url.socketUri,
 		cache,
+		fileSystem,
 	);
 
 	if (raven) {

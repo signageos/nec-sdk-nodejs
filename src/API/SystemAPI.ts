@@ -18,3 +18,8 @@ export async function reboot() {
 	console.log("reboot device");
 	await execChildProcess("sudo /sbin/shutdown -r now");
 }
+
+export async function upgradeApp(debFile: string) {
+	const escapedDebFile = debFile.replace(/\'/g, "\\'");
+	await execChildProcess(`sudo dpkg -i '${escapedDebFile}'`);
+}
