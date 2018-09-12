@@ -1,7 +1,7 @@
 const webpack = require('webpack');
-const { getNodeModulesExternals } = require('@signageos/lib/tools/nodeModulesHelper');
 const NpmPackPlugin = require('@signageos/lib/dist/Webpack/NpmPackPlugin').default;
 const parameters = require('./config/parameters');
+const packageFile = require('./package');
 
 module.exports = {
 	entry: './src/server',
@@ -55,7 +55,10 @@ module.exports = {
 			},
 		],
 	},
-	externals: getNodeModulesExternals(parameters.paths.rootPath)
+	externals: Object.keys(packageFile.dependencies).reduce(
+		(result, key) => ({ ...result, [key]: 'commonjs ' + key }),
+		{},
+	),
 }
 
 switch (parameters.environment) {
