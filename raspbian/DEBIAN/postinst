@@ -1,0 +1,5 @@
+#! /bin/bash
+
+chown -R signageos:signageos /usr/lib/signageos
+chown -R signageos:signageos /var/lib/signageos
+chown -R signageos:signageos /var/log/signageos

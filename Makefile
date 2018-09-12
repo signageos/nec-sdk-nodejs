@@ -6,6 +6,7 @@ all: raspbian
 raspbian: dist-raspbian
 	envsubst < raspbian/control > $(RASPBIAN_DIST)/DEBIAN/control
 	tools/make-package-json-public.js $(RASPBIAN_DIST)/usr/lib/signageos/server/package.json
+	cp raspbian/DEBIAN/* $(RASPBIAN_DIST)/DEBIAN/
 	cp raspbian/service.sh $(RASPBIAN_DIST)/etc/init.d/signageos
 	cd $(RASPBIAN_DIST)/usr/lib/signageos/server; npm install
 	dpkg-deb --build $(RASPBIAN_DIST) $(DIST)/signageos-display-linux.deb
