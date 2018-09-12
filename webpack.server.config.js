@@ -7,8 +7,8 @@ module.exports = {
 	entry: './src/server',
 	target: 'node',
 	node: {
-		__filename: true,
-		__dirname: true,
+		__filename: false,
+		__dirname: false,
 	},
 	output: {
 		path: parameters.paths.distPath + '/server',
