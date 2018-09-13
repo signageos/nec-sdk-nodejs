@@ -3,6 +3,8 @@ import {
 	SystemReboot,
 	GetDeviceUid,
 	GetModel,
+	ScreenTurnOff,
+	ScreenTurnOn,
 	FileSystemGetFiles,
 	FileSystemFileExists,
 	FileSystemDownloadFile,
@@ -20,6 +22,8 @@ export default async function handleMessage(
 		SystemReboot |
 		GetDeviceUid |
 		GetModel |
+		ScreenTurnOff |
+		ScreenTurnOn |
 		FileSystemGetFiles |
 		FileSystemFileExists |
 		FileSystemDownloadFile |
@@ -37,6 +41,14 @@ export default async function handleMessage(
 		case GetModel:
 			const model = await SystemAPI.getModel();
 			return { model };
+
+		case ScreenTurnOff:
+			await SystemAPI.turnScreenOff();
+			return {};
+
+		case ScreenTurnOn:
+			await SystemAPI.turnScreenOn();
+			return {};
 
 		case FileSystemGetFiles:
 			const files = await fileSystem.getFilesInDirectory(message.path);

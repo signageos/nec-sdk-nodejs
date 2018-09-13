@@ -13,6 +13,16 @@ export interface GetModel {
 	type: typeof GetModel;
 }
 
+export const ScreenTurnOff = 'Screen.TurnOff';
+export interface ScreenTurnOff {
+	type: typeof ScreenTurnOff;
+}
+
+export const ScreenTurnOn = 'Screen.TurnOn';
+export interface ScreenTurnOn {
+	type: typeof ScreenTurnOn;
+}
+
 export const FileSystemGetFiles = 'FileSystem.GetFiles';
 export interface FileSystemGetFiles {
 	type: typeof FileSystemGetFiles;

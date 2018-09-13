@@ -23,3 +23,11 @@ export async function upgradeApp(debFile: string) {
 	const escapedDebFile = debFile.replace(/\'/g, "\\'");
 	await execChildProcess(`sudo dpkg -i '${escapedDebFile}'`);
 }
+
+export async function turnScreenOff() {
+	await execChildProcess('vcgencmd display_power 0');
+}
+
+export async function turnScreenOn() {
+	await execChildProcess('vcgencmd display_power 1');
+}

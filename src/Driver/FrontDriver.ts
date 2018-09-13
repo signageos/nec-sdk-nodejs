@@ -25,6 +25,8 @@ import {
 	SystemReboot,
 	GetDeviceUid,
 	GetModel,
+	ScreenTurnOff,
+	ScreenTurnOn,
 	FileSystemGetFiles,
 	FileSystemFileExists,
 	FileSystemDownloadFile,
@@ -133,11 +135,13 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async displayPowerOn(): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
+		await this.bridge.invoke<ScreenTurnOn, {}>({ type: ScreenTurnOn });
+		this.isDisplayOn = true;
 	}
 
 	public async displayPowerOff(): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
+		await this.bridge.invoke<ScreenTurnOff, {}>({ type: ScreenTurnOff });
+		this.isDisplayOn = false;
 	}
 
 	public bindKeyUp(keyUpListener: (keyUpEvent: IKeyUpEvent) => void) {
