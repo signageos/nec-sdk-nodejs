@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import * as path from 'path';
 import { promisify } from 'util';
 import { ChildProcess, spawn, exec } from "child_process";
 import * as AsyncLock from 'async-lock';
@@ -28,7 +29,7 @@ export default class OmxplayerVideoPlayer implements IVideoPlayer {
 		return checksumString(uri) + '_' + x + 'x' + y + '-' + width + 'x' + height;
 	}
 
-	public constructor(private distDirectory: string, private lock: AsyncLock, private fileSystem: IFileSystem) {}
+	public constructor(private scriptsDirectory: string, private lock: AsyncLock, private fileSystem: IFileSystem) {}
 
 	public async prepare(uri: string, _x: number, _y: number, _width: number, _height: number): Promise<void> {
 		if (!(await this.fileSystem.pathExists(uri)) ||
@@ -37,7 +38,7 @@ export default class OmxplayerVideoPlayer implements IVideoPlayer {
 			throw new Error('Video not found');
 		}
 
-		const command = this.distDirectory + '/ffmpeg-extract-video-last-frame.sh';
+		const command = path.join(this.scriptsDirectory, 'ffmpeg-extract-video-last-frame.sh');
 		const videoFullPath = this.fileSystem.getFullPath(uri);
 		const lastFrameFullPath = getLastFramePathFromVideoPath(videoFullPath);
 

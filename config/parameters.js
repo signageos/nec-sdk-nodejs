@@ -9,6 +9,7 @@ const environment = process.env.NODE_ENV || 'dev';
 const rootPath = detectModuleRootPath(packageConfig.name) || '..';
 const configPath = rootPath + '/config';
 const distPath = rootPath + '/dist';
+const scriptsPath = rootPath + '/scripts';
 const packagesPath = process.env.PACKAGES_PATH || rootPath + '/packages';
 
 try {
@@ -26,6 +27,7 @@ exports = module.exports = {
 		configPath,
 		rootPath,
 		distPath,
+		scriptsPath,
 		packagesPath,
 	},
 	app: {
