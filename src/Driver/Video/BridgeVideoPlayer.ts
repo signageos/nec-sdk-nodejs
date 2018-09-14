@@ -28,12 +28,7 @@ import {
 export default class BridgeVideoPlayer implements IVideoPlayer {
 
 	private preparedVideoIds: string[] = [];
-	private playingVideos: {
-		[videoId: string]: {
-			eventEmitter: EventEmitter;
-			lastFrame?: HTMLElement;
-		};
-	} = {};
+	private playingVideos: { [videoId: string]: EventEmitter } = {};
 
 	private static getVideoIdentificator(uri: string, x: number, y: number, width: number, height: number) {
 		return checksumString(uri) + '_' + x + 'x' + y + '-' + width + 'x' + height;
@@ -57,6 +52,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 				uriRelative, coordinates.x, coordinates.y, coordinates.width, coordinates.height,
 			);
 			await this.prepareVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
+			this.prepareLastFrame(videoId, uri, x, y, width, height); // original coordinates on purpose
 		});
 	}
 
@@ -72,8 +68,9 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 			}
 
 			await this.prepareVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
+			this.prepareLastFrame(videoId, uri, x, y, width, height);
 			const videoEventEmitter = await this.playVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
-			await this.showLastFrame(videoId, uri, x, y, width, height); // original coordinates on purpose
+			this.showLastFrame(videoId); // original coordinates on purpose
 
 			return this.convertEventEmitterWithConvertedCoordinatesBackToOriginalCoordinates(videoEventEmitter, x, y, width, height);
 		});
@@ -91,11 +88,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 			}
 
 			await this.stopVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
-
-			if (this.playingVideos[videoId].lastFrame) {
-				this.destroyLastFrame(videoId);
-			}
-
+			this.destroyLastFrame(videoId);
 			delete this.playingVideos[videoId];
 		});
 	}
@@ -111,9 +104,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 	public async clearAll(): Promise<void> {
 		await this.lock.acquire('video', async () => {
 			for (let videoId of Object.keys(this.playingVideos)) {
-				if (this.playingVideos[videoId].lastFrame) {
-					this.destroyLastFrame(videoId);
-				}
+				this.destroyLastFrame(videoId);
 			}
 
 			const resultPromise = new Promise<void>((resolve: () => void) => {
@@ -175,7 +166,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 			}),
 		] as Promise<void>[]);
 
-		this.playingVideos[videoId] = { eventEmitter: videoEmitter };
+		this.playingVideos[videoId] = videoEmitter;
 		const orientation = this.getOrientation();
 		this.bridge.socketClient.emit(PlayVideo, { uri: uriRelative, x, y, width, height, orientation });
 
@@ -191,7 +182,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 
 	private async stopVideo(videoId: string, uri: string, x: number, y: number, width: number, height: number) {
 		const uriRelative = this.stripFileSystemRootFromUri(uri);
-		const videoEmitter = this.playingVideos[videoId].eventEmitter;
+		const videoEmitter = this.playingVideos[videoId];
 		const resultRacePromise = Promise.race([
 			new Promise<void>((resolve: () => void) => videoEmitter.once('stopped', resolve)),
 			new Promise<void>((resolve: () => void) => videoEmitter.once('error', resolve)),
@@ -201,9 +192,9 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		await resultRacePromise;
 	}
 
-	private showLastFrame(videoId: string, uri: string, x: number, y: number, width: number, height: number) {
-		if (!this.playingVideos[videoId]) {
-			throw new Error('Show last frame failed because video is not playing');
+	private prepareLastFrame(videoId: string, uri: string, x: number, y: number, width: number, height: number) {
+		if (this.window.document.getElementById(videoId)) {
+			return;
 		}
 
 		const imageSrc = getLastFramePathFromVideoPath(uri);
@@ -218,22 +209,26 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		lastFrameElement.style.backgroundRepeat = 'no-repeat';
 		lastFrameElement.style.backgroundSize = 'contain';
 		lastFrameElement.style.backgroundPosition = 'center';
+		lastFrameElement.style.visibility = 'hidden';
 		this.window.document.getElementById('body')!.appendChild(lastFrameElement);
-		this.playingVideos[videoId].lastFrame = lastFrameElement;
+	}
+
+	private showLastFrame(videoId: string) {
+		if (!this.playingVideos[videoId]) {
+			throw new Error('Show last frame failed because video is not playing');
+		}
+
+		const lastFrameElement = this.window.document.getElementById(videoId);
+		if (lastFrameElement) {
+			lastFrameElement.style.visibility = 'visible';
+		}
 	}
 
 	private destroyLastFrame(videoId: string) {
-		if (!this.playingVideos[videoId]) {
-			throw new Error('Destroy last frame failed because video is not playing');
+		const lastFrameElement = this.window.document.getElementById(videoId);
+		if (lastFrameElement) {
+			lastFrameElement.parentElement!.removeChild(lastFrameElement);
 		}
-
-		if (!this.playingVideos[videoId].lastFrame) {
-			throw new Error('Destroy last frame failed because the last frame doesn\'t exist');
-		}
-
-		const imageElement = this.playingVideos[videoId].lastFrame as HTMLElement;
-		imageElement.parentNode!.removeChild(imageElement);
-		delete this.playingVideos[videoId].lastFrame;
 	}
 
 	private listenToVideoEvents() {
@@ -259,7 +254,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		const { uri, x, y, width, height } = event;
 		const videoId = BridgeVideoPlayer.getVideoIdentificator(uri, x, y, width, height);
 		if (this.playingVideos[videoId]) {
-			this.playingVideos[videoId].eventEmitter.emit(
+			this.playingVideos[videoId].emit(
 				type,
 				{
 					type,
