@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events';
 import { ISocket } from '@signageos/lib/dist/WebSocket/socketServer';
-import IVideoPlayer from '@signageos/front-display/es6/Video/IVideoPlayer';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import {
 	PrepareVideo,
@@ -15,12 +14,13 @@ import {
 	AllVideosStopped,
 } from './bridgeVideoMessages';
 import IVideo from '../../node_modules/@signageos/front-display/es6/Video/IVideo';
+import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 
 const eventEmitter = new EventEmitter();
 
 export default function handleSocket(
 	socket: ISocket,
-	videoPlayer: IVideoPlayer,
+	videoPlayer: IServerVideoPlayer,
 ) {
 	forwardEventEmitterToSocket(socket);
 	listenToVideoEventsFromClient(socket, videoPlayer);
@@ -38,14 +38,14 @@ function forwardEventEmitterToSocket(socket: ISocket) {
 	});
 }
 
-function listenToVideoEventsFromClient(socket: ISocket, videoPlayer: IVideoPlayer) {
+function listenToVideoEventsFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	listenToPrepareVideoEventFromClient(socket, videoPlayer);
 	listenToPlayVideoEventFromClient(socket, videoPlayer);
 	listenToStopVideoEventFromClient(socket, videoPlayer);
 	listenToStopAllVideosEventFromClient(socket, videoPlayer);
 }
 
-function listenToPrepareVideoEventFromClient(socket: ISocket, videoPlayer: IVideoPlayer) {
+function listenToPrepareVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	socket.on(PrepareVideo, async (message: PrepareVideo) => {
 		const { uri, x, y, width, height } = message;
 		try {
@@ -69,12 +69,12 @@ function listenToPrepareVideoEventFromClient(socket: ISocket, videoPlayer: IVide
 	});
 }
 
-function listenToPlayVideoEventFromClient(socket: ISocket, videoPlayer: IVideoPlayer) {
+function listenToPlayVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	socket.on(PlayVideo, async (message: PlayVideo) => {
 		const { uri, x, y, width, height } = message;
 		let video: IVideo;
 		try {
-			video = await videoPlayer.play(uri, x, y, width, height);
+			video = await videoPlayer.play(uri, x, y, width, height, message.orientation);
 			video.on('ended', async (event: IVideoEvent) => {
 				eventEmitter.emit('video_event', {
 					type: VideoEnded,
@@ -115,7 +115,7 @@ function listenToPlayVideoEventFromClient(socket: ISocket, videoPlayer: IVideoPl
 	});
 }
 
-function listenToStopVideoEventFromClient(socket: ISocket, videoPlayer: IVideoPlayer) {
+function listenToStopVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	socket.on(StopVideo, async (message: StopVideo) => {
 		const { uri, x, y, width, height } = message;
 		try {
@@ -139,7 +139,7 @@ function listenToStopVideoEventFromClient(socket: ISocket, videoPlayer: IVideoPl
 	});
 }
 
-function listenToStopAllVideosEventFromClient(socket: ISocket, videoPlayer: IVideoPlayer) {
+function listenToStopAllVideosEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	socket.on(StopAllVideos, async () => {
 		await videoPlayer.clearAll();
 

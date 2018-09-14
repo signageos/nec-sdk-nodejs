@@ -22,21 +22,24 @@ import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants'
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
 import {
-	SystemReboot,
+	FileSystemDeleteFile,
+	FileSystemDownloadFile,
+	FileSystemFileExists,
+	FileSystemGetFiles,
 	GetDeviceUid,
 	GetModel,
 	ScreenTurnOff,
 	ScreenTurnOn,
-	FileSystemGetFiles,
-	FileSystemFileExists,
-	FileSystemDownloadFile,
-	FileSystemDeleteFile,
+	SystemReboot,
 } from '../Bridge/bridgeSystemMessages';
 import BridgeVideoPlayer from './Video/BridgeVideoPlayer';
+import PrivateOrientation, { convertScreenOrientationToAngle } from './Orientation';
 
 const FS_NAMESPACE = 'front';
 
 export default class FrontDriver implements IDriver, ICacheDriver {
+
+	private static ORIENTATION_KEY: string = 'local-config-ORIENTATION_KEY';
 
 	public readonly hardware: Hardware = {
 		led: {
@@ -67,7 +70,7 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 			timeout: 30 * SECOND_IN_MS,
 		});
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
-		this.video = new BridgeVideoPlayer(window, this.fileSystemUrl, this.lock, this.bridge);
+		this.video = new BridgeVideoPlayer(window, this.fileSystemUrl, this.lock, this.bridge, () => this.getScreenOrientation());
 	}
 
 	public async getConfigurationBaseUrl(): Promise<string | null> {
@@ -84,6 +87,7 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 	}
 
 	public async onLoad(callback: () => void) {
+		this.initialize();
 		callback();
 	}
 
@@ -259,11 +263,12 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 
 	public async screenResize(
 		_baseUrl: string,
-		_orientation: Orientation,
+		orientation: Orientation,
 		_resolution: Resolution,
 		_videoOrientation?: VideoOrientation,
 	): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
+		await this.setScreenOrientation(orientation);
+		this.appRestart();
 	}
 
 	public async getSessionId(sessionIdKey: string) {
@@ -340,5 +345,78 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 
 	private getFileUri(filePath: string) {
 		return this.fileSystemUrl + '/' + filePath;
+	}
+
+	private initialize() {
+		this.screenUpdateOrientation();
+	}
+
+	private screenUpdateOrientation() {
+		const orientation = this.getScreenOrientation();
+		const rotation = convertScreenOrientationToAngle(orientation);
+
+		const body = this.window.document.getElementById('body')!;
+		body.style.webkitTransform = `rotate(${rotation}deg)`;
+		body.style.position = 'absolute';
+
+		switch (orientation) {
+			case Orientation.LANDSCAPE:
+			case Orientation.LANDSCAPE_FLIPPED:
+				body.style.width = '100vw';
+				body.style.height = '100vh';
+				body.style.left = '0';
+				body.style.top = '0';
+				break;
+			case Orientation.PORTRAIT:
+			case Orientation.PORTRAIT_FLIPPED:
+				const fixingOffset = (this.window.innerWidth - this.window.innerHeight) / 2;
+				body.style.width = '100vh';
+				body.style.height = '100vw';
+				body.style.left = fixingOffset + 'px';
+				body.style.top = '-' + fixingOffset + 'px';
+				break;
+			default:
+		}
+	}
+
+	private getScreenOrientation() {
+		const orientation = this.window.localStorage.getItem(FrontDriver.ORIENTATION_KEY) as PrivateOrientation;
+		if (!orientation) {
+			return Orientation.LANDSCAPE;
+		}
+
+		switch (orientation) {
+			case PrivateOrientation.PORTRAIT:
+				return Orientation.PORTRAIT;
+			case PrivateOrientation.PORTRAIT_FLIPPED:
+				return Orientation.PORTRAIT_FLIPPED;
+			case PrivateOrientation.LANDSCAPE_FLIPPED:
+				return Orientation.LANDSCAPE_FLIPPED;
+			default:
+				return Orientation.LANDSCAPE;
+		}
+	}
+
+	private setScreenOrientation(orientation: Orientation) {
+		let privateOrientation: PrivateOrientation;
+
+		switch (orientation) {
+			case Orientation.LANDSCAPE:
+				privateOrientation = PrivateOrientation.LANDSCAPE;
+				break;
+			case Orientation.LANDSCAPE_FLIPPED:
+				privateOrientation = PrivateOrientation.LANDSCAPE_FLIPPED;
+				break;
+			case Orientation.PORTRAIT:
+				privateOrientation = PrivateOrientation.PORTRAIT;
+				break;
+			case Orientation.PORTRAIT_FLIPPED:
+				privateOrientation = PrivateOrientation.PORTRAIT_FLIPPED;
+				break;
+			default:
+				throw new Error('Invalid orientation');
+		}
+
+		this.window.localStorage.setItem(FrontDriver.ORIENTATION_KEY, privateOrientation as string);
 	}
 }

@@ -4,12 +4,12 @@ import * as express from 'express';
 import * as cors from 'cors';
 import * as bodyParser from 'body-parser';
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
-import IVideoPlayer from '@signageos/front-display/es6/Video/IVideoPlayer';
 import { ISocketServerWrapper, ISocket } from '@signageos/lib/dist/WebSocket/socketServer';
 import { createWsSocketServer } from '@signageos/lib/dist/WebSocket/wsServerFactory';
 import handleMessage, { InvalidMessageError } from './handleMessage';
 import handleSocket from './handleSocket';
 import IFileSystem from '../FileSystem/IFileSystem';
+import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 
 export default class BridgeServer {
 
@@ -21,7 +21,7 @@ export default class BridgeServer {
 		private serverUrl: string,
 		private fileSystem: IFileSystem,
 		private nativeDriver: IBasicDriver,
-		private videoPlayer: IVideoPlayer,
+		private videoPlayer: IServerVideoPlayer,
 	) {
 		this.expressApp = express();
 		this.httpServer = http.createServer(this.expressApp);

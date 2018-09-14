@@ -5,19 +5,25 @@ import IVideo from '@signageos/front-display/es6/Video/IVideo';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import BridgeClient from '../../Bridge/BridgeClient';
 import {
-	PrepareVideo,
+	AllVideosStopped,
 	PlayVideo,
-	StopVideo,
+	PrepareVideo,
 	StopAllVideos,
+	StopVideo,
+	VideoEnded,
+	VideoError,
 	VideoPrepared,
 	VideoStarted,
-	VideoEnded,
 	VideoStopped,
-	VideoError,
-	AllVideosStopped,
 } from '../../Bridge/bridgeVideoMessages';
 import { checksumString } from '../../../node_modules/@signageos/front-display/es6/Hash/checksum';
-import { getLastFramePathFromVideoPath } from './helper';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import {
+	convertToLandscapeFlipped,
+	convertToPortrait,
+	convertToPortraitFlipped,
+	getLastFramePathFromVideoPath,
+} from './helper';
 
 export default class BridgeVideoPlayer implements IVideoPlayer {
 
@@ -38,6 +44,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		private fileSystemUrl: string,
 		private lock: AsyncLock,
 		private bridge: BridgeClient,
+		private getOrientation: () => Orientation,
 	) {
 		this.listenToVideoEvents();
 	}
@@ -45,36 +52,45 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 	public async prepare(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		return await this.lock.acquire('video', async () => {
 			const uriRelative = this.stripFileSystemRootFromUri(uri);
-			const videoId = BridgeVideoPlayer.getVideoIdentificator(uriRelative, x, y, width, height);
-			await this.prepareVideo(videoId, uri, x, y, width, height);
+			const coordinates = this.convertCoordinatesToMatchOrientation(x, y, width, height);
+			const videoId = BridgeVideoPlayer.getVideoIdentificator(
+				uriRelative, coordinates.x, coordinates.y, coordinates.width, coordinates.height,
+			);
+			await this.prepareVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
 		});
 	}
 
 	public async play(uri: string, x: number, y: number, width: number, height: number): Promise<IVideo> {
 		return await this.lock.acquire('video', async () => {
 			const uriRelative = this.stripFileSystemRootFromUri(uri);
-			const videoId = BridgeVideoPlayer.getVideoIdentificator(uriRelative, x, y, width, height);
+			const coordinates = this.convertCoordinatesToMatchOrientation(x, y, width, height);
+			const videoId = BridgeVideoPlayer.getVideoIdentificator(
+				uriRelative, coordinates.x, coordinates.y, coordinates.width, coordinates.height,
+			);
 			if (this.playingVideos[videoId]) {
 				throw new Error(`Video is already playing: ${uri}, ${x}, ${y}, ${width}, ${height}`);
 			}
 
-			await this.prepareVideo(videoId, uri, x, y, width, height);
-			const videoEventEmitter = await this.playVideo(videoId, uri, x, y, width, height);
-			await this.showLastFrame(videoId, uri, x, y, width, height);
+			await this.prepareVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
+			const videoEventEmitter = await this.playVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
+			await this.showLastFrame(videoId, uri, x, y, width, height); // original coordinates on purpose
 
-			return videoEventEmitter;
+			return this.convertEventEmitterWithConvertedCoordinatesBackToOriginalCoordinates(videoEventEmitter, x, y, width, height);
 		});
 	}
 
 	public async stop(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		await this.lock.acquire('video', async () => {
 			const uriRelative = this.stripFileSystemRootFromUri(uri);
-			const videoId = BridgeVideoPlayer.getVideoIdentificator(uriRelative, x, y, width, height);
+			const coordinates = this.convertCoordinatesToMatchOrientation(x, y, width, height);
+			const videoId = BridgeVideoPlayer.getVideoIdentificator(
+				uriRelative, coordinates.x, coordinates.y, coordinates.width, coordinates.height,
+			);
 			if (!this.playingVideos[videoId]) {
 				throw new Error(`Video is not playing: ${uri}, ${x}, ${y}, ${width}, ${height}`);
 			}
 
-			await this.stopVideo(videoId, uri, x, y, width, height);
+			await this.stopVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
 
 			if (this.playingVideos[videoId].lastFrame) {
 				this.destroyLastFrame(videoId);
@@ -147,7 +163,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		this.preparedVideoIds.push(videoId);
 	}
 
-	private async playVideo(videoId: string, uri: string, x: number, y: number, width: number, height: number) {
+	private async playVideo(videoId: string, uri: string, x: number, y: number, width: number, height: number): Promise<IVideo> {
 		const uriRelative = this.stripFileSystemRootFromUri(uri);
 		const videoEmitter = new EventEmitter();
 		const resultRacePromise = Promise.race([
@@ -160,7 +176,8 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		] as Promise<void>[]);
 
 		this.playingVideos[videoId] = { eventEmitter: videoEmitter };
-		this.bridge.socketClient.emit(PlayVideo, { uri: uriRelative, x, y, width, height });
+		const orientation = this.getOrientation();
+		this.bridge.socketClient.emit(PlayVideo, { uri: uriRelative, x, y, width, height, orientation });
 
 		try {
 			await resultRacePromise;
@@ -201,7 +218,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		lastFrameElement.style.backgroundRepeat = 'no-repeat';
 		lastFrameElement.style.backgroundSize = 'contain';
 		lastFrameElement.style.backgroundPosition = 'center';
-		this.window.document.body.appendChild(lastFrameElement);
+		this.window.document.getElementById('body')!.appendChild(lastFrameElement);
 		this.playingVideos[videoId].lastFrame = lastFrameElement;
 	}
 
@@ -215,27 +232,27 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		}
 
 		const imageElement = this.playingVideos[videoId].lastFrame as HTMLElement;
-		this.window.document.body.removeChild(imageElement);
+		imageElement.parentNode!.removeChild(imageElement);
 		delete this.playingVideos[videoId].lastFrame;
 	}
 
 	private listenToVideoEvents() {
 		const socketClient = this.bridge.socketClient;
-		socketClient.on(VideoStarted, async (event: VideoStarted) => {
-			await this.emitVideoEvent('started', event);
+		socketClient.on(VideoStarted, (event: VideoStarted) => {
+			this.emitVideoEvent('started', event);
 		});
-		socketClient.on(VideoEnded, async (event: VideoEnded) => {
-			await this.emitVideoEvent('ended', event);
+		socketClient.on(VideoEnded, (event: VideoEnded) => {
+			this.emitVideoEvent('ended', event);
 		});
-		socketClient.on(VideoStopped, async (event: VideoStopped) => {
-			await this.emitVideoEvent('stopped', event);
+		socketClient.on(VideoStopped, (event: VideoStopped) => {
+			this.emitVideoEvent('stopped', event);
 		});
-		socketClient.on(VideoError, async (event: VideoError) => {
-			await this.emitVideoEvent('error', event);
+		socketClient.on(VideoError, (event: VideoError) => {
+			this.emitVideoEvent('error', event);
 		});
 	}
 
-	private async emitVideoEvent(
+	private emitVideoEvent(
 		type: string,
 		event: VideoStarted | VideoEnded | VideoStopped | VideoError,
 	) {
@@ -263,5 +280,50 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		}
 
 		throw new Error('Videos can only be played from local storage. Supply full URI.');
+	}
+
+	private convertCoordinatesToMatchOrientation(x: number, y: number, width: number, height: number) {
+		const orientation = this.getOrientation();
+
+		switch (orientation) {
+			case Orientation.PORTRAIT:
+				return convertToPortrait(this.window, x, y, width, height);
+			case Orientation.PORTRAIT_FLIPPED:
+				return convertToPortraitFlipped(this.window, x, y, width, height);
+			case Orientation.LANDSCAPE_FLIPPED:
+				return convertToLandscapeFlipped(this.window, x, y, width, height);
+			default:
+				return { x, y, width, height };
+		}
+	}
+
+	private convertEventEmitterWithConvertedCoordinatesBackToOriginalCoordinates(
+		videoEmitter: IVideo,
+		originalX: number,
+		originalY: number,
+		originalWidth: number,
+		originalHeight: number,
+	): IVideo {
+		const convertedVideoEmitter = new EventEmitter();
+		const convertEvent = (event: IVideoEvent) => ({
+			...event,
+			srcArguments: {
+				uri: event.srcArguments.uri,
+				x: originalX,
+				y: originalY,
+				width: originalWidth,
+				height: originalHeight,
+			},
+		});
+
+		videoEmitter.on('ended', (event: IVideoEvent) => convertedVideoEmitter.emit('ended', convertEvent(event)));
+		videoEmitter.on('error', (event: IVideoEvent) => convertedVideoEmitter.emit('error', convertEvent(event)));
+		videoEmitter.on('stopped', (event: IVideoEvent) => convertedVideoEmitter.emit('stopped', convertEvent(event)));
+
+		// "error" event type is treated as a special case and has to have at least one listener or it can crash the whole process
+		// https://nodejs.org/api/events.html#events_error_events
+		convertedVideoEmitter.on('error', (event: IVideoEvent) => console.log('video error', event));
+
+		return convertedVideoEmitter;
 	}
 }

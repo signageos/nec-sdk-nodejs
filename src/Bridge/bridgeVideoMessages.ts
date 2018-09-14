@@ -1,3 +1,5 @@
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+
 export const PrepareVideo = 'Video.PrepareVideo';
 export interface PrepareVideo {
 	type: typeof PrepareVideo;
@@ -16,6 +18,7 @@ export interface PlayVideo {
 	y: number;
 	width: number;
 	height: number;
+	orientation: Orientation;
 }
 
 export const StopVideo = 'Video.StopVideo';

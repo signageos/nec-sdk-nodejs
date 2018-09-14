@@ -1,17 +1,18 @@
 import { EventEmitter } from 'events';
 import * as path from 'path';
 import { promisify } from 'util';
-import { ChildProcess, spawn, exec } from "child_process";
+import { ChildProcess, exec, spawn } from "child_process";
 import * as AsyncLock from 'async-lock';
 import { checksumString } from '@signageos/front-display/es6/Hash/checksum';
-import IVideoPlayer from '@signageos/front-display/es6/Video/IVideoPlayer';
 import IVideo from '@signageos/front-display/es6/Video/IVideo';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import wait from '@signageos/lib/dist/Timer/wait';
 import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import IFileSystem from '../../FileSystem/IFileSystem';
 import { getLastFramePathFromVideoPath } from './helper';
+import IServerVideoPlayer from './IServerVideoPlayer';
 
-export default class OmxplayerVideoPlayer implements IVideoPlayer {
+export default class OmxplayerVideoPlayer implements IServerVideoPlayer {
 
 	private videoProcesses: {
 		[videoId: string]: {
@@ -47,7 +48,7 @@ export default class OmxplayerVideoPlayer implements IVideoPlayer {
 		}
 	}
 
-	public async play(uri: string, x: number, y: number, width: number, height: number): Promise<IVideo> {
+	public async play(uri: string, x: number, y: number, width: number, height: number, orientation: Orientation): Promise<IVideo> {
 		return await this.lock.acquire('video', async () => {
 			const videoId = OmxplayerVideoPlayer.getVideoIdentificator(uri, x, y, width, height);
 			if (this.videoProcesses[videoId]) {
@@ -60,7 +61,7 @@ export default class OmxplayerVideoPlayer implements IVideoPlayer {
 				throw new Error('Video not found');
 			}
 
-			return await this.runVideoChildProcess(videoId, uri, x, y, width, height);
+			return await this.runVideoChildProcess(videoId, uri, x, y, width, height, orientation);
 		});
 
 	}
@@ -120,8 +121,17 @@ export default class OmxplayerVideoPlayer implements IVideoPlayer {
 		delete this.videoProcesses[videoId];
 	}
 
-	private async runVideoChildProcess(videoId: string, uri: string, x: number, y: number, width: number, height: number) {
+	private async runVideoChildProcess(
+		videoId: string,
+		uri: string,
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		orientation: Orientation,
+	) {
 		const videoFullPath = this.fileSystem.getFullPath(uri);
+		const rotationAngle = this.convertOrientationToRotationAngle(orientation);
 		const videoProcess = spawn(
 			'omxplayer',
 			[
@@ -131,6 +141,8 @@ export default class OmxplayerVideoPlayer implements IVideoPlayer {
 				'letterbox',
 				'--win',
 				`${x},${y},${width},${height}`,
+				'--orientation',
+				rotationAngle,
 				videoFullPath,
 			] as ReadonlyArray<string>,
 		);
@@ -179,5 +191,18 @@ export default class OmxplayerVideoPlayer implements IVideoPlayer {
 		});
 
 		return eventEmitter;
+	}
+
+	private convertOrientationToRotationAngle(orientation: Orientation) {
+		switch (orientation) {
+			case Orientation.PORTRAIT:
+				return 90;
+			case Orientation.LANDSCAPE_FLIPPED:
+				return 180;
+			case Orientation.PORTRAIT_FLIPPED:
+				return 270;
+			default:
+				return 0;
+		}
 	}
 }
