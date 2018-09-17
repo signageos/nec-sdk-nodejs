@@ -48,20 +48,26 @@ export default class OmxplayerVideoPlayer implements IServerVideoPlayer {
 		}
 	}
 
-	public async play(uri: string, x: number, y: number, width: number, height: number, orientation: Orientation): Promise<IVideo> {
+	public async play(
+		uri: string,
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		orientation: Orientation,
+		isStream: boolean,
+	): Promise<IVideo> {
 		return await this.lock.acquire('video', async () => {
 			const videoId = OmxplayerVideoPlayer.getVideoIdentificator(uri, x, y, width, height);
 			if (this.videoProcesses[videoId]) {
 				throw new Error('Video is already playing');
 			}
 
-			if (!(await this.fileSystem.pathExists(uri)) ||
-				!(await this.fileSystem.isFile(uri))
-			) {
+			if (!isStream && (!(await this.fileSystem.pathExists(uri)) || !(await this.fileSystem.isFile(uri)))) {
 				throw new Error('Video not found');
 			}
 
-			return await this.runVideoChildProcess(videoId, uri, x, y, width, height, orientation);
+			return await this.runVideoChildProcess(videoId, uri, x, y, width, height, orientation, isStream);
 		});
 
 	}
@@ -129,23 +135,27 @@ export default class OmxplayerVideoPlayer implements IServerVideoPlayer {
 		width: number,
 		height: number,
 		orientation: Orientation,
+		isStream: boolean,
 	) {
-		const videoFullPath = this.fileSystem.getFullPath(uri);
+		const videoFullPath = isStream ? uri : this.fileSystem.getFullPath(uri);
 		const rotationAngle = this.convertOrientationToRotationAngle(orientation);
-		const videoProcess = spawn(
-			'omxplayer',
-			[
-				'--threshold',
-				'1',
-				'--aspect-mode',
-				'letterbox',
-				'--win',
-				`${x},${y},${width},${height}`,
-				'--orientation',
-				rotationAngle,
-				videoFullPath,
-			] as ReadonlyArray<string>,
-		);
+
+		const processArgs = [
+			'--threshold',
+			'1',
+			'--aspect-mode',
+			'letterbox',
+			'--win',
+			`${x},${y},${width},${height}`,
+			'--orientation',
+			rotationAngle,
+		];
+
+		if (isStream) {
+			processArgs.push('--live');
+		}
+
+		const videoProcess = spawn('omxplayer', [ ...processArgs, videoFullPath ] as ReadonlyArray<string>);
 		const videoEventEmitter = this.createVideoEventEmitter(uri, x, y, width, height, videoProcess);
 		this.videoProcesses[videoId] = { process: videoProcess, running: true, uri, x, y, width, height };
 

@@ -19,6 +19,7 @@ export interface PlayVideo {
 	width: number;
 	height: number;
 	orientation: Orientation;
+	isStream: boolean;
 }
 
 export const StopVideo = 'Video.StopVideo';

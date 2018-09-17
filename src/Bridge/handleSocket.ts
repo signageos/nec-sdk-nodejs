@@ -74,7 +74,7 @@ function listenToPlayVideoEventFromClient(socket: ISocket, videoPlayer: IServerV
 		const { uri, x, y, width, height } = message;
 		let video: IVideo;
 		try {
-			video = await videoPlayer.play(uri, x, y, width, height, message.orientation);
+			video = await videoPlayer.play(uri, x, y, width, height, message.orientation, message.isStream);
 			video.on('ended', async (event: IVideoEvent) => {
 				eventEmitter.emit('video_event', {
 					type: VideoEnded,

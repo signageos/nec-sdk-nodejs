@@ -5,91 +5,56 @@ import IVideo from '@signageos/front-display/es6/Video/IVideo';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import BridgeClient from '../../Bridge/BridgeClient';
 import {
-	AllVideosStopped,
-	PlayVideo,
-	PrepareVideo,
-	StopAllVideos,
-	StopVideo,
-	VideoEnded,
-	VideoError,
-	VideoPrepared,
-	VideoStarted,
-	VideoStopped,
-} from '../../Bridge/bridgeVideoMessages';
-import { checksumString } from '../../../node_modules/@signageos/front-display/es6/Hash/checksum';
-import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
-import {
-	convertToLandscapeFlipped,
-	convertToPortrait,
-	convertToPortraitFlipped,
 	getLastFramePathFromVideoPath,
+	getVideoIdentificator,
 } from './helper';
 
 export default class BridgeVideoPlayer implements IVideoPlayer {
 
-	private preparedVideoIds: string[] = [];
-	private playingVideos: { [videoId: string]: EventEmitter } = {};
-
-	private static getVideoIdentificator(uri: string, x: number, y: number, width: number, height: number) {
-		return checksumString(uri) + '_' + x + 'x' + y + '-' + width + 'x' + height;
-	}
+	private videoLastFrameIds: string[] = [];
 
 	constructor(
 		private window: Window,
 		private fileSystemUrl: string,
 		private lock: AsyncLock,
 		private bridge: BridgeClient,
-		private getOrientation: () => Orientation,
-	) {
-		this.listenToVideoEvents();
-	}
+	) {}
 
 	public async prepare(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		return await this.lock.acquire('video', async () => {
 			const uriRelative = this.stripFileSystemRootFromUri(uri);
-			const coordinates = this.convertCoordinatesToMatchOrientation(x, y, width, height);
-			const videoId = BridgeVideoPlayer.getVideoIdentificator(
-				uriRelative, coordinates.x, coordinates.y, coordinates.width, coordinates.height,
-			);
-			await this.prepareVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
-			this.prepareLastFrame(videoId, uri, x, y, width, height); // original coordinates on purpose
+
+			if (this.bridge.video.isVideoPlaying(uriRelative, x, y, width, height)) {
+				throw new Error(`Video is already playing: ${uri}, ${x}, ${y}, ${width}, ${height}`);
+			}
+
+			await this.bridge.video.prepareVideo(uriRelative, x, y, width, height);
+			this.prepareLastFrame(uri, x, y, width, height);
 		});
 	}
 
 	public async play(uri: string, x: number, y: number, width: number, height: number): Promise<IVideo> {
 		return await this.lock.acquire('video', async () => {
 			const uriRelative = this.stripFileSystemRootFromUri(uri);
-			const coordinates = this.convertCoordinatesToMatchOrientation(x, y, width, height);
-			const videoId = BridgeVideoPlayer.getVideoIdentificator(
-				uriRelative, coordinates.x, coordinates.y, coordinates.width, coordinates.height,
-			);
-			if (this.playingVideos[videoId]) {
+
+			if (this.bridge.video.isVideoPlaying(uriRelative, x, y, width, height)) {
 				throw new Error(`Video is already playing: ${uri}, ${x}, ${y}, ${width}, ${height}`);
 			}
 
-			await this.prepareVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
-			this.prepareLastFrame(videoId, uri, x, y, width, height);
-			const videoEventEmitter = await this.playVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
-			this.showLastFrame(videoId); // original coordinates on purpose
+			await this.bridge.video.prepareVideo(uriRelative, x, y, width, height);
+			this.prepareLastFrame(uri, x, y, width, height);
+			const videoEventEmitter = await this.bridge.video.playVideo(uriRelative, x, y, width, height, false);
+			this.showLastFrame(uri, x, y, width, height);
 
-			return this.convertEventEmitterWithConvertedCoordinatesBackToOriginalCoordinates(videoEventEmitter, x, y, width, height);
+			return this.convertEventEmitterWithRelativeUriToAbsoluteUri(videoEventEmitter);
 		});
 	}
 
 	public async stop(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		await this.lock.acquire('video', async () => {
 			const uriRelative = this.stripFileSystemRootFromUri(uri);
-			const coordinates = this.convertCoordinatesToMatchOrientation(x, y, width, height);
-			const videoId = BridgeVideoPlayer.getVideoIdentificator(
-				uriRelative, coordinates.x, coordinates.y, coordinates.width, coordinates.height,
-			);
-			if (!this.playingVideos[videoId]) {
-				throw new Error(`Video is not playing: ${uri}, ${x}, ${y}, ${width}, ${height}`);
-			}
-
-			await this.stopVideo(videoId, uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
-			this.destroyLastFrame(videoId);
-			delete this.playingVideos[videoId];
+			await this.bridge.video.stopVideo(uriRelative, x, y, width, height, false);
+			this.destroyLastFrame(uri, x, y, width, height);
 		});
 	}
 
@@ -103,97 +68,14 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 
 	public async clearAll(): Promise<void> {
 		await this.lock.acquire('video', async () => {
-			for (let videoId of Object.keys(this.playingVideos)) {
-				this.destroyLastFrame(videoId);
-			}
-
-			const resultPromise = new Promise<void>((resolve: () => void) => {
-				this.bridge.socketClient.once(AllVideosStopped, resolve);
-			});
-
-			this.bridge.socketClient.emit(StopAllVideos, {});
-			await resultPromise;
-			this.playingVideos = {};
-			this.preparedVideoIds = [];
+			this.destroyAllLastFrames();
 		});
 	}
 
-	private async prepareVideo(videoId: string, uri: string, x: number, y: number, width: number, height: number) {
-		if (this.preparedVideoIds.indexOf(videoId) >= 0) {
-			return;
-		}
+	private prepareLastFrame(uri: string, x: number, y: number, width: number, height: number) {
+		const videoId = getVideoIdentificator(uri, x, y, width, height);
 
-		const uriRelative = this.stripFileSystemRootFromUri(uri);
-		const socketClient = this.bridge.socketClient;
-
-		const resultPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-			let successListener: (message: any) => void;
-			let errorListener: (message: any) => void;
-
-			successListener = (event: VideoPrepared) => {
-				if (event.uri === uriRelative && event.x === x && event.y === y && event.width === width && event.height === height) {
-					socketClient.removeListener(VideoPrepared, successListener);
-					resolve();
-				}
-			};
-
-			errorListener = (event: VideoError) => {
-				if (event.uri === uriRelative && event.x === x && event.y === y && event.width === width && event.height === height) {
-					socketClient.removeListener(VideoError, errorListener);
-					reject(new Error('Failed to prepare video'));
-				}
-			};
-
-			this.bridge.socketClient.on(VideoPrepared, successListener);
-			this.bridge.socketClient.on(VideoError, errorListener);
-		});
-
-		socketClient.emit(PrepareVideo, { uri: uriRelative, x, y, width, height });
-		await resultPromise;
-
-		this.preparedVideoIds.push(videoId);
-	}
-
-	private async playVideo(videoId: string, uri: string, x: number, y: number, width: number, height: number): Promise<IVideo> {
-		const uriRelative = this.stripFileSystemRootFromUri(uri);
-		const videoEmitter = new EventEmitter();
-		const resultRacePromise = Promise.race([
-			new Promise<void>((resolve: () => void) => {
-				videoEmitter.once('started', resolve);
-			}),
-			new Promise<void>((_resolve: () => void, reject: (error: Error) => void) => {
-				videoEmitter.once('error', () => reject(new Error('Failed to play video')));
-			}),
-		] as Promise<void>[]);
-
-		this.playingVideos[videoId] = videoEmitter;
-		const orientation = this.getOrientation();
-		this.bridge.socketClient.emit(PlayVideo, { uri: uriRelative, x, y, width, height, orientation });
-
-		try {
-			await resultRacePromise;
-		} catch (error) {
-			delete this.playingVideos[videoId];
-			throw error;
-		}
-
-		return videoEmitter;
-	}
-
-	private async stopVideo(videoId: string, uri: string, x: number, y: number, width: number, height: number) {
-		const uriRelative = this.stripFileSystemRootFromUri(uri);
-		const videoEmitter = this.playingVideos[videoId];
-		const resultRacePromise = Promise.race([
-			new Promise<void>((resolve: () => void) => videoEmitter.once('stopped', resolve)),
-			new Promise<void>((resolve: () => void) => videoEmitter.once('error', resolve)),
-		] as Promise<void>[]);
-
-		this.bridge.socketClient.emit(StopVideo, { uri: uriRelative, x, y, width, height });
-		await resultRacePromise;
-	}
-
-	private prepareLastFrame(videoId: string, uri: string, x: number, y: number, width: number, height: number) {
-		if (this.window.document.getElementById(videoId)) {
+		if (this.videoLastFrameIds.indexOf(videoId) >= 0) {
 			return;
 		}
 
@@ -211,61 +93,38 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		lastFrameElement.style.backgroundPosition = 'center';
 		lastFrameElement.style.visibility = 'hidden';
 		this.window.document.getElementById('body')!.appendChild(lastFrameElement);
+
+		this.videoLastFrameIds.push(videoId);
 	}
 
-	private showLastFrame(videoId: string) {
-		if (!this.playingVideos[videoId]) {
-			throw new Error('Show last frame failed because video is not playing');
-		}
-
+	private showLastFrame(uri: string, x: number, y: number, width: number, height: number) {
+		const videoId = getVideoIdentificator(uri, x, y, width, height);
 		const lastFrameElement = this.window.document.getElementById(videoId);
 		if (lastFrameElement) {
 			lastFrameElement.style.visibility = 'visible';
 		}
 	}
 
-	private destroyLastFrame(videoId: string) {
+	private destroyLastFrame(uri: string, x: number, y: number, width: number, height: number) {
+		const videoId = getVideoIdentificator(uri, x, y, width, height);
 		const lastFrameElement = this.window.document.getElementById(videoId);
 		if (lastFrameElement) {
-			lastFrameElement.parentElement!.removeChild(lastFrameElement);
+			this.window.document.getElementById('body')!.removeChild(lastFrameElement);
 		}
+
+		this.videoLastFrameIds = this.videoLastFrameIds.filter((lastFrameId: string) => lastFrameId !== videoId);
 	}
 
-	private listenToVideoEvents() {
-		const socketClient = this.bridge.socketClient;
-		socketClient.on(VideoStarted, (event: VideoStarted) => {
-			this.emitVideoEvent('started', event);
-		});
-		socketClient.on(VideoEnded, (event: VideoEnded) => {
-			this.emitVideoEvent('ended', event);
-		});
-		socketClient.on(VideoStopped, (event: VideoStopped) => {
-			this.emitVideoEvent('stopped', event);
-		});
-		socketClient.on(VideoError, (event: VideoError) => {
-			this.emitVideoEvent('error', event);
-		});
-	}
-
-	private emitVideoEvent(
-		type: string,
-		event: VideoStarted | VideoEnded | VideoStopped | VideoError,
-	) {
-		const { uri, x, y, width, height } = event;
-		const videoId = BridgeVideoPlayer.getVideoIdentificator(uri, x, y, width, height);
-		if (this.playingVideos[videoId]) {
-			this.playingVideos[videoId].emit(
-				type,
-				{
-					type,
-					srcArguments: {
-						uri: this.fileSystemUrl + '/' + uri,
-						x, y, width, height,
-					},
-					data: (event as any).data,
-				} as IVideoEvent,
-			);
+	private destroyAllLastFrames() {
+		const body = this.window.document.getElementById('body')!;
+		for (let videoId of this.videoLastFrameIds) {
+			const lastFrameElement = this.window.document.getElementById(videoId);
+			if (lastFrameElement) {
+				body.removeChild(lastFrameElement);
+			}
 		}
+
+		this.videoLastFrameIds = [];
 	}
 
 	private stripFileSystemRootFromUri(uri: string) {
@@ -277,37 +136,13 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		throw new Error('Videos can only be played from local storage. Supply full URI.');
 	}
 
-	private convertCoordinatesToMatchOrientation(x: number, y: number, width: number, height: number) {
-		const orientation = this.getOrientation();
-
-		switch (orientation) {
-			case Orientation.PORTRAIT:
-				return convertToPortrait(this.window, x, y, width, height);
-			case Orientation.PORTRAIT_FLIPPED:
-				return convertToPortraitFlipped(this.window, x, y, width, height);
-			case Orientation.LANDSCAPE_FLIPPED:
-				return convertToLandscapeFlipped(this.window, x, y, width, height);
-			default:
-				return { x, y, width, height };
-		}
-	}
-
-	private convertEventEmitterWithConvertedCoordinatesBackToOriginalCoordinates(
-		videoEmitter: IVideo,
-		originalX: number,
-		originalY: number,
-		originalWidth: number,
-		originalHeight: number,
-	): IVideo {
+	private convertEventEmitterWithRelativeUriToAbsoluteUri(videoEmitter: IVideo) {
 		const convertedVideoEmitter = new EventEmitter();
 		const convertEvent = (event: IVideoEvent) => ({
 			...event,
 			srcArguments: {
-				uri: event.srcArguments.uri,
-				x: originalX,
-				y: originalY,
-				width: originalWidth,
-				height: originalHeight,
+				...event.srcArguments,
+				uri: this.fileSystemUrl + '/' + event.srcArguments.uri,
 			},
 		});
 
@@ -317,7 +152,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 
 		// "error" event type is treated as a special case and has to have at least one listener or it can crash the whole process
 		// https://nodejs.org/api/events.html#events_error_events
-		convertedVideoEmitter.on('error', (event: IVideoEvent) => console.log('video error', event));
+		convertedVideoEmitter.on('error', () => { /* do nothing */ });
 
 		return convertedVideoEmitter;
 	}

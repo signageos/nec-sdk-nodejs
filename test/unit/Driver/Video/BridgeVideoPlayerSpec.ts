@@ -3,10 +3,8 @@ import { EventEmitter } from 'events';
 import * as sinon from 'sinon';
 import * as AsyncLock from 'async-lock';
 import {
-	AllVideosStopped,
 	PlayVideo,
 	PrepareVideo,
-	StopAllVideos,
 	StopVideo,
 	VideoEnded,
 	VideoError,
@@ -18,112 +16,51 @@ import BridgeVideoPlayer from '../../../../src/Driver/Video/BridgeVideoPlayer';
 import IVideoEvent from '../../../../node_modules/@signageos/front-display/es6/Video/IVideoEvent';
 import { checksumString } from '@signageos/front-display/es6/Hash/checksum';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
-import { convertToPortrait } from '../../../../src/Driver/Video/helper';
+import BridgeVideoClient from '../../../../src/Bridge/BridgeVideoClient';
+import {
+	playVideo,
+	prepareVideo,
+} from './management';
 
 describe('Driver.Video.BridgeVideoPlayer', function () {
 
-	async function prepareVideo(
-		window: Window,
-		bridgeVideoPlayer: BridgeVideoPlayer,
-		socketClient: EventEmitter,
-		uri: string,
-		uriRelative: string,
-		x: number,
-		y: number,
-		width: number,
-		height: number,
-		orientation: Orientation = Orientation.LANDSCAPE,
-	) {
-		const coordinates = orientation === Orientation.PORTRAIT
-			? convertToPortrait(window, x, y, width, height)
-			: { x, y, width, height };
-
-		const prepareVideoEmittedPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-			socketClient.once(PrepareVideo, (event: { uri: string; x: number; y: number; width: number; height: number }) => {
-				if (event.uri === uriRelative &&
-					event.x === coordinates.x &&
-					event.y === coordinates.y &&
-					event.width === coordinates.width &&
-					event.height === coordinates.height
-				) {
-					resolve();
-				} else {
-					reject(new Error('Attempt to play video with unexpected arguments'));
-				}
-			});
-		});
-
-		const prepareVideoPromise = bridgeVideoPlayer.prepare(uri, x, y, width, height);
-		await prepareVideoEmittedPromise;
-		socketClient.emit(VideoPrepared, {
-			uri: uriRelative,
-			x: coordinates.x,
-			y: coordinates.y,
-			width: coordinates.width,
-			height: coordinates.height,
-		});
-		return await prepareVideoPromise;
-	}
-
-	async function playVideo(
-		window: Window,
-		bridgeVideoPlayer: BridgeVideoPlayer,
-		socketClient: EventEmitter,
-		uri: string,
-		uriRelative: string,
-		x: number,
-		y: number,
-		width: number,
-		height: number,
-		orientation: Orientation = Orientation.LANDSCAPE,
-	) {
-		await prepareVideo(window, bridgeVideoPlayer, socketClient, uri, uriRelative, x, y, width, height, orientation);
-
-		const coordinates = orientation === Orientation.PORTRAIT
-			? convertToPortrait(window, x, y, width, height)
-			: { x, y, width, height };
-
-		const playVideoEmittedPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-			socketClient.once(PlayVideo, (event: { uri: string; x: number; y: number; width: number; height: number }) => {
-				if (event.uri === uriRelative &&
-					event.x === coordinates.x &&
-					event.y === coordinates.y &&
-					event.width === coordinates.width &&
-					event.height === coordinates.height
-				) {
-					resolve();
-				} else {
-					reject(new Error('Attempt to play video with unexpected arguments'));
-				}
-			});
-		});
-
-		const playVideoPromise = bridgeVideoPlayer.play(uri, x, y, width, height);
-		await playVideoEmittedPromise;
-		socketClient.emit(VideoStarted, {
-			uri: uriRelative,
-			x: coordinates.x,
-			y: coordinates.y,
-			width: coordinates.width,
-			height: coordinates.height,
-		});
-		return await playVideoPromise;
-	}
-
 	function createMockWindow(): any {
+		const elements: any[] = [
+			{
+				name: 'div',
+				id: 'body',
+				appendChild: sinon.spy(),
+				removeChild: sinon.spy(),
+			},
+		];
+
 		return {
 			innerWidth: 1920,
 			innerHeight: 1080,
 			document: {
-				body: {
-					appendChild: sinon.spy(),
-					removeChild: sinon.spy(),
+				getElementById(id: string) {
+					for (let element of elements) {
+						if (element.id === id) {
+							return element;
+						}
+					}
+
+					return null;
 				},
-				createElement: (name: string) => ({
-					name,
-					style: {},
-				}),
+				createElement: (name: string) => {
+					const element = { name, style: {} };
+					elements.push(element);
+					return element;
+				},
 			},
+		};
+	}
+
+	function createMockBridge(window: Window, orientation: Orientation, lock: AsyncLock): any {
+		const socketClient = new EventEmitter() as any;
+		return {
+			socketClient,
+			video: new BridgeVideoClient(window, () => orientation, lock, socketClient),
 		};
 	}
 
@@ -132,8 +69,8 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 		it('should resolve', async function () {
 			const window = createMockWindow();
 			const lock = new AsyncLock();
-			const socketClient = new EventEmitter();
-			const bridge = { socketClient };
+			const bridge = createMockBridge(window, Orientation.LANDSCAPE, lock);
+			const socketClient = bridge.socketClient;
 
 			const prepareVideoEmittedPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
 				socketClient.once(PrepareVideo, (event: { uri: string; x: number; y: number; width: number; height: number }) => {
@@ -146,7 +83,7 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 				});
 			});
 
-			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any, () => Orientation.LANDSCAPE);
+			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any);
 			const prepareVideoPromise = bridgeVideoPlayer.prepare('http://localhost:8081/video1', 0, 0, 1920, 1080);
 
 			await prepareVideoEmittedPromise;
@@ -157,8 +94,8 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 		it('should fail when bridge throws an error', async function () {
 			const window = createMockWindow();
 			const lock = new AsyncLock();
-			const socketClient = new EventEmitter();
-			const bridge = { socketClient };
+			const bridge = createMockBridge(window, Orientation.LANDSCAPE, lock);
+			const socketClient = bridge.socketClient;
 
 			const prepareVideoEmittedPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
 				socketClient.once(PrepareVideo, (event: { uri: string; x: number; y: number; width: number; height: number }) => {
@@ -171,7 +108,7 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 				});
 			});
 
-			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any, () => Orientation.LANDSCAPE);
+			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any);
 			const prepareVideoPromise = bridgeVideoPlayer.prepare('http://localhost:8081/video1', 0, 0, 1920, 1080);
 
 			await prepareVideoEmittedPromise;
@@ -185,16 +122,23 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 		it('should resolve and append last frame img element to body', async function () {
 			const window = createMockWindow();
 			const lock = new AsyncLock();
-			const socketClient = new EventEmitter();
-			const bridge = { socketClient };
-			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any, () => Orientation.LANDSCAPE);
+			const bridge = createMockBridge(window, Orientation.LANDSCAPE, lock);
+			const socketClient = bridge.socketClient;
+			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any);
 
 			await prepareVideo(window, bridgeVideoPlayer, socketClient, 'http://localhost:8081/video1', 'video1', 0, 0, 1920, 1080);
 
 			const playVideoEmittedPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-				socketClient.once(PlayVideo, (event: { uri: string; x: number; y: number; width: number; height: number }) => {
-					const { uri, x, y, width, height } = event;
-					if (uri === 'video1' && x === 0 && y === 0 && width === 1920 && height === 1080) {
+				socketClient.once(PlayVideo, (event: PlayVideo) => {
+					const { uri, x, y, width, height, orientation, isStream } = event;
+					if (uri === 'video1' &&
+						x === 0 &&
+						y === 0 &&
+						width === 1920 &&
+						height === 1080 &&
+						orientation === Orientation.LANDSCAPE &&
+						!isStream
+					) {
 						resolve();
 					} else {
 						reject(new Error('Attempt to play video with unexpected arguments'));
@@ -208,10 +152,11 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 			socketClient.emit(VideoStarted, { uri: 'video1', x: 0, y: 0, width: 1920, height: 1080 });
 			await playVideoPromise;
 
-			window.document.body.appendChild.callCount.should.equal(1);
-			window.document.body.appendChild.getCall(0).args[0].should.deepEqual({
+			const body = window.document.getElementById('body');
+			body.appendChild.callCount.should.equal(1);
+			body.appendChild.getCall(0).args[0].should.deepEqual({
 				name: 'div',
-				id: checksumString('video1') + '_0x0-1920x1080',
+				id: checksumString('http://localhost:8081/video1') + '_0x0-1920x1080',
 				style: {
 					position: 'absolute',
 					left: '0px',
@@ -222,6 +167,7 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 					backgroundRepeat: 'no-repeat',
 					backgroundSize: 'contain',
 					backgroundPosition: 'center',
+					visibility: 'visible',
 				},
 			});
 		});
@@ -229,16 +175,23 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 		it('should fail when bridge throws error', async function () {
 			const window = createMockWindow();
 			const lock = new AsyncLock();
-			const socketClient = new EventEmitter();
-			const bridge = { socketClient };
-			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any, () => Orientation.LANDSCAPE);
+			const bridge = createMockBridge(window, Orientation.LANDSCAPE, lock);
+			const socketClient = bridge.socketClient;
+			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any);
 
 			await prepareVideo(window, bridgeVideoPlayer, socketClient, 'http://localhost:8081/video1', 'video1', 0, 0, 1920, 1080);
 
 			const playVideoEmittedPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-				socketClient.once(PlayVideo, (event: { uri: string; x: number; y: number; width: number; height: number }) => {
-					const { uri, x, y, width, height } = event;
-					if (uri === 'video1' && x === 0 && y === 0 && width === 1920 && height === 1080) {
+				socketClient.once(PlayVideo, (event: PlayVideo) => {
+					const { uri, x, y, width, height, orientation, isStream } = event;
+					if (uri === 'video1' &&
+						x === 0 &&
+						y === 0 &&
+						width === 1920 &&
+						height === 1080 &&
+						orientation === Orientation.LANDSCAPE &&
+						!isStream
+					) {
 						resolve();
 					} else {
 						reject(new Error('Attempt to play video with unexpected arguments'));
@@ -256,9 +209,9 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 		it('should fail when trying to play same video twice', async function () {
 			const window = createMockWindow();
 			const lock = new AsyncLock();
-			const socketClient = new EventEmitter();
-			const bridge = { socketClient };
-			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any, () => Orientation.LANDSCAPE);
+			const bridge = createMockBridge(window, Orientation.LANDSCAPE, lock);
+			const socketClient = bridge.socketClient;
+			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any);
 
 			await playVideo(
 				window,
@@ -270,6 +223,7 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 				0,
 				1920,
 				1080,
+				Orientation.LANDSCAPE,
 			);
 			await bridgeVideoPlayer.play('http://localhost:8081/video1', 0, 0, 1920, 1080).should.be.rejected();
 		});
@@ -277,9 +231,9 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 		it('returns event emitter that emits correct events when they are thrown from bridge socket', async function () {
 			const window = createMockWindow();
 			const lock = new AsyncLock();
-			const socketClient = new EventEmitter();
-			const bridge = { socketClient };
-			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any, () => Orientation.LANDSCAPE);
+			const bridge = createMockBridge(window, Orientation.LANDSCAPE, lock);
+			const socketClient = bridge.socketClient;
+			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any);
 
 			const videoEmitter = await playVideo(
 				window,
@@ -291,6 +245,7 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 				0,
 				1920,
 				1080,
+				Orientation.LANDSCAPE,
 			);
 
 			async function assertEvent(listenType: string, emitType: string) {
@@ -322,9 +277,9 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 			async function () {
 				const window = createMockWindow();
 				const lock = new AsyncLock();
-				const socketClient = new EventEmitter();
-				const bridge = { socketClient };
-				const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any, () => Orientation.PORTRAIT);
+				const bridge = createMockBridge(window, Orientation.PORTRAIT, lock);
+				const socketClient = bridge.socketClient;
+				const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any);
 
 				const videoEmitter = await playVideo(
 					window,
@@ -369,9 +324,9 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 		it('should stop playing video and remove last frame img element', async function () {
 			const window = createMockWindow();
 			const lock = new AsyncLock();
-			const socketClient = new EventEmitter();
-			const bridge = { socketClient };
-			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any, () => Orientation.LANDSCAPE);
+			const bridge = createMockBridge(window, Orientation.LANDSCAPE, lock);
+			const socketClient = bridge.socketClient;
+			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any);
 
 			await playVideo(
 				window,
@@ -383,6 +338,7 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 				0,
 				1920,
 				1080,
+				Orientation.LANDSCAPE,
 			);
 
 			const stopVideoEmittedPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
@@ -401,10 +357,11 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 			socketClient.emit(VideoStopped, { uri: 'video1', x: 0, y: 0, width: 1920, height: 1080 });
 			await stopVideoPromise;
 
-			window.document.body.removeChild.callCount.should.equal(1);
-			window.document.body.removeChild.getCall(0).args[0].should.deepEqual({
+			const body = window.document.getElementById('body');
+			body.removeChild.callCount.should.equal(1);
+			body.removeChild.getCall(0).args[0].should.deepEqual({
 				name: 'div',
-				id: checksumString('video1') + '_0x0-1920x1080',
+				id: checksumString('http://localhost:8081/video1') + '_0x0-1920x1080',
 				style: {
 					position: 'absolute',
 					left: '0px',
@@ -415,6 +372,7 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 					backgroundRepeat: 'no-repeat',
 					backgroundSize: 'contain',
 					backgroundPosition: 'center',
+					visibility: 'visible',
 				},
 			});
 		});
@@ -422,9 +380,9 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 		it('should resolve even if bridge throws error because either way video stopped playing', async function () {
 			const window = createMockWindow();
 			const lock = new AsyncLock();
-			const socketClient = new EventEmitter();
-			const bridge = { socketClient };
-			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any, () => Orientation.LANDSCAPE);
+			const bridge = createMockBridge(window, Orientation.LANDSCAPE, lock);
+			const socketClient = bridge.socketClient;
+			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any);
 
 			await playVideo(
 				window,
@@ -436,6 +394,7 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 				0,
 				1920,
 				1080,
+				Orientation.LANDSCAPE,
 			);
 
 			const stopVideoEmittedPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
@@ -458,28 +417,9 @@ describe('Driver.Video.BridgeVideoPlayer', function () {
 		it('should fail for non-playing video', async function () {
 			const window = createMockWindow();
 			const lock = new AsyncLock();
-			const socketClient = new EventEmitter();
-			const bridge = { socketClient };
-			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any, () => Orientation.LANDSCAPE);
-
+			const bridge = createMockBridge(window, Orientation.LANDSCAPE, lock);
+			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any);
 			await bridgeVideoPlayer.stop('http://localhost:8081/video1', 0, 0, 1920, 1080).should.be.rejected();
-		});
-	});
-
-	describe('clearAll', function () {
-
-		it('should stop all videos', async function () {
-			const window = createMockWindow();
-			const lock = new AsyncLock();
-			const socketClient = new EventEmitter();
-			const bridge = { socketClient };
-			const bridgeVideoPlayer = new BridgeVideoPlayer(window, 'http://localhost:8081', lock, bridge as any, () => Orientation.LANDSCAPE);
-
-			const clearAllEmittedPromise = new Promise<void>((resolve: () => void) => socketClient.once(StopAllVideos, resolve));
-			const clearAllPromise = bridgeVideoPlayer.clearAll();
-			await clearAllEmittedPromise;
-			socketClient.emit(AllVideosStopped, {});
-			await clearAllPromise;
 		});
 	});
 });

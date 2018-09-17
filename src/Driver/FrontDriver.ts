@@ -11,7 +11,6 @@ import TimerLevel from '@signageos/front-display/es6/NativeDevice/Timer/TimerLev
 import IBrightness from '@signageos/front-display/es6/NativeDevice/IBrightness';
 import ProprietaryCache from '@signageos/front-display/es6/Cache/ProprietaryCache';
 import ICache from '@signageos/front-display/es6/Cache/ICache';
-import ProprietaryResourceManager from '@signageos/front-display/es6/Video/ProprietaryResourceManager';
 import ISignature from '@signageos/front-display/es6/NativeDevice/ISignature';
 import VideoOrientation from "@signageos/front-display/es6/Video/Orientation";
 import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver';
@@ -33,6 +32,7 @@ import {
 	SystemReboot,
 } from '../Bridge/bridgeSystemMessages';
 import BridgeVideoPlayer from './Video/BridgeVideoPlayer';
+import BridgeStreamPlayer from './Video/BridgeStreamPlayer';
 import PrivateOrientation, { convertScreenOrientationToAngle } from './Orientation';
 
 const FS_NAMESPACE = 'front';
@@ -49,7 +49,6 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 		},
 	};
 
-	public readonly resourceManager: ProprietaryResourceManager;
 	public readonly video: BridgeVideoPlayer;
 	public readonly stream: IStreamPlayer;
 
@@ -70,7 +69,8 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 			timeout: 30 * SECOND_IN_MS,
 		});
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
-		this.video = new BridgeVideoPlayer(window, this.fileSystemUrl, this.lock, this.bridge, () => this.getScreenOrientation());
+		this.video = new BridgeVideoPlayer(window, this.fileSystemUrl, this.lock, this.bridge);
+		this.stream = new BridgeStreamPlayer(this.lock, this.bridge);
 	}
 
 	public async getConfigurationBaseUrl(): Promise<string | null> {
@@ -281,6 +281,8 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 
 	public async restoreDisplayArea() {
 		await this.video.clearAll();
+		await this.stream.clearAll();
+		await this.bridge.video.clearAll();
 	}
 
 	public areTimersSupported(powerTimerLevel: TimerLevel) {
@@ -349,6 +351,7 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 
 	private initialize() {
 		this.screenUpdateOrientation();
+		this.bridge.initialize(this.window, () => this.getScreenOrientation(), this.lock);
 	}
 
 	private screenUpdateOrientation() {
