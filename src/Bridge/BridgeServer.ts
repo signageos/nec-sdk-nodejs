@@ -32,16 +32,21 @@ export default class BridgeServer {
 
 	public async start() {
 		await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-			const port = url.parse(this.serverUrl).port;
-			this.httpServer.listen(port, (error: any) => {
-				if (error) {
-					console.error('failed to start BridgeServer', error);
-					reject(new Error('Failed to start BridgeServer'));
-				} else {
-					console.info('BridgeServer started');
-					resolve();
-				}
-			});
+			const serverUrl = url.parse(this.serverUrl);
+			this.httpServer.listen(
+				{
+					host: serverUrl.hostname!,
+					port: parseInt(serverUrl.port!, 10),
+				},
+				(error: any) => {
+					if (error) {
+						console.error('failed to start BridgeServer', error);
+						reject(new Error('Failed to start BridgeServer'));
+					} else {
+						console.info('BridgeServer started');
+						resolve();
+					}
+				});
 		});
 
 		await this.socketServer.listen();
