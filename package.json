@@ -24,8 +24,8 @@
   },
   "author": "signageOS.io <dev@signageos.io>",
   "devDependencies": {
-    "@signageos/front-display": "^3.1.0-ma-fixNodejsManagement.29888027",
-    "@signageos/lib": "^1.1.5-ma-webSocketServerFactory.30037457",
+    "@signageos/front-display": "^4.1.0",
+    "@signageos/lib": "^1.2.2",
     "@types/async-lock": "0.0.19",
     "@types/cors": "^2.8.4",
     "@types/express": "^4.16.0",
