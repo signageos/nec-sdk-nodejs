@@ -17,6 +17,7 @@ import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver
 import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheStorageInfo';
 import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
 import { KeyMap } from '@signageos/front-display/es6/NativeDevice/Default/DefaultHelper';
+import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
@@ -25,6 +26,7 @@ import {
 	FileSystemDownloadFile,
 	FileSystemFileExists,
 	FileSystemGetFiles,
+	FileSystemGetFileChecksum,
 	GetDeviceUid,
 	GetModel,
 	ScreenTurnOff,
@@ -343,6 +345,20 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 
 	public async setVolume(_volume: number): Promise<void> {
 		throw new Error("Not implemented"); // TODO : implement
+	}
+
+	public async getChecksumFile(uid: string, hashType: HashAlgorithm): Promise<string> {
+		const { checksum } = await this.bridge.invoke<FileSystemGetFileChecksum, { checksum: string }>({
+			type: FileSystemGetFileChecksum,
+			path: uid,
+			hashAlgorithm: hashType,
+		});
+		return checksum;
+	}
+
+	public async validateChecksumFile(uid: string, hash: string, hashType: HashAlgorithm): Promise<boolean> {
+		const checksum = await this.getChecksumFile(uid, hashType);
+		return checksum === hash;
 	}
 
 	private getFileUri(filePath: string) {

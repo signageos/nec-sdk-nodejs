@@ -2,6 +2,7 @@ import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as mkdirp from 'mkdirp';
+import * as checksum from 'checksum';
 import IFileSystem, { FileOrDirectoryNotFound } from './IFileSystem';
 import { downloadFile } from './downloadFile';
 
@@ -18,6 +19,17 @@ export default class FileSystem implements IFileSystem {
 		const fullPath = this.getFullPath(fileName);
 		const contents = await promisify(fs.readFile)(fullPath);
 		return contents.toString();
+	}
+
+	public async getFileChecksum(fileName: string, hashAlgorithm: string): Promise<string> {
+		const fileExists = await this.pathExists(fileName);
+		if (!fileExists) {
+			throw new FileOrDirectoryNotFound();
+		}
+
+		const fullPath = this.getFullPath(fileName);
+		const getChecksum = promisify<string, checksum.ChecksumOptions, string>(checksum.file);
+		return await getChecksum(fullPath, { algorithm: hashAlgorithm });
 	}
 
 	public async saveToFile(fileName: string, contents: string) {

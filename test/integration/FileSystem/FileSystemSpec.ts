@@ -64,6 +64,52 @@ describe('FileSystem', function () {
 		});
 	});
 
+	describe('getFileChecksum', function () {
+
+		const testCases = [
+			{
+				fileName: 'fileHashTest1',
+				contents: 'test content in file1',
+				hashAlgorithm: 'md5',
+				expectedChecksum: 'cea74dfe3b9857dfff26283f6aad9870',
+			},
+			{
+				fileName: 'fileHashTest2',
+				contents: 'test content in file2',
+				hashAlgorithm: 'sha1',
+				expectedChecksum: 'f29f12e19001f96da9c5a9f7f8a199ddf7b2c4d6',
+			},
+			{
+				fileName: 'fileHashTest3',
+				contents: 'test content in file3',
+				hashAlgorithm: 'sha256',
+				expectedChecksum: '6aac983cc4a926f34cb090071123ce7ea8d45adf2a6399a104148d0a14579a1c',
+			},
+			{
+				fileName: 'fileHashTest4',
+				contents: 'test content in file4',
+				hashAlgorithm: 'sha512',
+				// tslint:disable-next-line
+				expectedChecksum: '18229405423f1da97a3365a757e8832486b43ceef99bab5ecd15564094cc18d422ff6fea48a009a7852121a002800631aacb1b46579cf5333e02ac84ee7e1069',
+			},
+		];
+
+		testCases.forEach((testCase: typeof testCases[0]) => {
+			it('should return file checksum using ' + testCase.hashAlgorithm, async function () {
+				const fileSystem = new FileSystem(fileSystemRoot);
+				const fileFullPath = path.join(fileSystemRoot, testCase.fileName);
+				await promisify(fs.writeFile)(fileFullPath, testCase.contents);
+				const checksum = await fileSystem.getFileChecksum(testCase.fileName, testCase.hashAlgorithm);
+				checksum.should.equal(testCase.expectedChecksum);
+			});
+		});
+
+		it('should throw FileOrDirectoryNotFound for non-existent file', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			await fileSystem.getFileChecksum('invalidFile', 'md5').should.be.rejected();
+		});
+	});
+
 	describe('saveToFile', function () {
 
 		it('should write contents to a file', async function () {

@@ -1,6 +1,8 @@
 export default interface IFileSystem {
 	/* @throws FileOrDirectoryNotFound */
 	readFile(fileName: string): Promise<string>;
+	/* @throws FileOrDirectoryNotFound */
+	getFileChecksum(fileName: string, hashAlgorithm: string): Promise<string>;
 	saveToFile(fileName: string, contents: string): Promise<void>;
 	/* @throws FileOrDirectoryNotFound */
 	deleteFile(fileName: string): Promise<void>;

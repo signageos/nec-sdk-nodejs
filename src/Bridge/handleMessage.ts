@@ -9,6 +9,7 @@ import {
 	FileSystemFileExists,
 	FileSystemDownloadFile,
 	FileSystemDeleteFile,
+	FileSystemGetFileChecksum,
 } from './bridgeSystemMessages';
 import * as SystemAPI from '../API/SystemAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
@@ -27,7 +28,8 @@ export default async function handleMessage(
 		FileSystemGetFiles |
 		FileSystemFileExists |
 		FileSystemDownloadFile |
-		FileSystemDeleteFile,
+		FileSystemDeleteFile |
+		FileSystemGetFileChecksum,
 ): Promise<object> {
 	switch (message.type) {
 		case SystemReboot:
@@ -67,6 +69,9 @@ export default async function handleMessage(
 			await fileSystem.deleteFile(message.path);
 			return {};
 
+		case FileSystemGetFileChecksum:
+			const checksum = await fileSystem.getFileChecksum(message.path, message.hashAlgorithm);
+			return { checksum };
 		default:
 			throw new InvalidMessageError('invalid message type: ' + (message as any).type);
 	}

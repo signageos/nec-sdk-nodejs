@@ -48,3 +48,10 @@ export interface FileSystemDeleteFile {
 	type: typeof FileSystemDeleteFile;
 	path: string;
 }
+
+export const FileSystemGetFileChecksum = 'FileSystem.GetFileChecksum';
+export interface FileSystemGetFileChecksum {
+	type: typeof FileSystemGetFileChecksum;
+	path: string;
+	hashAlgorithm: string;
+}
