@@ -32,6 +32,7 @@ import {
 	ScreenTurnOff,
 	ScreenTurnOn,
 	SystemReboot,
+	SetNativeDebug,
 } from '../Bridge/bridgeSystemMessages';
 import BridgeVideoPlayer from './Video/BridgeVideoPlayer';
 import BridgeStreamPlayer from './Video/BridgeStreamPlayer';
@@ -331,8 +332,11 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 		throw new Error('browserOpenLink not implemented');
 	}
 
-	public async setDebug(_enabled: boolean): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
+	public async setDebug(isEnabled: boolean): Promise<void> {
+		await this.bridge.invoke<SetNativeDebug, {}>({
+			type: SetNativeDebug,
+			isEnabled,
+		});
 	}
 
 	public async getCurrentSignature(): Promise<ISignature | null> {

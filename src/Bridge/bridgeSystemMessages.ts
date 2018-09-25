@@ -13,6 +13,12 @@ export interface GetModel {
 	type: typeof GetModel;
 }
 
+export const SetNativeDebug = 'System.SetNativeDebug';
+export interface SetNativeDebug {
+	type: typeof SetNativeDebug;
+	isEnabled: boolean;
+}
+
 export const ScreenTurnOff = 'Screen.TurnOff';
 export interface ScreenTurnOff {
 	type: typeof ScreenTurnOff;

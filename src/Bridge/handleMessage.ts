@@ -3,6 +3,7 @@ import {
 	SystemReboot,
 	GetDeviceUid,
 	GetModel,
+	SetNativeDebug,
 	ScreenTurnOff,
 	ScreenTurnOn,
 	FileSystemGetFiles,
@@ -23,6 +24,7 @@ export default async function handleMessage(
 		SystemReboot |
 		GetDeviceUid |
 		GetModel |
+		SetNativeDebug |
 		ScreenTurnOff |
 		ScreenTurnOn |
 		FileSystemGetFiles |
@@ -43,6 +45,14 @@ export default async function handleMessage(
 		case GetModel:
 			const model = await SystemAPI.getModel();
 			return { model };
+
+		case SetNativeDebug:
+			if (message.isEnabled) {
+				await SystemAPI.enableNativeDebug();
+			} else {
+				await SystemAPI.disableNativeDebug();
+			}
+			return {};
 
 		case ScreenTurnOff:
 			await SystemAPI.turnScreenOff();
