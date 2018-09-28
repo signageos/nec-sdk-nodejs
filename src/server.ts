@@ -64,7 +64,7 @@ if (parameters.raven.enabled) {
 	);
 
 	const videoPlayerLock = new AsyncLock({ timeout: 30 * SECOND_IN_MS });
-	const videoPlayer = new OmxplayerVideoPlayer(parameters.paths.scriptsPath, videoPlayerLock, fileSystem);
+	const videoPlayer = new OmxplayerVideoPlayer(videoPlayerLock, fileSystem);
 
 	const bridgeServer = new BridgeServer(parameters.server.bridge_url, fileSystem, nativeDriver, videoPlayer);
 	await bridgeServer.start();

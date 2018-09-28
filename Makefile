@@ -23,11 +23,10 @@ dist-raspbian: dist
 	cp -r $(DIST)/server/* $(RASPBIAN_DIST)/usr/lib/signageos/server
 
 dist:
-	mkdir -p $(DIST)/server/scripts
+	mkdir -p $(DIST)/server
 	mkdir -p $(DIST)/client
 	cp README.md $(DIST)
 	envsubst < index.html > $(DIST)/client/index.html
 	cp node_modules/@signageos/front-display/dist/webWorker.js $(DIST)/client/webWorker.js
-	cp tools/ffmpeg-extract-video-last-frame.sh $(DIST)/server/scripts
 
 

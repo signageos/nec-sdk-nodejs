@@ -1,7 +1,5 @@
 import { EventEmitter } from 'events';
-import * as path from 'path';
-import { promisify } from 'util';
-import { ChildProcess, exec, spawn } from "child_process";
+import { ChildProcess } from "child_process";
 import * as AsyncLock from 'async-lock';
 import { checksumString } from '@signageos/front-display/es6/Hash/checksum';
 import IVideo from '@signageos/front-display/es6/Video/IVideo';
@@ -11,6 +9,11 @@ import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants'
 import IFileSystem from '../../FileSystem/IFileSystem';
 import { getLastFramePathFromVideoPath } from './helper';
 import IServerVideoPlayer from './IServerVideoPlayer';
+import {
+	playVideo,
+	playStream,
+	generateLastFrame,
+} from '../../API/VideoAPI';
 
 export default class OmxplayerVideoPlayer implements IServerVideoPlayer {
 
@@ -30,7 +33,7 @@ export default class OmxplayerVideoPlayer implements IServerVideoPlayer {
 		return checksumString(uri) + '_' + x + 'x' + y + '-' + width + 'x' + height;
 	}
 
-	public constructor(private scriptsDirectory: string, private lock: AsyncLock, private fileSystem: IFileSystem) {}
+	public constructor(private lock: AsyncLock, private fileSystem: IFileSystem) {}
 
 	public async prepare(uri: string, _x: number, _y: number, _width: number, _height: number): Promise<void> {
 		if (!(await this.fileSystem.pathExists(uri)) ||
@@ -44,11 +47,9 @@ export default class OmxplayerVideoPlayer implements IServerVideoPlayer {
 			return;
 		}
 
-		const command = path.join(this.scriptsDirectory, 'ffmpeg-extract-video-last-frame.sh');
 		const videoFullPath = this.fileSystem.getFullPath(uri);
 		const lastFrameFullPath = getLastFramePathFromVideoPath(videoFullPath);
-
-		await promisify(exec)(command + ' ' + videoFullPath + ' ' + lastFrameFullPath);
+		await generateLastFrame(videoFullPath, lastFrameFullPath);
 	}
 
 	public async play(
@@ -140,25 +141,14 @@ export default class OmxplayerVideoPlayer implements IServerVideoPlayer {
 		orientation: Orientation,
 		isStream: boolean,
 	) {
-		const videoFullPath = isStream ? uri : this.fileSystem.getFullPath(uri);
-		const rotationAngle = this.convertOrientationToRotationAngle(orientation);
-
-		const processArgs = [
-			'--threshold',
-			'1',
-			'--aspect-mode',
-			'letterbox',
-			'--win',
-			`${x},${y},${width},${height}`,
-			'--orientation',
-			rotationAngle,
-		];
-
+		let videoProcess: ChildProcess;
 		if (isStream) {
-			processArgs.push('--live');
+			videoProcess = playStream(uri, x, y, width, height, orientation);
+		} else {
+			const videoFullPath = this.fileSystem.getFullPath(uri);
+			videoProcess = playVideo(videoFullPath, x, y, width, height, orientation);
 		}
 
-		const videoProcess = spawn('omxplayer', [ ...processArgs, videoFullPath ] as ReadonlyArray<string>);
 		const videoEventEmitter = this.createVideoEventEmitter(uri, x, y, width, height, videoProcess);
 		this.videoProcesses[videoId] = { process: videoProcess, running: true, uri, x, y, width, height };
 
@@ -204,18 +194,5 @@ export default class OmxplayerVideoPlayer implements IServerVideoPlayer {
 		});
 
 		return eventEmitter;
-	}
-
-	private convertOrientationToRotationAngle(orientation: Orientation) {
-		switch (orientation) {
-			case Orientation.PORTRAIT:
-				return 90;
-			case Orientation.LANDSCAPE_FLIPPED:
-				return 180;
-			case Orientation.PORTRAIT_FLIPPED:
-				return 270;
-			default:
-				return 0;
-		}
 	}
 }
