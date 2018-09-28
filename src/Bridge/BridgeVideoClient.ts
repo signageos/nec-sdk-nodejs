@@ -159,7 +159,8 @@ export default class BridgeVideoClient {
 			new Promise<void>((resolve: () => void) => videoEmitter.once('error', resolve)),
 		] as Promise<void>[]);
 
-		this.socketClient.emit(StopVideo, { uri, x, y, width, height });
+		const coordinates = this.convertCoordinatesForOrientation(x, y, width, height);
+		this.socketClient.emit(StopVideo, { uri, ...coordinates });
 		await resultRacePromise;
 
 		delete this.playingVideos[videoId];
