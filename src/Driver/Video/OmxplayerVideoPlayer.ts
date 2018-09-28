@@ -39,13 +39,16 @@ export default class OmxplayerVideoPlayer implements IServerVideoPlayer {
 			throw new Error('Video not found');
 		}
 
+		const lastFrameRelativePath = getLastFramePathFromVideoPath(uri);
+		if (await this.fileSystem.pathExists(lastFrameRelativePath)) {
+			return;
+		}
+
 		const command = path.join(this.scriptsDirectory, 'ffmpeg-extract-video-last-frame.sh');
 		const videoFullPath = this.fileSystem.getFullPath(uri);
 		const lastFrameFullPath = getLastFramePathFromVideoPath(videoFullPath);
 
-		if (!(await this.fileSystem.pathExists(lastFrameFullPath))) {
-			await promisify(exec)(command + ' ' + videoFullPath + ' ' + lastFrameFullPath);
-		}
+		await promisify(exec)(command + ' ' + videoFullPath + ' ' + lastFrameFullPath);
 	}
 
 	public async play(
