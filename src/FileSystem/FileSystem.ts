@@ -5,10 +5,16 @@ import * as mkdirp from 'mkdirp';
 import * as checksum from 'checksum';
 import IFileSystem, { FileOrDirectoryNotFound } from './IFileSystem';
 import { downloadFile } from './downloadFile';
+import { uploadFile } from './uploadFile';
 
 export default class FileSystem implements IFileSystem {
 
 	constructor(private baseDirectory: string) {}
+
+	public async ensureDirectory(directoryName: string): Promise<void> {
+		const fullPath = this.getFullPath(directoryName);
+		await promisify(mkdirp)(fullPath);
+	}
 
 	public async readFile(fileName: string): Promise<string> {
 		const fileExists = await this.pathExists(fileName);
@@ -33,9 +39,9 @@ export default class FileSystem implements IFileSystem {
 	}
 
 	public async saveToFile(fileName: string, contents: string) {
+		const directory = path.dirname(fileName);
+		await this.ensureDirectory(directory);
 		const fullPath = this.getFullPath(fileName);
-		const directory = path.dirname(fullPath);
-		await promisify(mkdirp)(directory);
 		return await promisify(fs.writeFile)(fullPath, contents);
 	}
 
@@ -55,6 +61,17 @@ export default class FileSystem implements IFileSystem {
 		await promisify(mkdirp)(destinationDirectory);
 		const file = fs.createWriteStream(fullDestinationPath);
 		await downloadFile(file, uri, headers);
+	}
+
+	public async uploadFile(fileName: string, formKey: string, uri: string, headers?: { [key: string]: string }) {
+		const fileExists = await this.pathExists(fileName);
+		if (!fileExists) {
+			throw new FileOrDirectoryNotFound();
+		}
+
+		const fullPath = this.getFullPath(fileName);
+		const file = fs.createReadStream(fullPath);
+		return await uploadFile(file, formKey, uri, headers);
 	}
 
 	public async getFilesInDirectory(directory: string) {
@@ -95,6 +112,10 @@ export default class FileSystem implements IFileSystem {
 	}
 
 	public getFullPath(relativePath: string) {
+		// if the path is absolute, return it as it is
+		if (relativePath.startsWith('/')) {
+			return relativePath;
+		}
 		return path.join(this.baseDirectory, relativePath);
 	}
 

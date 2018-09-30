@@ -1,4 +1,5 @@
 export default interface IFileSystem {
+	ensureDirectory(directoryName: string): Promise<void>;
 	/* @throws FileOrDirectoryNotFound */
 	readFile(fileName: string): Promise<string>;
 	/* @throws FileOrDirectoryNotFound */
@@ -7,6 +8,8 @@ export default interface IFileSystem {
 	/* @throws FileOrDirectoryNotFound */
 	deleteFile(fileName: string): Promise<void>;
 	downloadFile(destinationPath: string, uri: string, headers?: { [key: string]: string }): Promise<void>;
+	/* @throws FileOrDirectoryNotFound */
+	uploadFile(fileName: string, formKey: string, uri: string, headers?: { [key: string]: string }): Promise<any>;
 	/* @throws FileOrDirectoryNotFound */
 	getFilesInDirectory(directory: string): Promise<string[]>;
 	/* @throws FileOrDirectoryNotFound */

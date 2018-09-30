@@ -106,8 +106,19 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		throw new Error('Failed to get wifi mac address: no wifi interface found');
 	}
 
-	public async screenshotUpload(_uploadBaseUrl: string): Promise<string> {
-		throw new Error("Not implemented"); // TODO : implement
+	public async screenshotUpload(uploadBaseUrl: string): Promise<string> {
+		const screenshotPath = await SystemAPI.takeScreenshot();
+		const uploadUri = uploadBaseUrl + '/upload/file?prefix=screenshot/';
+		const response = await this.fileSystem.uploadFile(screenshotPath, 'file', uploadUri);
+		const data = JSON.parse(response);
+
+		try {
+			await this.fileSystem.deleteFile(screenshotPath);
+		} catch (error) {
+			console.error('failed to cleanup screenshot after upload');
+		}
+
+		return data.uri;
 	}
 
 	public async isConnected(): Promise<boolean> {
@@ -130,6 +141,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 			case Capability.WIFI_MAC:
 			case Capability.ETHERNET_MAC:
 			case Capability.TEMPERATURE:
+			case Capability.SCREENSHOT_UPLOAD:
 				return true;
 
 			default:

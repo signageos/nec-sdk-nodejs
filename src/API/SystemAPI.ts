@@ -39,3 +39,7 @@ export async function turnScreenOff() {
 export async function turnScreenOn() {
 	await execApiCommand('screen', 'on');
 }
+
+export async function takeScreenshot() {
+	return await execApiCommand('screen', 'screenshot');
+}

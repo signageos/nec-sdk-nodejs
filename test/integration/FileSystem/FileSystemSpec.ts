@@ -4,6 +4,9 @@ import { promisify } from 'util';
 import * as path from 'path';
 import * as http from 'http';
 import * as express from 'express';
+import * as cors from 'cors';
+import * as bodyParser from 'body-parser';
+import * as multer from 'multer';
 import { FileOrDirectoryNotFound } from '../../../src/FileSystem/IFileSystem';
 import FileSystem from '../../../src/FileSystem/FileSystem';
 
@@ -220,6 +223,72 @@ describe('FileSystem', function () {
 		});
 	});
 
+	describe('uploadFile', function () {
+
+		before('start upload HTTP server', function (done: Function) {
+			const expressApp = express();
+			this.staticHttpServer = http.createServer(expressApp);
+
+			expressApp.use(cors());
+			expressApp.use(bodyParser.json());
+
+			const storage = multer.memoryStorage();
+			const upload = multer({ storage });
+
+			expressApp.post(
+				'/upload',
+				upload.single('file'),
+				async (request: express.Request, response: express.Response) => {
+					if (request.header('should_fail') === 'yes') {
+						response.sendStatus(400);
+					} else {
+						const fileName = (request as Express.Request).file.originalname;
+						const contentsBuffer = (request as Express.Request).file.buffer;
+						response.send({
+							fileName,
+							contents: contentsBuffer.toString(),
+						});
+					}
+				},
+			);
+
+			this.staticHttpServer.listen(33333, (error: any) => {
+				if (error) {
+					throw new Error('Failed starting static HTTP server');
+				} else {
+					done();
+				}
+			});
+		});
+
+		after('close static HTTP server', function (done: Function) {
+			this.staticHttpServer.close(done);
+		});
+
+		it('should upload file and get response with 200 status code and correct body', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			const sourceFilePath = path.join(fileSystemRoot, 'fileToUpload1');
+			await promisify(fs.writeFile)(sourceFilePath, 'file to upload 1');
+			const response = await fileSystem.uploadFile('fileToUpload1', 'file', 'http://localhost:33333/upload');
+			JSON.parse(response).should.be.deepEqual({
+				fileName: 'fileToUpload1',
+				contents: 'file to upload 1',
+			});
+		});
+
+		it('should fail when server returns an error status code', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			const sourceFilePath = path.join(fileSystemRoot, 'fileToUpload2');
+			await promisify(fs.writeFile)(sourceFilePath, 'file to upload 2');
+			await fileSystem.uploadFile(
+				'fileToUpload2',
+				'file',
+				'http://localhost:33333/upload',
+				{ should_fail: 'yes' },
+			).should.be.rejected();
+		});
+	});
+
 	describe('getFilesInDirectory', function () {
 
 		it('should return filenames of all files in a given directory (but not directories or others)', async function () {
@@ -299,6 +368,9 @@ describe('FileSystem', function () {
 
 			const fullPath3 = fileSystem.getFullPath('subdir/file3');
 			fullPath3.should.equal(path.join(fileSystemRoot, 'subdir', 'file3'));
+
+			const fullPath4 = fileSystem.getFullPath('/absolute/path/file4');
+			fullPath4.should.equal(path.join('/absolute/path/file4'));
 		});
 	});
 
