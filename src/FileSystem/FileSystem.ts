@@ -127,6 +127,12 @@ export default class FileSystem implements IFileSystem {
 
 	public async pathExists(relativePath: string) {
 		const fullPath = this.getFullPath(relativePath);
-		return await promisify(fs.exists)(fullPath);
+
+		try {
+			await promisify(fs.access)(fullPath);
+			return true;
+		} catch (error) {
+			return false;
+		}
 	}
 }
