@@ -24,7 +24,7 @@
   },
   "author": "signageOS.io <dev@signageos.io>",
   "devDependencies": {
-    "@signageos/front-display": "^4.1.0",
+    "@signageos/front-display": "^4.1.0-ma-upgradeFWInManagement.32031128",
     "@signageos/lib": "^1.2.2",
     "@types/async-lock": "0.0.19",
     "@types/checksum": "^0.1.30",
