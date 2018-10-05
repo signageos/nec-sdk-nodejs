@@ -20,8 +20,17 @@ export async function reboot() {
 }
 
 export async function upgradeApp(debFile: string) {
-	const escapedDebFile = debFile.replace(/\'/g, "\\'");
+	const escapedDebFile = escapeBashArgument(debFile);
 	await execApiCommand('application', 'upgrade', escapedDebFile);
+}
+
+export async function getFirmwareVersion() {
+	return await execApiCommand('firmware', 'version');
+}
+
+export async function upgradeFirmware(sourceUrl: string) {
+	const escapedSourceUrl = escapeBashArgument(sourceUrl);
+	await execApiCommand('firmware', 'upgrade', escapedSourceUrl);
 }
 
 export async function enableNativeDebug() {
@@ -42,4 +51,8 @@ export async function turnScreenOn() {
 
 export async function takeScreenshot() {
 	return await execApiCommand('screen', 'screenshot');
+}
+
+function escapeBashArgument(argument: string) {
+	return argument.replace(/\'/g, "\\'");
 }

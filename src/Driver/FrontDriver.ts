@@ -240,14 +240,6 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 		return this.cache.getStorageInfo();
 	}
 
-	public async firmwareUpgrade(_baseUrl: string, _version: string, _onProgress: (progress: number) => void): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
-	}
-
-	public async firmwareGetVersion(): Promise<string> {
-		throw new Error("Not implemented"); // TODO : implement
-	}
-
 	public async getDeviceUid(): Promise<string> {
 		if (!this.deviceUid) {
 			const { deviceUid } = await this.bridge.invoke<GetDeviceUid, { deviceUid: string }>({ type: GetDeviceUid });
