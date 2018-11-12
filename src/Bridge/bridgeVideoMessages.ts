@@ -8,6 +8,8 @@ export interface PrepareVideo {
 	y: number;
 	width: number;
 	height: number;
+	orientation: Orientation;
+	isStream: boolean;
 }
 
 export const PlayVideo = 'Video.PlayVideo';

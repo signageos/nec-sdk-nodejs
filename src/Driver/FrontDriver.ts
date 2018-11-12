@@ -72,8 +72,8 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
 		this.lock = new AsyncLock();
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
-		this.video = new BridgeVideoPlayer(window, this.fileSystemUrl, this.lock, this.bridge);
-		this.stream = new BridgeStreamPlayer(this.lock, this.bridge);
+		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridge);
+		this.stream = new BridgeStreamPlayer(this.bridge);
 	}
 
 	public async getConfigurationBaseUrl(): Promise<string | null> {

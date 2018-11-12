@@ -47,9 +47,9 @@ function listenToVideoEventsFromClient(socket: ISocket, videoPlayer: IServerVide
 
 function listenToPrepareVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	socket.on(PrepareVideo, async (message: PrepareVideo) => {
-		const { uri, x, y, width, height } = message;
+		const { uri, x, y, width, height, orientation, isStream } = message;
 		try {
-			await videoPlayer.prepare(uri, x, y, width, height);
+			await videoPlayer.prepare(uri, x, y, width, height, orientation, isStream);
 
 			eventEmitter.emit('video_event', {
 				type: VideoPrepared,

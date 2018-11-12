@@ -45,7 +45,7 @@ describe('Bridge.BridgeVideoClient', function () {
 				});
 			});
 
-			const promisePrepareVideo = bridgeVideoClient.prepareVideo('video1', 0, 0, 1920, 1080);
+			const promisePrepareVideo = bridgeVideoClient.prepareVideo('video1', 0, 0, 1920, 1080, false);
 			await promisePrepareVideoEmitted;
 
 			socketClient.emit(VideoPrepared, {
@@ -84,7 +84,7 @@ describe('Bridge.BridgeVideoClient', function () {
 					});
 				});
 
-				const promisePrepareVideo = bridgeVideoClient.prepareVideo('video1', 0, 0, 1080, 1920);
+				const promisePrepareVideo = bridgeVideoClient.prepareVideo('video1', 0, 0, 1080, 1920, false);
 				await promisePrepareVideoEmitted;
 
 				socketClient.emit(VideoPrepared, {
@@ -120,7 +120,7 @@ describe('Bridge.BridgeVideoClient', function () {
 				});
 			});
 
-			const promisePrepareVideo = bridgeVideoClient.prepareVideo('video1', 0, 0, 1920, 1080);
+			const promisePrepareVideo = bridgeVideoClient.prepareVideo('video1', 0, 0, 1920, 1080, false);
 			await promisePrepareVideoEmitted;
 
 			socketClient.emit(VideoError, {
@@ -136,7 +136,7 @@ describe('Bridge.BridgeVideoClient', function () {
 		});
 	});
 
-	describe('playVideo', function () {
+	describe('prepareVideo', function () {
 
 		it(
 			'should send PlayVideo event to server and resolve when server sends event VideoStarted and return event emitter',
@@ -296,7 +296,7 @@ describe('Bridge.BridgeVideoClient', function () {
 				...coords,
 			} as VideoStarted);
 
-			await promisePlayVideo;
+			return await promisePlayVideo;
 		}
 
 		it('should send StopVideo event to server and resolve when server sends event VideoStopped', async function () {
@@ -321,7 +321,7 @@ describe('Bridge.BridgeVideoClient', function () {
 				});
 			});
 
-			const promiseStopVideo = bridgeVideoClient.stopVideo('video1', 0, 0, 1920, 1080, false);
+			const promiseStopVideo = bridgeVideoClient.stopVideo('video1', 0, 0, 1920, 1080);
 			await promiseStopVideoEmitted;
 
 			socketClient.emit(VideoStopped, {
@@ -362,7 +362,7 @@ describe('Bridge.BridgeVideoClient', function () {
 					});
 				});
 
-				const promiseStopVideo = bridgeVideoClient.stopVideo('video1', 0, 0, 1080, 1920, false);
+				const promiseStopVideo = bridgeVideoClient.stopVideo('video1', 0, 0, 1080, 1920);
 				await promiseStopVideoEmitted;
 
 				socketClient.emit(VideoStopped, {
@@ -378,7 +378,7 @@ describe('Bridge.BridgeVideoClient', function () {
 			},
 		);
 
-		it('should send StopVideo event to server and resolve even when server sends event VideoError', async function () {
+		it('should send StopVideo event to server and reject when server sends event VideoError', async function () {
 			const lock = new AsyncLock();
 			const socketClient = new EventEmitter();
 			const bridgeVideoClient = new BridgeVideoClient(
@@ -388,7 +388,8 @@ describe('Bridge.BridgeVideoClient', function () {
 				socketClient as any,
 			);
 
-			await playVideo(bridgeVideoClient, socketClient, 'video1', 0, 0, 1920, 1080, Orientation.LANDSCAPE);
+			const videoEmitter = await playVideo(bridgeVideoClient, socketClient, 'video1', 0, 0, 1920, 1080, Orientation.LANDSCAPE);
+			videoEmitter.on('error', () => { /* do nothing, this just has to be here so error event doesn't throw error */ });
 
 			const promiseStopVideoEmitted = new Promise<void>((resolve: () => void, reject: () => void) => {
 				socketClient.on(StopVideo, (event: StopVideo) => {
@@ -400,7 +401,7 @@ describe('Bridge.BridgeVideoClient', function () {
 				});
 			});
 
-			const promiseStopVideo = bridgeVideoClient.stopVideo('video1', 0, 0, 1920, 1080, false);
+			const promiseStopVideo = bridgeVideoClient.stopVideo('video1', 0, 0, 1920, 1080);
 			await promiseStopVideoEmitted;
 
 			socketClient.emit(VideoError, {
@@ -412,7 +413,7 @@ describe('Bridge.BridgeVideoClient', function () {
 				height: 1080,
 			} as VideoError);
 
-			await promiseStopVideo;
+			await promiseStopVideo.should.be.rejected();
 		});
 	});
 });

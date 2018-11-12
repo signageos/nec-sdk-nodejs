@@ -26,7 +26,6 @@ import {
 
 export default class BridgeVideoClient {
 
-	private preparedVideoIds: string[] = [];
 	private playingVideos: { [videoId: string]: EventEmitter } = {};
 
 	constructor(
@@ -44,12 +43,8 @@ export default class BridgeVideoClient {
 		y: number,
 		width: number,
 		height: number,
+		isStream: boolean,
 	) {
-		const videoId = this.getVideoId(uri, x, y, width, height);
-		if (this.preparedVideoIds.indexOf(videoId) >= 0) {
-			return;
-		}
-
 		const coordinates = this.convertCoordinatesForOrientation(x, y, width, height);
 
 		const resultPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
@@ -64,6 +59,7 @@ export default class BridgeVideoClient {
 					event.height === coordinates.height
 				) {
 					this.socketClient.removeListener(VideoPrepared, successListener);
+					this.socketClient.removeListener(VideoError, errorListener);
 					resolve();
 				}
 			};
@@ -75,6 +71,7 @@ export default class BridgeVideoClient {
 					event.width === coordinates.width &&
 					event.height === coordinates.height
 				) {
+					this.socketClient.removeListener(VideoPrepared, successListener);
 					this.socketClient.removeListener(VideoError, errorListener);
 					reject(new Error('Failed to prepare video'));
 				}
@@ -84,16 +81,9 @@ export default class BridgeVideoClient {
 			this.socketClient.on(VideoError, errorListener);
 		});
 
-		this.socketClient.emit(PrepareVideo, {
-			uri,
-			x: coordinates.x,
-			y: coordinates.y,
-			width: coordinates.width,
-			height: coordinates.height,
-		});
+		const orientation = this.getOrientation();
+		this.socketClient.emit(PrepareVideo, { uri, ...coordinates, orientation, isStream });
 		await resultPromise;
-
-		this.preparedVideoIds.push(videoId);
 	}
 
 	public async playVideo(
@@ -104,41 +94,49 @@ export default class BridgeVideoClient {
 		height: number,
 		isStream: boolean,
 	): Promise<IVideo> {
-		if (this.isVideoPlaying(uri, x, y, width, height)) {
-			throw new Error(`${isStream ? 'Stream' : 'Video'} is already playing: ${x}, ${y}, ${width}, ${height}`);
-		}
-
-		const videoEmitter = new EventEmitter();
-		const resultRacePromise = Promise.race([
-			new Promise<void>((resolve: () => void) => {
-				videoEmitter.once('started', resolve);
-			}),
-			new Promise<void>((_resolve: () => void, reject: (error: Error) => void) => {
-				videoEmitter.once('error', () => reject(new Error('Failed to play video')));
-			}),
-		] as Promise<void>[]);
-
-		const videoId = this.getVideoId(uri, x, y, width, height);
-		this.playingVideos[videoId] = videoEmitter;
-
-		const orientation = this.getOrientation();
 		const coordinates = this.convertCoordinatesForOrientation(x, y, width, height);
-		this.socketClient.emit(PlayVideo, {
-			uri,
-			x: coordinates.x,
-			y: coordinates.y,
-			width: coordinates.width,
-			height: coordinates.height,
-			orientation,
-			isStream,
+
+		const resultPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
+			let successListener: (message: any) => void;
+			let errorListener: (message: any) => void;
+
+			successListener = (event: VideoStarted) => {
+				if (event.uri === uri &&
+					event.x === coordinates.x &&
+					event.y === coordinates.y &&
+					event.width === coordinates.width &&
+					event.height === coordinates.height
+				) {
+					this.socketClient.removeListener(VideoStarted, successListener);
+					this.socketClient.removeListener(VideoError, errorListener);
+					resolve();
+				}
+			};
+
+			errorListener = (event: VideoError) => {
+				if (event.uri === uri &&
+					event.x === coordinates.x &&
+					event.y === coordinates.y &&
+					event.width === coordinates.width &&
+					event.height === coordinates.height
+				) {
+					this.socketClient.removeListener(VideoStarted, successListener);
+					this.socketClient.removeListener(VideoError, errorListener);
+					reject(new Error('Failed to prepare video'));
+				}
+			};
+
+			this.socketClient.on(VideoStarted, successListener);
+			this.socketClient.on(VideoError, errorListener);
 		});
 
-		try {
-			await resultRacePromise;
-		} catch (error) {
-			delete this.playingVideos[videoId];
-			throw error;
-		}
+		const orientation = this.getOrientation();
+		this.socketClient.emit(PlayVideo, { uri, ...coordinates, orientation, isStream });
+		await resultPromise;
+
+		const videoEmitter = new EventEmitter();
+		const videoId = this.getVideoId(uri, x, y, width, height);
+		this.playingVideos[videoId] = videoEmitter;
 
 		if (orientation === Orientation.LANDSCAPE) {
 			return videoEmitter;
@@ -147,28 +145,48 @@ export default class BridgeVideoClient {
 		}
 	}
 
-	public async stopVideo(uri: string, x: number, y: number, width: number, height: number, isStream: boolean) {
-		if (!this.isVideoPlaying(uri, x, y, width, height)) {
-			throw new Error(`${isStream ? 'Stream' : 'Video'} is not playing: ${uri}, ${x}, ${y}, ${width}, ${height}`);
-		}
-
-		const videoId = this.getVideoId(uri, x, y, width, height);
-		const videoEmitter = this.playingVideos[videoId];
-		const resultRacePromise = Promise.race([
-			new Promise<void>((resolve: () => void) => videoEmitter.once('stopped', resolve)),
-			new Promise<void>((resolve: () => void) => videoEmitter.once('error', resolve)),
-		] as Promise<void>[]);
-
+	public async stopVideo(uri: string, x: number, y: number, width: number, height: number) {
 		const coordinates = this.convertCoordinatesForOrientation(x, y, width, height);
+
+		const resultPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
+			let successListener: (message: any) => void;
+			let errorListener: (message: any) => void;
+
+			successListener = (event: VideoStopped) => {
+				if (event.uri === uri &&
+					event.x === coordinates.x &&
+					event.y === coordinates.y &&
+					event.width === coordinates.width &&
+					event.height === coordinates.height
+				) {
+					this.socketClient.removeListener(VideoStopped, successListener);
+					this.socketClient.removeListener(VideoError, errorListener);
+					resolve();
+				}
+			};
+
+			errorListener = (event: VideoError) => {
+				if (event.uri === uri &&
+					event.x === coordinates.x &&
+					event.y === coordinates.y &&
+					event.width === coordinates.width &&
+					event.height === coordinates.height
+				) {
+					this.socketClient.removeListener(VideoStopped, successListener);
+					this.socketClient.removeListener(VideoError, errorListener);
+					reject(new Error('Failed to prepare video'));
+				}
+			};
+
+			this.socketClient.on(VideoStopped, successListener);
+			this.socketClient.on(VideoError, errorListener);
+		});
+
 		this.socketClient.emit(StopVideo, { uri, ...coordinates });
-		await resultRacePromise;
+		await resultPromise;
 
-		delete this.playingVideos[videoId];
-	}
-
-	public isVideoPlaying(uri: string, x: number, y: number, width: number, height: number) {
 		const videoId = this.getVideoId(uri, x, y, width, height);
-		return this.playingVideos[videoId]!!;
+		delete this.playingVideos[videoId];
 	}
 
 	public async clearAll() {
@@ -181,7 +199,6 @@ export default class BridgeVideoClient {
 			await resultPromise;
 
 			this.playingVideos = {};
-			this.preparedVideoIds = [];
 		});
 	}
 
@@ -192,9 +209,6 @@ export default class BridgeVideoClient {
 
 	private listenToVideoEvents() {
 		const socketClient = this.socketClient;
-		socketClient.on(VideoStarted, (event: VideoStarted) => {
-			this.emitVideoEvent('started', event);
-		});
 		socketClient.on(VideoEnded, (event: VideoEnded) => {
 			this.emitVideoEvent('ended', event);
 		});
@@ -208,7 +222,7 @@ export default class BridgeVideoClient {
 
 	private emitVideoEvent(
 		type: string,
-		event: VideoStarted | VideoEnded | VideoStopped | VideoError,
+		event: VideoEnded | VideoStopped | VideoError,
 	) {
 		const { uri, x, y, width, height } = event;
 		const videoId = getVideoIdentificator(uri, x, y, width, height);

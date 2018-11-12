@@ -1,51 +1,108 @@
+import { ChildProcess } from 'child_process';
 import {
 	execApiCommand,
 	spawnApiCommandChildProcess,
 } from './apiCommand';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 
-export function playVideo(
-	filePath: string,
-	x: number,
-	y: number,
-	width: number,
-	height: number,
-	orientation: Orientation,
-) {
-	const windowCoords = `${x},${y},${width},${height}`;
-	const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
+export interface IVideoAPI {
+	prepareVideo(
+		filePath: string,
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		orientation: Orientation,
+	): ChildProcess;
+	playVideo(videoProcess: ChildProcess): Promise<void>;
+	stopVideo(videoProcess: ChildProcess): Promise<void>;
+	prepareStream(
+		filePath: string,
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		orientation: Orientation,
+	): ChildProcess;
 
-	return spawnApiCommandChildProcess('video', 'play', [
-		windowCoords,
-		rotationAngle,
-		filePath,
-	]);
+	playStream(streamProcess: ChildProcess): Promise<void>;
+	stopStream(streamProcess: ChildProcess): Promise<void>;
 }
 
-export function playStream(
-	filePath: string,
-	x: number,
-	y: number,
-	width: number,
-	height: number,
-	orientation: Orientation,
-) {
-	const windowCoords = `${x},${y},${width},${height}`;
-	const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
+export function createVideoAPI(): IVideoAPI {
+	return {
+		prepareVideo(
+			filePath: string,
+			x: number,
+			y: number,
+			width: number,
+			height: number,
+			orientation: Orientation,
+		) {
+			const windowCoords = `${x},${y},${width},${height}`;
+			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
 
-	return spawnApiCommandChildProcess('stream', 'play', [
-		windowCoords,
-		rotationAngle,
-		filePath,
-	]);
-}
+			return spawnApiCommandChildProcess('video', 'init', [
+				windowCoords,
+				rotationAngle,
+				filePath,
+			]);
+		},
 
-export async function generateLastFrame(
-	sourceVideoFilePath: string,
-	lastFrameFileDestination: string,
-) {
-	const args = sourceVideoFilePath + ' ' + lastFrameFileDestination;
-	await execApiCommand('video', 'generate_last_frame', args);
+		async playVideo(videoProcess: ChildProcess) {
+			await execApiCommand('video', 'play', videoProcess.pid.toString());
+		},
+
+		async stopVideo(videoProcess: ChildProcess) {
+			const stoppedPromise = new Promise<void>((resolve: () => void) => {
+				const timeout = setTimeout(
+					() => {
+						videoProcess.kill('SIGKILL');
+						resolve();
+					},
+					2 * SECOND_IN_MS,
+				);
+
+				function cancelKillTimeoutAndResolve() {
+					clearTimeout(timeout);
+					resolve();
+				}
+
+				videoProcess.once('close', cancelKillTimeoutAndResolve);
+				videoProcess.once('error', cancelKillTimeoutAndResolve);
+			});
+
+			videoProcess.kill('SIGINT');
+			await stoppedPromise;
+		},
+
+		prepareStream(
+			filePath: string,
+			x: number,
+			y: number,
+			width: number,
+			height: number,
+			orientation: Orientation,
+		) {
+			const windowCoords = `${x},${y},${width},${height}`;
+			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
+
+			return spawnApiCommandChildProcess('stream', 'init', [
+				windowCoords,
+				rotationAngle,
+				filePath,
+			]);
+		},
+
+		async playStream(streamProcess: ChildProcess) {
+			await execApiCommand('stream', 'play', streamProcess.pid.toString());
+		},
+
+		async stopStream(streamProcess: ChildProcess) {
+			await this.stopVideo(streamProcess);
+		},
+	};
 }
 
 function convertOrientationToRotationAngle(orientation: Orientation) {

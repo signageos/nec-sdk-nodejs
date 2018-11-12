@@ -1,16 +1,20 @@
-import * as AsyncLock from 'async-lock';
+import { EventEmitter } from 'events';
 import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
 import StreamProtocol from '@signageos/front-display/es6/Stream/StreamProtocol';
 import IStream from '@signageos/front-display/es6/Stream/IStream';
+import IVideo from '@signageos/front-display/es6/Video/IVideo';
 import BridgeClient from '../../Bridge/BridgeClient';
+import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
+import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
+import { IStreamClosedEvent, IStreamErrorEvent } from '@signageos/front-display/es6/Stream/streamEvents';
 
 export default class BridgeStreamPlayer implements IStreamPlayer {
 
 	constructor(
-		private lock: AsyncLock,
 		private bridge: BridgeClient,
 	) {}
 
+	@locked('video')
 	public async play(uri: string, x: number, y: number, width: number, height: number, protocol: StreamProtocol): Promise<IStream> {
 		if (uri.startsWith('internal://')) {
 			throw new Error('Playing from internal port is not supported');
@@ -20,17 +24,16 @@ export default class BridgeStreamPlayer implements IStreamPlayer {
 			throw new Error('Streaming protocol is not supported');
 		}
 
-		return await this.lock.acquire('video', async () => {
-			return await this.bridge.video.playVideo(uri, x, y, width, height, true);
-		});
+		const videoEmitter = await this.bridge.video.playVideo(uri, x, y, width, height, true);
+		return this.convertVideoEventEmitterToStreamEventEmitter(videoEmitter, protocol);
 	}
 
+	@locked('video')
 	public async stop(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
-		await this.lock.acquire('video', async () => {
-			await this.bridge.video.stopVideo(uri, x, y, width, height, true);
-		});
+		await this.bridge.video.stopVideo(uri, x, y, width, height);
 	}
 
+	@locked('video')
 	public async clearAll(): Promise<void> {
 		// do nothing
 	}
@@ -44,5 +47,26 @@ export default class BridgeStreamPlayer implements IStreamPlayer {
 		];
 
 		return supportedProtocols.indexOf(protocol) >= 0;
+	}
+
+	private convertVideoEventEmitterToStreamEventEmitter(videoEmitter: IVideo, protocol: StreamProtocol): IStream {
+		const streamEmitter = new EventEmitter();
+
+		videoEmitter.on('error', (event: IVideoEvent) => streamEmitter.emit('error', {
+			type: 'error',
+			...event.srcArguments,
+			protocol,
+			errorMessage: 'Error occurred during stream playback',
+		} as IStreamErrorEvent));
+
+		videoEmitter.on('stopped', (event: IVideoEvent) => streamEmitter.emit('closed', {
+			type: 'closed',
+			...event.srcArguments,
+			protocol,
+		} as IStreamClosedEvent));
+
+		// TODO implement connected/disconnected events
+
+		return streamEmitter;
 	}
 }

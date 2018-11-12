@@ -6,7 +6,7 @@ interface IVideoPlayer {
 	stop(uri: string, x: number, y: number, width: number, height: number): Promise<void>;
 	pause(uri: string, x: number, y: number, width: number, height: number): Promise<void>;
 	resume(uri: string, x: number, y: number, width: number, height: number): Promise<void>;
-	prepare(uri: string, x: number, y: number, width: number, height: number): Promise<void>;
+	prepare(uri: string, x: number, y: number, width: number, height: number, orientation: Orientation, isStream: boolean): Promise<void>;
 	clearAll(): Promise<void>;
 }
 
