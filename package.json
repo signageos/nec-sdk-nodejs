@@ -24,7 +24,7 @@
   },
   "author": "signageOS.io <dev@signageos.io>",
   "devDependencies": {
-    "@signageos/front-display": "^4.2.0",
+    "@signageos/front-display": "^4.2.0-ma-lockDecorator.36422172",
     "@signageos/lib": "^1.2.2",
     "@types/async-lock": "0.0.19",
     "@types/checksum": "^0.1.30",
