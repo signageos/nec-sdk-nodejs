@@ -23,9 +23,14 @@ export async function execApiCommand(namespace: string, command: string, args: s
 	});
 }
 
-export function spawnApiCommandChildProcess(namespace: string, command: string, args: string[] = []) {
-	const fullCommand = ['signageos', namespace, command, ...args];
-	const spawnedChildProcess = childProcess.spawn('sudo', fullCommand as ReadonlyArray<string>);
+export function spawnApiCommandChildProcess(namespace: string, command: string, args: string[] = [], spawnAsRoot: boolean = false) {
+	let fullCommand = ['signageos', namespace, command, ...args];
+	if (spawnAsRoot) {
+		fullCommand = ['sudo', ...fullCommand];
+	}
+
+	const [commandName, ...commandArgs] = fullCommand;
+	const spawnedChildProcess = childProcess.spawn(commandName, commandArgs as ReadonlyArray<string>);
 	spawnedChildProcess.stdout.on('data', (chunk: any) => console.log(fullCommand.join(' '), chunk.toString()));
 	spawnedChildProcess.stderr.on('data', (chunk: any) => console.error(fullCommand.join(' '), chunk.toString()));
 	return spawnedChildProcess;
