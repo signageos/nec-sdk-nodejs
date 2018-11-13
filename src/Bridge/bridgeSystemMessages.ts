@@ -13,10 +13,25 @@ export interface GetModel {
 	type: typeof GetModel;
 }
 
+export const GetSerialNumber = 'System.GetSerialNumber';
+export interface GetSerialNumber {
+	type: typeof GetSerialNumber;
+}
+
 export const SetNativeDebug = 'System.SetNativeDebug';
 export interface SetNativeDebug {
 	type: typeof SetNativeDebug;
 	isEnabled: boolean;
+}
+
+export const NetworkGetEthernetMacAddress = 'Network.GetEthernetMacAddress';
+export interface NetworkGetEthernetMacAddress {
+	type: typeof NetworkGetEthernetMacAddress;
+}
+
+export const NetworkGetWifiMacAddress = 'Network.GetWifiMacAddress';
+export interface NetworkGetWifiMacAddress {
+	type: typeof NetworkGetWifiMacAddress;
 }
 
 export const ScreenTurnOff = 'Screen.TurnOff';

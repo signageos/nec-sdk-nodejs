@@ -1,11 +1,15 @@
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
+import IManagementDriver from '@signageos/front-display/es6/NativeDevice/IManagementDriver';
 import {
 	SystemReboot,
 	GetDeviceUid,
 	GetModel,
+	GetSerialNumber,
 	SetNativeDebug,
 	ScreenTurnOff,
 	ScreenTurnOn,
+	NetworkGetEthernetMacAddress,
+	NetworkGetWifiMacAddress,
 	FileSystemGetFiles,
 	FileSystemFileExists,
 	FileSystemDownloadFile,
@@ -19,14 +23,17 @@ export class InvalidMessageError extends Error {}
 
 export default async function handleMessage(
 	fileSystem: IFileSystem,
-	nativeDriver: IBasicDriver,
+	nativeDriver: IBasicDriver & IManagementDriver,
 	message:
 		SystemReboot |
 		GetDeviceUid |
 		GetModel |
+		GetSerialNumber |
 		SetNativeDebug |
 		ScreenTurnOff |
 		ScreenTurnOn |
+		NetworkGetEthernetMacAddress |
+		NetworkGetWifiMacAddress |
 		FileSystemGetFiles |
 		FileSystemFileExists |
 		FileSystemDownloadFile |
@@ -46,6 +53,10 @@ export default async function handleMessage(
 			const model = await SystemAPI.getModel();
 			return { model };
 
+		case GetSerialNumber:
+			const serialNumber = await nativeDriver.getSerialNumber();
+			return { serialNumber };
+
 		case SetNativeDebug:
 			if (message.isEnabled) {
 				await SystemAPI.enableNativeDebug();
@@ -61,6 +72,14 @@ export default async function handleMessage(
 		case ScreenTurnOn:
 			await SystemAPI.turnScreenOn();
 			return {};
+
+		case NetworkGetEthernetMacAddress:
+			const ethernetMacAddress = await nativeDriver.getEthernetMacAddress();
+			return { macAddress: ethernetMacAddress };
+
+		case NetworkGetWifiMacAddress:
+			const wifiMacAddress = await nativeDriver.getWifiMacAddress();
+			return { macAddress: wifiMacAddress };
 
 		case FileSystemGetFiles:
 			const files = await fileSystem.getFilesInDirectory(message.path);

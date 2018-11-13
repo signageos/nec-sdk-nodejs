@@ -24,7 +24,7 @@
   },
   "author": "signageOS.io <dev@signageos.io>",
   "devDependencies": {
-    "@signageos/front-display": "^4.1.0-ma-upgradeFWInManagement.32031128",
+    "@signageos/front-display": "^4.2.0",
     "@signageos/lib": "^1.2.2",
     "@types/async-lock": "0.0.19",
     "@types/checksum": "^0.1.30",
@@ -74,6 +74,7 @@
     "tiny-worker": "^2.1.2",
     "tslint": "^5.8.0",
     "typescript": "^2.6.2",
+    "url-loader": "^1.1.2",
     "util.promisify": "^1.0.0",
     "webpack": "^3.11.0",
     "whatwg-fetch": "^2.0.4"

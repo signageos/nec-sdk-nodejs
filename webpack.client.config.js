@@ -50,7 +50,7 @@ module.exports = {
 				include: [
 					path.resolve(parameters.paths.rootPath, 'config'),
 					path.resolve(parameters.paths.rootPath, 'src'),
-					/node_modules\/(@signageos|hugport-*)/,
+					/node_modules\/(@signageos|hugport-*|cron)/,
 				],
 				loader: 'babel-loader',
 				query: {
@@ -58,6 +58,8 @@ module.exports = {
 				},
 				enforce: "post",
 			},
+			{ test: /\.css$/, loader: 'style-loader!css-loader' },
+			{ test: /\.(png|woff|woff2|eot|ttf)$/, loader: 'url-loader?limit=100000' },
 		],
 	}
 }

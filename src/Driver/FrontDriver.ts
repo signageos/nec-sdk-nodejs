@@ -28,8 +28,11 @@ import {
 	FileSystemGetFileChecksum,
 	GetDeviceUid,
 	GetModel,
+	GetSerialNumber,
 	ScreenTurnOff,
 	ScreenTurnOn,
+	NetworkGetEthernetMacAddress,
+	NetworkGetWifiMacAddress,
 	SystemReboot,
 	SetNativeDebug,
 } from '../Bridge/bridgeSystemMessages';
@@ -117,6 +120,27 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 
 	public stop() {
 		console.info('Stopped Linux front driver');
+	}
+
+	public async getEthernetMacAddress(): Promise<string> {
+		const { macAddress } = await this.bridge.invoke<NetworkGetEthernetMacAddress, { macAddress: string }>({
+			type: NetworkGetEthernetMacAddress,
+		});
+		return macAddress;
+	}
+
+	public async getWifiMacAddress(): Promise<string> {
+		const { macAddress } = await this.bridge.invoke<NetworkGetWifiMacAddress, { macAddress: string }>({
+			type: NetworkGetWifiMacAddress,
+		});
+		return macAddress;
+	}
+
+	public async getSerialNumber(): Promise<string> {
+		const { serialNumber } = await this.bridge.invoke<GetSerialNumber, { serialNumber: string }>({
+			type: GetSerialNumber,
+		});
+		return serialNumber;
 	}
 
 	public async getCurrentTimeWithTimezone(): Promise<{
