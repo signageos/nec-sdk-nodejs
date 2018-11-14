@@ -5,6 +5,7 @@ import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import {
 	IVideoAPI,
 } from '../../API/VideoAPI';
+import IUnixSocketEventListener from '../../UnixSocket/IUnixSocketEventListener';
 import IFileSystem from '../../FileSystem/IFileSystem';
 import IServerVideo from './IServerVideo';
 
@@ -35,9 +36,14 @@ export default class ServerVideo implements IServerVideo {
 		private fileSystem: IFileSystem,
 		private key: string,
 		private videoAPI: IVideoAPI,
+		private videoEventListener: IUnixSocketEventListener,
 	) {
 		this.eventEmitter = new EventEmitter();
 		this.removeAllListeners();
+	}
+
+	public async initialize() {
+		await this.videoEventListener.listen();
 	}
 
 	public getVideoArguments(): IVideoArguments | null {
@@ -49,16 +55,24 @@ export default class ServerVideo implements IServerVideo {
 			await this.stop();
 		}
 
+		const readyPromise = new Promise<void>((resolve: () => void) => {
+			this.videoEventListener.once('ready', resolve);
+		});
+
 		this.childProcess = this.prepareVideoChildProcess(uri, x, y, width, height, orientation, isStream);
 		this.videoArguments = { uri, x, y, width, height };
 		this.isStream = isStream;
-		await wait(1e3);
+		await readyPromise;
 	}
 
 	public async play() {
 		if (!this.childProcess) {
 			throw new Error('Trying to play video that\'s not prepared, video key: ' + this.key);
 		}
+
+		const playingPromise = new Promise<void>((resolve: () => void) => {
+			this.videoEventListener.once('started', resolve);
+		});
 
 		if (this.isStream) {
 			await this.videoAPI.playStream(this.childProcess);
@@ -67,6 +81,8 @@ export default class ServerVideo implements IServerVideo {
 		}
 		this.finished = false;
 		this.state = State.PLAYING;
+		await playingPromise;
+		await wait(500);
 	}
 
 	public async stop() {
@@ -82,6 +98,7 @@ export default class ServerVideo implements IServerVideo {
 			}
 		}
 
+		this.videoEventListener.removeAllListeners();
 		this.state = State.IDLE;
 		this.childProcess = null;
 		this.videoArguments = null;
@@ -121,23 +138,23 @@ export default class ServerVideo implements IServerVideo {
 		orientation: Orientation,
 		isStream: boolean,
 	) {
+		const socketPath = this.videoEventListener.getSocketPath();
 		let videoProcess: ChildProcess;
 		if (isStream) {
-			videoProcess = this.videoAPI.prepareStream(uri, x, y, width, height, orientation);
+			videoProcess = this.videoAPI.prepareStream(uri, x, y, width, height, orientation, socketPath);
 		} else {
 			const filePath = this.fileSystem.getFullPath(uri);
-			videoProcess = this.videoAPI.prepareVideo(filePath, x, y, width, height, orientation);
+			videoProcess = this.videoAPI.prepareVideo(filePath, x, y, width, height, orientation, socketPath);
 		}
+
+		const videoEventSrcArgs = { uri, x, y, width, height };
 
 		videoProcess.once('close', (code: number, signal: string | null) => {
 			this.state = State.IDLE;
 			this.finished = true;
-			const videoEventSrcArgs = { uri, x, y, width, height };
 			if (signal !== null) {
 				this.eventEmitter.emit('stopped', { type: 'stopped', srcArguments: videoEventSrcArgs });
-			} else if (code === 0) {
-				this.eventEmitter.emit('ended', { type: 'ended', srcArguments: videoEventSrcArgs });
-			} else {
+			} else if (code !== 0) {
 				this.eventEmitter.emit('error', {
 					type: 'error',
 					srcArguments: videoEventSrcArgs,
@@ -150,6 +167,10 @@ export default class ServerVideo implements IServerVideo {
 
 		videoProcess.on('error', (error: Error) => {
 			console.error('video error', error, { uri, x, y, width, height });
+		});
+
+		this.videoEventListener.on('ended', () => {
+			this.eventEmitter.emit('ended', { type: 'ended', srcArguments: videoEventSrcArgs });
 		});
 
 		return videoProcess;

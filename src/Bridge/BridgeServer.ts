@@ -32,6 +32,7 @@ export default class BridgeServer {
 	}
 
 	public async start() {
+		await this.videoPlayer.initialize();
 		await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
 			const serverUrl = url.parse(this.serverUrl);
 			this.httpServer.listen(

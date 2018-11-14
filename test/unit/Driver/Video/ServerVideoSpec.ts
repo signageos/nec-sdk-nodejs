@@ -1,9 +1,11 @@
 import { EventEmitter } from 'events';
 import * as should from 'should';
 import * as sinon from 'sinon';
+import wait from '@signageos/lib/dist/Timer/wait';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import ServerVideo from '../../../../src/Driver/Video/ServerVideo';
 import { ChildProcess } from "child_process";
+import IUnixSocketEventListener from '../../../../src/UnixSocket/IUnixSocketEventListener';
 
 interface IMockVideoAPI {
 	prepareVideo?(
@@ -29,7 +31,20 @@ interface IMockVideoAPI {
 	stopStream?(streamProcess: ChildProcess): Promise<void>;
 }
 
+class MockVideoEventListener extends EventEmitter implements IUnixSocketEventListener {
+
+	public getSocketPath(): string {
+		return "/tmp/test.sock";
+	}
+
+	public async listen(): Promise<void> {
+		// do nothing
+	}
+
+}
+
 function createServerVideo(
+	videoEventListener: IUnixSocketEventListener,
 	mockVideoAPI: IMockVideoAPI = {},
 	key: string = 'test_video',
 ) {
@@ -51,7 +66,7 @@ function createServerVideo(
 		getFullPath: (uri: string) => uri,
 	};
 
-	return new ServerVideo(mockFileSystem as any, key, videoAPI as any);
+	return new ServerVideo(mockFileSystem as any, key, videoAPI as any, videoEventListener);
 }
 
 describe('Driver.Video.ServerVideo', function () {
@@ -59,7 +74,7 @@ describe('Driver.Video.ServerVideo', function () {
 	describe('construct', function () {
 
 		it('should be idle and have no video arguments when constructed', function () {
-			const serverVideo = createServerVideo();
+			const serverVideo = createServerVideo(new MockVideoEventListener());
 			serverVideo.isIdle().should.be.true();
 			should(serverVideo.getVideoArguments()).be.null();
 		});
@@ -70,11 +85,14 @@ describe('Driver.Video.ServerVideo', function () {
 		it('should create video child process', async function () {
 			const prepareVideo = sinon.stub().returns(new EventEmitter());
 			const prepareStream = sinon.spy();
-			const serverVideo = createServerVideo({ prepareVideo, prepareStream });
+			const videoEventListener = new MockVideoEventListener();
+			const serverVideo = createServerVideo(videoEventListener, { prepareVideo, prepareStream });
 
-			await serverVideo.prepare('video1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
+			const preparedPromise = serverVideo.prepare('video1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
+			videoEventListener.emit('ready');
+			await preparedPromise;
 			prepareVideo.calledOnce.should.be.true();
-			prepareVideo.getCall(0).args.should.deepEqual(['video1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE]);
+			prepareVideo.getCall(0).args.should.deepEqual(['video1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, '/tmp/test.sock']);
 			prepareStream.called.should.be.false();
 			serverVideo.isIdle().should.be.true();
 			serverVideo.getVideoArguments()!.should.deepEqual({ uri: 'video1Uri', x: 0, y: 1, width: 1920, height: 1080 });
@@ -83,11 +101,14 @@ describe('Driver.Video.ServerVideo', function () {
 		it('should create stream child process', async function () {
 			const prepareVideo = sinon.spy();
 			const prepareStream = sinon.stub().returns(new EventEmitter());
-			const serverVideo = createServerVideo({ prepareVideo, prepareStream });
+			const videoEventListener = new MockVideoEventListener();
+			const serverVideo = createServerVideo(videoEventListener, { prepareVideo, prepareStream });
 
-			await serverVideo.prepare('stream1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			const preparedPromise = serverVideo.prepare('stream1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			videoEventListener.emit('ready');
+			await preparedPromise;
 			prepareStream.calledOnce.should.be.true();
-			prepareStream.getCall(0).args.should.deepEqual(['stream1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE]);
+			prepareStream.getCall(0).args.should.deepEqual(['stream1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, '/tmp/test.sock']);
 			prepareVideo.called.should.be.false();
 			serverVideo.isIdle().should.be.true();
 			serverVideo.getVideoArguments()!.should.deepEqual({ uri: 'stream1Uri', x: 0, y: 1, width: 1920, height: 1080 });
@@ -102,13 +123,23 @@ describe('Driver.Video.ServerVideo', function () {
 			};
 
 			const prepareVideo = sinon.stub().returns(videoChildProcess);
-			const serverVideo = createServerVideo({ prepareVideo });
+			const videoEventListener = new MockVideoEventListener();
+			const serverVideo = createServerVideo(videoEventListener, { prepareVideo });
 
-			await serverVideo.prepare('videoUri1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
-			await serverVideo.play();
+			const preparedPromise = serverVideo.prepare('videoUri1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
+			videoEventListener.emit('ready');
+			await preparedPromise;
+
+			const startedPromise = serverVideo.play();
+			videoEventListener.emit('started');
+			await startedPromise;
 			serverVideo.isPlaying().should.be.true();
 
-			await serverVideo.prepare('videoUri2', 2, 3, 1000, 500, Orientation.LANDSCAPE, false);
+			const preparedPromise2 = serverVideo.prepare('videoUri2', 2, 3, 1000, 500, Orientation.LANDSCAPE, false);
+			await wait(500);
+			videoEventListener.emit('ready');
+			await preparedPromise2;
+
 			serverVideo.isIdle().should.be.true();
 			serverVideo.getVideoArguments()!.should.deepEqual({ uri: 'videoUri2', x: 2, y: 3, width: 1000, height: 500 });
 		});
@@ -124,20 +155,27 @@ describe('Driver.Video.ServerVideo', function () {
 			}
 
 			const playVideo = sinon.stub().resolves();
-			const serverVideo = createServerVideo({
+			const videoEventListener = new MockVideoEventListener();
+			const serverVideo = createServerVideo(videoEventListener, {
 				prepareVideo: (uri: string) => new MockVideoProcess(uri) as any,
 				playVideo,
 			});
 
-			await serverVideo.prepare('videoUri1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
-			await serverVideo.play();
+			const preparedPromise = serverVideo.prepare('videoUri1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
+			videoEventListener.emit('ready');
+			await preparedPromise;
+
+			const startedPromise = serverVideo.play();
+			videoEventListener.emit('started');
+			await startedPromise;
+
 			serverVideo.isPlaying().should.be.true();
 			playVideo.calledOnce.should.be.true();
 			playVideo.getCall(0).args[0].uri.should.equal('videoUri1');
 		});
 
 		it('should throw error if the video isn\'t prepared', async function () {
-			const serverVideo = createServerVideo();
+			const serverVideo = createServerVideo(new MockVideoEventListener());
 			await serverVideo.play().should.be.rejected();
 		});
 	});
@@ -146,9 +184,17 @@ describe('Driver.Video.ServerVideo', function () {
 
 		it('should stop running process and change internal state to IDLE', async function () {
 			const stopVideo = sinon.spy();
-			const serverVideo = createServerVideo({ stopVideo });
-			await serverVideo.prepare('videoUri1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
-			await serverVideo.play();
+			const videoEventListener = new MockVideoEventListener();
+			const serverVideo = createServerVideo(videoEventListener, { stopVideo });
+
+			const preparedPromise = serverVideo.prepare('videoUri1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
+			videoEventListener.emit('ready');
+			await preparedPromise;
+
+			const startedPromise = serverVideo.play();
+			videoEventListener.emit('started');
+			await startedPromise;
+
 			serverVideo.isPlaying().should.be.true();
 			await serverVideo.stop();
 			serverVideo.isIdle().should.be.true();
@@ -156,7 +202,7 @@ describe('Driver.Video.ServerVideo', function () {
 		});
 
 		it('should throw error when trying to stop video that\'s not playing', async function () {
-			const serverVideo = createServerVideo();
+			const serverVideo = createServerVideo(new MockVideoEventListener());
 			await serverVideo.stop().should.be.rejected();
 		});
 	});

@@ -67,4 +67,7 @@ exports = module.exports = {
 	fileSystem: {
 		root: process.env.fs_root_path,
 	},
+	video: {
+		socket_root: '/tmp'
+	},
 };

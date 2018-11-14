@@ -3,6 +3,7 @@ import { IVideoArguments } from './ServerVideo';
 
 interface IServerVideo {
 	getVideoArguments(): IVideoArguments | null;
+	initialize(): Promise<void>;
 	prepare(uri: string, x: number, y: number, width: number, height: number, orientation: Orientation, isStream: boolean): Promise<void>;
 	play(): Promise<void>;
 	stop(): Promise<void>;

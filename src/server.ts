@@ -1,8 +1,11 @@
 // polyfill promisify for node.js 5
+import UnixSocketEventListener from './UnixSocket/UnixSocketEventListener';
+
 require('util').promisify = require('util.promisify');
 // polyfill WebSocket for node.js
 (global as any).WebSocket = require('ws');
 
+import * as path from 'path';
 import * as AsyncLock from 'async-lock';
 import ManagementDriver from './Driver/ManagementDriver';
 import ServerVideo from './Driver/Video/ServerVideo';
@@ -68,7 +71,11 @@ if (parameters.raven.enabled) {
 	);
 
 	const videoAPI = createVideoAPI();
-	const createVideo = (key: string) => new ServerVideo(fileSystem, key, videoAPI);
+	const createVideo = (key: string) => {
+		const unixSocketPath = path.join(parameters.video.socket_root, key + '.sock');
+		const videoEventListener = new UnixSocketEventListener(unixSocketPath);
+		return new ServerVideo(fileSystem, key, videoAPI, videoEventListener);
+	};
 	const videoPlayer = new ServerVideoPlayer(4, createVideo);
 
 	const bridgeServer = new BridgeServer(parameters.server.bridge_url, fileSystem, nativeDriver, videoPlayer);

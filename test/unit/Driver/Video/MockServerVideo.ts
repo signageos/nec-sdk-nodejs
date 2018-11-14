@@ -22,6 +22,10 @@ class MockServerVideo implements IServerVideo {
 		return this.videoArguments;
 	}
 
+	public async initialize(): Promise<void> {
+		// do nothing
+	}
+
 	public async prepare(
 		uri: string,
 		x: number,

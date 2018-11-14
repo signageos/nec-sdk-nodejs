@@ -18,6 +18,12 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		}
 	}
 
+	public async initialize() {
+		await Promise.all(
+			this.videos.map((video: IServerVideo) => video.initialize()),
+		);
+	}
+
 	public async prepare(
 		uri: string,
 		x: number,
