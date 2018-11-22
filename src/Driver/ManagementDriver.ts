@@ -1,9 +1,11 @@
 import * as url from 'url';
 import { checksumString } from '@signageos/lib/dist/Hash/checksum';
-import IManagementDriver from '@signageos/front-display/es6/NativeDevice/IManagementDriver';
+import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
+import ManagementCapability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
+import INetworkInfo from '@signageos/front-display/es6/Front/Device/Network/INetworkInfo';
 import IBatteryStatus from '@signageos/front-display/es6/NativeDevice/Battery/IBatteryStatus';
 import IStorageUnit from '@signageos/front-display/es6/NativeDevice/IStorageUnit';
-import Capability from '@signageos/front-display/es6/NativeDevice/Capability';
+import Capability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
 import { APPLICATION_TYPE } from './constants';
 import IBasicDriver from '../../node_modules/@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import * as SystemAPI from '../API/SystemAPI';
@@ -91,30 +93,39 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		return await SystemAPI.getCpuTemperature();
 	}
 
-	public async getEthernetMacAddress(): Promise<string> {
-		const networkInterfaces = await NetworkAPI.getNetworkInterfaces();
-		for (let networkInterface of networkInterfaces) {
-			if (networkInterface.type === NetworkAPI.NetworkInterfaceType.ETHERNET) {
-				return networkInterface.mac;
-			}
+	public async getNetworkInfo(): Promise<INetworkInfo> {
+		const ethernet = await NetworkAPI.getEthernet();
+		const wifi = await NetworkAPI.getWifi();
+		const gateway = await NetworkAPI.getDefaultGateway();
+		const dns = await NetworkAPI.getDNSSettings();
+
+		let localAddress: string | undefined = undefined;
+		let activeInterface: string | undefined = undefined;
+		let netmask: string | undefined = undefined;
+
+		if (ethernet) {
+			localAddress = ethernet.ip;
+			activeInterface = 'ethernet';
+			netmask = ethernet.netmask;
+		} else if (wifi) {
+			localAddress = wifi.ip;
+			activeInterface = 'wifi';
+			netmask = wifi.netmask;
 		}
 
-		throw new Error('Failed to get ethernet mac address: no ethernet interface found');
+		return {
+			localAddress,
+			ethernetMacAddress: ethernet ? ethernet.mac : undefined,
+			wifiMacAddress: wifi ? wifi.mac : undefined,
+			activeInterface,
+			gateway: gateway || undefined,
+			netmask,
+			dns,
+		} as INetworkInfo;
 	}
 
 	public async getSerialNumber(): Promise<string> {
 		return await SystemAPI.getSerialNumber();
-	}
-
-	public async getWifiMacAddress(): Promise<string> {
-		const networkInterfaces = await NetworkAPI.getNetworkInterfaces();
-		for (let networkInterface of networkInterfaces) {
-			if (networkInterface.type === NetworkAPI.NetworkInterfaceType.WIFI) {
-				return networkInterface.mac;
-			}
-		}
-
-		throw new Error('Failed to get wifi mac address: no wifi interface found');
 	}
 
 	public async screenshotUpload(uploadBaseUrl: string): Promise<string> {
@@ -145,12 +156,11 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		await this.cache.save(sessionIdKey, sessionId);
 	}
 
-	public supports(capability: Capability): boolean {
+	public managementSupports(capability: ManagementCapability): boolean {
 		switch (capability) {
 			case Capability.MODEL:
 			case Capability.SERIAL_NUMBER:
-			case Capability.WIFI_MAC:
-			case Capability.ETHERNET_MAC:
+			case Capability.NETWORK_INFO:
 			case Capability.TEMPERATURE:
 			case Capability.SCREENSHOT_UPLOAD:
 				return true;

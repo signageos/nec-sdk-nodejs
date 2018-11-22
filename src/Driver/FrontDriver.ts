@@ -1,6 +1,8 @@
 import * as moment from 'moment-timezone';
 import * as AsyncLock from 'async-lock';
-import IDriver, { Hardware } from '@signageos/front-display/es6/NativeDevice/IDriver';
+import IFrontDriver, { Hardware } from '@signageos/front-display/es6/NativeDevice/Front/IFrontDriver';
+import FrontCapability from '@signageos/front-display/es6/NativeDevice/Front/FrontCapability';
+import INetworkInfo from '@signageos/front-display/es6/Front/Device/Network/INetworkInfo';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import Resolution from '@signageos/front-display/es6/NativeDevice/Resolution';
 import IFileSystemFile from '@signageos/front-display/es6/NativeDevice/IFileSystemFile';
@@ -31,8 +33,7 @@ import {
 	GetSerialNumber,
 	ScreenTurnOff,
 	ScreenTurnOn,
-	NetworkGetEthernetMacAddress,
-	NetworkGetWifiMacAddress,
+	NetworkGetInfo,
 	SystemReboot,
 	SetNativeDebug,
 } from '../Bridge/bridgeSystemMessages';
@@ -42,7 +43,7 @@ import PrivateOrientation, { convertScreenOrientationToAngle } from './Orientati
 
 const FS_NAMESPACE = 'front';
 
-export default class FrontDriver implements IDriver, ICacheDriver {
+export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	private static ORIENTATION_KEY: string = 'local-config-ORIENTATION_KEY';
 
@@ -84,6 +85,20 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 		return APPLICATION_TYPE;
 	}
 
+	public frontSupports(capability: FrontCapability): boolean {
+		switch (capability) {
+			case FrontCapability.SYSTEM_REBOOT_REMOTE:
+			case FrontCapability.APP_RESTART_REMOTE:
+			case FrontCapability.DISPLAY_POWER_REMOTE:
+			case FrontCapability.SYSTEM_REBOOT_LOCAL:
+			case FrontCapability.APP_RESTART_LOCAL:
+			case FrontCapability.DISPLAY_POWER_LOCAL:
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	public async getModel(): Promise<string> {
 		const response = await this.bridge.invoke<GetModel, { model: string }>({ type: GetModel });
 		return response.model;
@@ -122,18 +137,11 @@ export default class FrontDriver implements IDriver, ICacheDriver {
 		console.info('Stopped Linux front driver');
 	}
 
-	public async getEthernetMacAddress(): Promise<string> {
-		const { macAddress } = await this.bridge.invoke<NetworkGetEthernetMacAddress, { macAddress: string }>({
-			type: NetworkGetEthernetMacAddress,
+	public async getNetworkInfo(): Promise<INetworkInfo> {
+		const { networkInfo } = await this.bridge.invoke<NetworkGetInfo, { networkInfo: INetworkInfo }>({
+			type: NetworkGetInfo,
 		});
-		return macAddress;
-	}
-
-	public async getWifiMacAddress(): Promise<string> {
-		const { macAddress } = await this.bridge.invoke<NetworkGetWifiMacAddress, { macAddress: string }>({
-			type: NetworkGetWifiMacAddress,
-		});
-		return macAddress;
+		return networkInfo;
 	}
 
 	public async getSerialNumber(): Promise<string> {

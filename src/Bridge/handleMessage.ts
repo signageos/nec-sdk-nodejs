@@ -1,5 +1,5 @@
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
-import IManagementDriver from '@signageos/front-display/es6/NativeDevice/IManagementDriver';
+import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import {
 	SystemReboot,
 	GetDeviceUid,
@@ -8,8 +8,7 @@ import {
 	SetNativeDebug,
 	ScreenTurnOff,
 	ScreenTurnOn,
-	NetworkGetEthernetMacAddress,
-	NetworkGetWifiMacAddress,
+	NetworkGetInfo,
 	FileSystemGetFiles,
 	FileSystemFileExists,
 	FileSystemDownloadFile,
@@ -32,8 +31,7 @@ export default async function handleMessage(
 		SetNativeDebug |
 		ScreenTurnOff |
 		ScreenTurnOn |
-		NetworkGetEthernetMacAddress |
-		NetworkGetWifiMacAddress |
+		NetworkGetInfo |
 		FileSystemGetFiles |
 		FileSystemFileExists |
 		FileSystemDownloadFile |
@@ -73,13 +71,9 @@ export default async function handleMessage(
 			await SystemAPI.turnScreenOn();
 			return {};
 
-		case NetworkGetEthernetMacAddress:
-			const ethernetMacAddress = await nativeDriver.getEthernetMacAddress();
-			return { macAddress: ethernetMacAddress };
-
-		case NetworkGetWifiMacAddress:
-			const wifiMacAddress = await nativeDriver.getWifiMacAddress();
-			return { macAddress: wifiMacAddress };
+		case NetworkGetInfo:
+			const networkInfo = await nativeDriver.getNetworkInfo();
+			return { networkInfo };
 
 		case FileSystemGetFiles:
 			const files = await fileSystem.getFilesInDirectory(message.path);

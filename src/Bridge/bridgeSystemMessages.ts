@@ -24,14 +24,9 @@ export interface SetNativeDebug {
 	isEnabled: boolean;
 }
 
-export const NetworkGetEthernetMacAddress = 'Network.GetEthernetMacAddress';
-export interface NetworkGetEthernetMacAddress {
-	type: typeof NetworkGetEthernetMacAddress;
-}
-
-export const NetworkGetWifiMacAddress = 'Network.GetWifiMacAddress';
-export interface NetworkGetWifiMacAddress {
-	type: typeof NetworkGetWifiMacAddress;
+export const NetworkGetInfo = 'Network.GetInfo';
+export interface NetworkGetInfo {
+	type: typeof NetworkGetInfo;
 }
 
 export const ScreenTurnOff = 'Screen.TurnOff';
