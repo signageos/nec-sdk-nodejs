@@ -8,6 +8,25 @@ export async function getModel() {
 	return await execApiCommand('system_info', 'model');
 }
 
+export interface IStorageUnit {
+	type: string;
+	usedSpace: number;
+	availableSpace: number;
+}
+
+export async function getStorageStatus(): Promise<IStorageUnit[]> {
+	const result = await execApiCommand('system_info', 'storage');
+	const linesSplit = result.trim().split("\n");
+	return linesSplit.map((line: string) => {
+		const [type, usedSpace, availableSpace] = line.split(',');
+		return {
+			type,
+			usedSpace: usedSpace ? parseInt(usedSpace) * 1000 : 0,
+			availableSpace: availableSpace ? parseInt(availableSpace) * 1000 : 0,
+		} as IStorageUnit;
+	});
+}
+
 export async function getCpuTemperature() {
 	const temperatureInMiliCelsiusString = await execApiCommand('cpu', 'temperature');
 	const temperatureInMiliCelsius = parseInt(temperatureInMiliCelsiusString, 10);
@@ -49,8 +68,8 @@ export async function turnScreenOn() {
 	await execApiCommand('screen', 'on');
 }
 
-export async function takeScreenshot() {
-	return await execApiCommand('screen', 'screenshot');
+export async function takeScreenshot(destination: string) {
+	await execApiCommand('screen', 'screenshot', destination);
 }
 
 function escapeBashArgument(argument: string) {

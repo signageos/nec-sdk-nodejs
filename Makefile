@@ -15,7 +15,7 @@ dist-raspbian: dist
 	mkdir -p $(RASPBIAN_DIST)/DEBIAN
 	mkdir -p $(RASPBIAN_DIST)/usr/lib/signageos/server
 	mkdir -p $(RASPBIAN_DIST)/usr/lib/signageos/client
-	mkdir -p $(RASPBIAN_DIST)/var/lib/signageos/fs
+	mkdir -p $(RASPBIAN_DIST)/var/lib/signageos/fs/internal
 	mkdir -p $(RASPBIAN_DIST)/var/lib/signageos/system
 	mkdir -p $(RASPBIAN_DIST)/var/log/signageos
 	mkdir -p $(RASPBIAN_DIST)/etc/init.d

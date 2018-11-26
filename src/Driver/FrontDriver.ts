@@ -5,7 +5,6 @@ import FrontCapability from '@signageos/front-display/es6/NativeDevice/Front/Fro
 import INetworkInfo from '@signageos/front-display/es6/Front/Device/Network/INetworkInfo';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import Resolution from '@signageos/front-display/es6/NativeDevice/Resolution';
-import IFileSystemFile from '@signageos/front-display/es6/NativeDevice/IFileSystemFile';
 import IKeyUpEvent from '@signageos/front-display/es6/NativeDevice/Input/IKeyUpEvent';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
@@ -19,15 +18,10 @@ import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver
 import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheStorageInfo';
 import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
 import { KeyMap } from '@signageos/front-display/es6/NativeDevice/Default/DefaultHelper';
-import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
+import IFileSystem from '@signageos/front-display/es6/NativeDevice/Front/IFileSystem';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
 import {
-	FileSystemDeleteFile,
-	FileSystemDownloadFile,
-	FileSystemFileExists,
-	FileSystemGetFiles,
-	FileSystemGetFileChecksum,
 	GetDeviceUid,
 	GetModel,
 	GetSerialNumber,
@@ -40,8 +34,7 @@ import {
 import BridgeVideoPlayer from './Video/BridgeVideoPlayer';
 import BridgeStreamPlayer from './Video/BridgeStreamPlayer';
 import PrivateOrientation, { convertScreenOrientationToAngle } from './Orientation';
-
-const FS_NAMESPACE = 'front';
+import FrontFileSystem from './FrontFileSystem';
 
 export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
@@ -57,6 +50,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	public readonly video: BridgeVideoPlayer;
 	public readonly stream: IStreamPlayer;
+	public readonly fileSystem: IFileSystem;
 
 	private deviceUid: string;
 	private lock: AsyncLock;
@@ -75,6 +69,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
 		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridge);
 		this.stream = new BridgeStreamPlayer(this.bridge);
+		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge);
 	}
 
 	public async getConfigurationBaseUrl(): Promise<string | null> {
@@ -93,6 +88,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 			case FrontCapability.SYSTEM_REBOOT_LOCAL:
 			case FrontCapability.APP_RESTART_LOCAL:
 			case FrontCapability.DISPLAY_POWER_LOCAL:
+			case FrontCapability.FILE_SYSTEM_INTERNAL_STORAGE:
 				return true;
 			default:
 				return false;
@@ -187,64 +183,6 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 			} else {
 				console.warn(new Error('Not supported keyCode ' + event.keyCode));
 			}
-		});
-	}
-
-	public fileSystemCleanup() {
-		// do nothing on startup cleanup
-	}
-
-	public async fileSystemGetFileUids(): Promise<string[]> {
-		const { files } = await this.bridge.invoke<FileSystemGetFiles, { files: string[] }>({
-			type: FileSystemGetFiles,
-			path: FS_NAMESPACE,
-		});
-
-		return files;
-	}
-
-	public async fileSystemGetFiles(): Promise<{ [uid: string]: IFileSystemFile }> {
-		const files = await this.fileSystemGetFileUids();
-		const result: { [uid: string]: IFileSystemFile } = {};
-		for (let fileUid of files) {
-			const filePath = FS_NAMESPACE + '/' + fileUid;
-			result[fileUid] = {
-				filePath: this.getFileUri(filePath),
-			};
-		}
-
-		return result;
-	}
-
-	public async fileSystemGetFile(uid: string): Promise<IFileSystemFile> {
-		const filePath = FS_NAMESPACE + '/' + uid;
-		const { fileExists } = await this.bridge.invoke<FileSystemFileExists, { fileExists: boolean }>({
-			type: FileSystemFileExists,
-			path: filePath,
-		});
-
-		if (!fileExists) {
-			throw new Error('File ' + uid + ' doesn\'t exist');
-		}
-
-		return {
-			filePath: this.getFileUri(filePath),
-		};
-	}
-
-	public async fileSystemDeleteFile(uid: string): Promise<void> {
-		await this.bridge.invoke<FileSystemDeleteFile, undefined>({
-			type: FileSystemDeleteFile,
-			path: FS_NAMESPACE + '/' + uid,
-		});
-	}
-
-	public async fileSystemSaveFile(uid: string, uri: string, headers?: { [key: string]: string }): Promise<void> {
-		await this.bridge.invoke<FileSystemDownloadFile, undefined>({
-			type: FileSystemDownloadFile,
-			path: FS_NAMESPACE + '/' + uid,
-			uri,
-			headers,
 		});
 	}
 
@@ -370,24 +308,6 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	public async setVolume(_volume: number): Promise<void> {
 		throw new Error("Not implemented"); // TODO : implement
-	}
-
-	public async getChecksumFile(uid: string, hashType: HashAlgorithm): Promise<string> {
-		const { checksum } = await this.bridge.invoke<FileSystemGetFileChecksum, { checksum: string }>({
-			type: FileSystemGetFileChecksum,
-			path: uid,
-			hashAlgorithm: hashType,
-		});
-		return checksum;
-	}
-
-	public async validateChecksumFile(uid: string, hash: string, hashType: HashAlgorithm): Promise<boolean> {
-		const checksum = await this.getChecksumFile(uid, hashType);
-		return checksum === hash;
-	}
-
-	private getFileUri(filePath: string) {
-		return this.fileSystemUrl + '/' + filePath;
 	}
 
 	private initialize() {

@@ -2,26 +2,31 @@ import * as url from 'url';
 import { checksumString } from '@signageos/lib/dist/Hash/checksum';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import ManagementCapability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
+import IManagementFileSystem from '@signageos/front-display/es6/NativeDevice/Management/IFileSystem';
 import INetworkInfo from '@signageos/front-display/es6/Front/Device/Network/INetworkInfo';
 import IBatteryStatus from '@signageos/front-display/es6/NativeDevice/Battery/IBatteryStatus';
-import IStorageUnit from '@signageos/front-display/es6/NativeDevice/IStorageUnit';
 import Capability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
 import { APPLICATION_TYPE } from './constants';
 import IBasicDriver from '../../node_modules/@signageos/front-display/es6/NativeDevice/IBasicDriver';
+import { IFilePath } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import * as SystemAPI from '../API/SystemAPI';
 import * as NetworkAPI from '../API/NetworkAPI';
 import ICache from '../Cache/ICache';
 import IFileSystem from '../FileSystem/IFileSystem';
+import ManagementFileSystem from './ManagementFileSystem';
 
 export default class ManagementDriver implements IBasicDriver, IManagementDriver {
 
+	public fileSystem: IManagementFileSystem;
 	private deviceUid: string;
 
 	constructor(
 		private remoteServerUrl: string,
 		private cache: ICache,
-		private fileSystem: IFileSystem,
-	) {}
+		private internalFileSystem: IFileSystem,
+	) {
+		this.fileSystem = new ManagementFileSystem(this.internalFileSystem);
+	}
 
 	public start() {
 		console.info('Started Linux management driver');
@@ -46,21 +51,30 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async appUpgrade(baseUrl: string, version: string) {
+		const internalStorageUnit = await this.internalFileSystem.getInternalStorageUnit();
 		const APP_SUBDIR = '__apps';
-		const destinationFile = APP_SUBDIR + '/' + version + '.deb';
+		const destinationDirectory = {
+			storageUnit: internalStorageUnit,
+			filePath: APP_SUBDIR,
+		};
+		const destinationFile = {
+			storageUnit: internalStorageUnit,
+			filePath: APP_SUBDIR + '/' + version + '.deb',
+		};
 		const sourcePath = `/app/linux/${version}/signageos-display-linux.deb`;
 		const sourceUrl = baseUrl + sourcePath;
 
 		console.log('downloading new app ' + version);
-		await this.fileSystem.downloadFile(destinationFile, sourceUrl);
+		await this.internalFileSystem.ensureDirectory(destinationDirectory);
+		await this.internalFileSystem.downloadFile(destinationFile, sourceUrl);
 		console.log(`app ${version} downloaded`);
 
 		try {
-			const fullFilePath = this.fileSystem.getFullPath(destinationFile);
-			await SystemAPI.upgradeApp(fullFilePath);
+			const absoluteFilePath = this.internalFileSystem.getAbsolutePath(destinationFile);
+			await SystemAPI.upgradeApp(absoluteFilePath);
 			console.log('upgraded to version ' + version);
 		} finally {
-			await this.fileSystem.deleteFile(destinationFile);
+			await this.internalFileSystem.deleteFile(destinationFile);
 		}
 
 		return () => SystemAPI.reboot();
@@ -83,10 +97,6 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 
 	public async batteryGetStatus(): Promise<IBatteryStatus> {
 		throw new Error('batteryGetStatus not implemented');
-	}
-
-	public async fileSystemGetStorageUnits(): Promise<IStorageUnit[]> {
-		throw new Error("Not implemented"); // TODO : implement
 	}
 
 	public async getCurrentTemperature(): Promise<number> {
@@ -129,13 +139,21 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async screenshotUpload(uploadBaseUrl: string): Promise<string> {
-		const screenshotPath = await SystemAPI.takeScreenshot();
+		const SCREENSHOT_DIR = 'screenshots';
+		const tmpStorageUnit = this.internalFileSystem.getTmpStorageUnit();
+		const destination = {
+			storageUnit: tmpStorageUnit,
+			filePath: SCREENSHOT_DIR,
+		} as IFilePath;
+		await this.internalFileSystem.ensureDirectory(destination);
+		const destinationAbsolutePath = this.internalFileSystem.getAbsolutePath(destination);
+		await SystemAPI.takeScreenshot(destinationAbsolutePath);
 		const uploadUri = uploadBaseUrl + '/upload/file?prefix=screenshot/';
-		const response = await this.fileSystem.uploadFile(screenshotPath, 'file', uploadUri);
+		const response = await this.internalFileSystem.uploadFile(destination, 'file', uploadUri);
 		const data = JSON.parse(response);
 
 		try {
-			await this.fileSystem.deleteFile(screenshotPath);
+			await this.internalFileSystem.deleteFile(destination);
 		} catch (error) {
 			console.error('failed to cleanup screenshot after upload');
 		}

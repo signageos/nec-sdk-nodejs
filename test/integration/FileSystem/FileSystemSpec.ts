@@ -1,161 +1,124 @@
-import 'should';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
+import * as should from 'should';
 import { promisify } from 'util';
+import * as child_process from 'child_process';
 import * as path from 'path';
 import * as http from 'http';
 import * as express from 'express';
 import * as cors from 'cors';
 import * as bodyParser from 'body-parser';
 import * as multer from 'multer';
-import { FileOrDirectoryNotFound } from '../../../src/FileSystem/IFileSystem';
+import { IFilePath, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
+import { DATA_DIRECTORY_PATH, FileOrDirectoryNotFound } from '../../../src/FileSystem/IFileSystem';
 import FileSystem from '../../../src/FileSystem/FileSystem';
 
 const parameters = require('../../../config/parameters');
 const fileSystemRoot = parameters.fileSystem.root;
 
+const testStorageUnit = {
+	type: 'test',
+	capacity: 0,
+	freeSpace: 0,
+	usableSpace: 0,
+	removable: false,
+} as IStorageUnit;
+
+function getRootPath() {
+	return path.join(fileSystemRoot, 'test', DATA_DIRECTORY_PATH);
+}
+
+function getAbsolutePath(relativePath: string) {
+	const rootPath = getRootPath();
+	return path.join(rootPath, relativePath);
+}
+
+function getFilePathObject(filePath: string): IFilePath {
+	return {
+		storageUnit: testStorageUnit,
+		filePath,
+	};
+}
+
 describe('FileSystem', function () {
 
-	async function rmdirRecursive(directory: string) {
-		const filenames = await promisify(fs.readdir)(directory);
-		for (let filename of filenames) {
-			const filePath = path.join(directory, filename);
-			const stats = await promisify(fs.lstat)(filePath);
-			if (stats.isDirectory()) {
-				await rmdirRecursive(filePath);
-			} else {
-				await promisify(fs.unlink)(filePath);
-			}
-		}
-		await promisify(fs.rmdir)(directory);
-	}
-
-	before(async function () {
-		if (await promisify(fs.exists)(fileSystemRoot)) {
-			await rmdirRecursive(fileSystemRoot);
-		}
-
-		await promisify(fs.mkdir)(fileSystemRoot);
+	beforeEach(async function () {
+		await fs.remove(fileSystemRoot);
+		const rootPath = getRootPath();
+		await fs.ensureDir(rootPath);
 	});
 
 	after(async function () {
-		await rmdirRecursive(fileSystemRoot);
+		await fs.remove(fileSystemRoot);
 	});
 
-	describe('readFile', function () {
+	describe('listFiles', function () {
 
-		it('should return contents of an existing file', async function () {
+		it('should return list of files in a directory', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			const fileFullPath = path.join(fileSystemRoot, 'file1');
-			await promisify(fs.writeFile)(fileFullPath, 'test content in file1');
-			const readFileContents = await fileSystem.readFile('file1');
-			readFileContents.should.equal('test content in file1');
+			const directoryFullPath = getAbsolutePath('directory');
+			const file1FullPath = getAbsolutePath('directory/file1');
+			const file2FullPath = getAbsolutePath('directory/file2');
+			const file3FullPath = getAbsolutePath('directory/file3');
+			await fs.ensureDir(directoryFullPath);
+			await Promise.all([
+				fs.writeFile(file1FullPath, 'contents1'),
+				fs.writeFile(file2FullPath, 'contents2'),
+				fs.writeFile(file3FullPath, 'contents3'),
+			]);
+
+			const filesList = await fileSystem.listFiles(getFilePathObject('directory'));
+			filesList.length.should.equal(3);
+			filesList[0].storageUnit.should.deepEqual(testStorageUnit);
+			filesList[0].filePath.should.equal('directory/file1');
+			filesList[1].storageUnit.should.deepEqual(testStorageUnit);
+			filesList[1].filePath.should.equal('directory/file2');
+			filesList[2].storageUnit.should.deepEqual(testStorageUnit);
+			filesList[2].filePath.should.equal('directory/file3');
 		});
 
-		it('should return contents of an existing file in a subdirectory', async function () {
+		it('should fail if the path isn\'t directory', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			const subdirectoryFullPath = path.join(fileSystemRoot, 'subdirectory');
-			const fileFullPath = path.join(subdirectoryFullPath, 'file2');
-			await promisify(fs.mkdir)(subdirectoryFullPath);
-			await promisify(fs.writeFile)(fileFullPath, 'test content in file2');
-			const readFileContents = await fileSystem.readFile('subdirectory/file2');
-			readFileContents.should.equal('test content in file2');
+			const fileFullPath = getAbsolutePath('file');
+			await fs.writeFile(fileFullPath, 'contents');
+			await fileSystem.listFiles(getFilePathObject('file')).should.be.rejected();
 		});
 
-		it('should throw FileOrDirectoryNotFound exception for trying to read non-existent file', async function () {
+		it('should fail if the path doesn\'t exist', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			await fileSystem.readFile('subdirectory/file3').should.be.rejectedWith(FileOrDirectoryNotFound);
-		});
-	});
-
-	describe('getFileChecksum', function () {
-
-		const testCases = [
-			{
-				fileName: 'fileHashTest1',
-				contents: 'test content in file1',
-				hashAlgorithm: 'md5',
-				expectedChecksum: 'cea74dfe3b9857dfff26283f6aad9870',
-			},
-			{
-				fileName: 'fileHashTest2',
-				contents: 'test content in file2',
-				hashAlgorithm: 'sha1',
-				expectedChecksum: 'f29f12e19001f96da9c5a9f7f8a199ddf7b2c4d6',
-			},
-			{
-				fileName: 'fileHashTest3',
-				contents: 'test content in file3',
-				hashAlgorithm: 'sha256',
-				expectedChecksum: '6aac983cc4a926f34cb090071123ce7ea8d45adf2a6399a104148d0a14579a1c',
-			},
-			{
-				fileName: 'fileHashTest4',
-				contents: 'test content in file4',
-				hashAlgorithm: 'sha512',
-				// tslint:disable-next-line
-				expectedChecksum: '18229405423f1da97a3365a757e8832486b43ceef99bab5ecd15564094cc18d422ff6fea48a009a7852121a002800631aacb1b46579cf5333e02ac84ee7e1069',
-			},
-		];
-
-		testCases.forEach((testCase: typeof testCases[0]) => {
-			it('should return file checksum using ' + testCase.hashAlgorithm, async function () {
-				const fileSystem = new FileSystem(fileSystemRoot);
-				const fileFullPath = path.join(fileSystemRoot, testCase.fileName);
-				await promisify(fs.writeFile)(fileFullPath, testCase.contents);
-				const checksum = await fileSystem.getFileChecksum(testCase.fileName, testCase.hashAlgorithm);
-				checksum.should.equal(testCase.expectedChecksum);
-			});
-		});
-
-		it('should throw FileOrDirectoryNotFound for non-existent file', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
-			await fileSystem.getFileChecksum('invalidFile', 'md5').should.be.rejected();
+			await fileSystem.listFiles(getFilePathObject('non_existent_directory')).should.be.rejected();
 		});
 	});
 
-	describe('saveToFile', function () {
+	describe('exists', function () {
 
-		it('should write contents to a file', async function () {
+		it('should return true if the file exists', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			await fileSystem.saveToFile('file4', 'test write content in file4');
-			const fileFullPath = path.join(fileSystemRoot, 'file4');
-			const fileContents = await promisify(fs.readFile)(fileFullPath);
-			fileContents.toString().should.equal('test write content in file4');
+			const fileFullPath = getAbsolutePath('file');
+			await fs.writeFile(fileFullPath, 'contents');
+			const exists = await fileSystem.exists(getFilePathObject('file'));
+			should(exists).be.true();
 		});
 
-		it('should write contents to a file in subdirectory', async function () {
+		it('should return true if the directory exists', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			await fileSystem.saveToFile('subdirectory2/file5', 'test write content in file5');
-			const fileFullPath = path.join(fileSystemRoot, 'subdirectory2', 'file5');
-			const fileContents = await promisify(fs.readFile)(fileFullPath);
-			fileContents.toString().should.equal('test write content in file5');
-		});
-	});
-
-	describe('deleteFile', function () {
-
-		it('should delete file', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
-			const fileFullPath = path.join(fileSystemRoot, 'file6');
-			await promisify(fs.writeFile)(fileFullPath, 'test content in file6');
-			await fileSystem.deleteFile('file6');
-			await promisify(fs.exists)(fileFullPath).should.be.resolvedWith(false);
+			const dirFullPath = getAbsolutePath('directory');
+			await fs.ensureDir(dirFullPath);
+			const exists = await fileSystem.exists(getFilePathObject('directory'));
+			should(exists).be.true();
 		});
 
-		it('should throw FileOrDirectoryNotFound exception for non-existent file', async function () {
+		it('should return false if the path doesn\'t exist', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			await fileSystem.deleteFile('invalid').should.be.rejectedWith(FileOrDirectoryNotFound);
+			const exists = await fileSystem.exists(getFilePathObject('non_existent_directory'));
+			should(exists).be.false();
 		});
 	});
 
 	describe('downloadFile', function () {
 
-		before('create protected directory', async function () {
-			const directoryPath = path.join(fileSystemRoot, 'protected');
-			const directoryExists = await promisify(fs.exists)(directoryPath);
-			if (!directoryExists) {
-				await promisify(fs.mkdir)(directoryPath);
-			}
+		beforeEach('create protected directory', async function () {
+			const directoryPath = getAbsolutePath('protected');
+			await fs.ensureDir(directoryPath);
 		});
 
 		before('start static HTTP server', function (done: Function) {
@@ -169,7 +132,8 @@ describe('FileSystem', function () {
 					next();
 				}
 			});
-			expressApp.use(express.static(fileSystemRoot));
+			const rootPath = getRootPath();
+			expressApp.use(express.static(rootPath));
 			this.staticHttpServer.listen(33333, (error: any) => {
 				if (error) {
 					throw new Error('Failed starting static HTTP server');
@@ -186,39 +150,71 @@ describe('FileSystem', function () {
 		it('should download file', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
 
-			const sourceFilePath = path.join(fileSystemRoot, 'sourceFile');
-			await promisify(fs.writeFile)(sourceFilePath, 'source file to download');
+			const sourceFilePath = getAbsolutePath('sourceFile');
+			await fs.writeFile(sourceFilePath, 'source file to download');
 
-			await fileSystem.downloadFile('downloadedFile', 'http://localhost:33333/sourceFile');
+			await fileSystem.downloadFile(
+				getFilePathObject('downloadedFile'),
+				'http://localhost:33333/sourceFile',
+			);
 
-			const downloadedFilePath = path.join(fileSystemRoot, 'downloadedFile');
-			const downloadedFileContents = await promisify(fs.readFile)(downloadedFilePath);
+			const downloadedFilePath = getAbsolutePath('downloadedFile');
+			const downloadedFileContents = await fs.readFile(downloadedFilePath);
 			downloadedFileContents.toString().should.equal('source file to download');
+		});
+
+		it('should download file into a directory', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+
+			const sourceFilePath = getAbsolutePath('sourceFile');
+			await fs.writeFile(sourceFilePath, 'source file to download');
+			const directoryPath = getAbsolutePath('directory');
+			await fs.mkdir(directoryPath);
+
+			await fileSystem.downloadFile(
+				getFilePathObject('directory/downloadedFile'),
+				'http://localhost:33333/sourceFile',
+			);
+
+			const downloadedFilePath = getAbsolutePath('directory/downloadedFile');
+			const downloadedFileContents = await fs.readFile(downloadedFilePath);
+			downloadedFileContents.toString().should.equal('source file to download');
+		});
+
+		it('should fail when destination directory doesn\'t exist', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+
+			const sourceFilePath = getAbsolutePath('sourceFile');
+			await fs.writeFile(sourceFilePath, 'source file to download');
+
+			await fileSystem.downloadFile(
+				getFilePathObject('directory/downloadedFile'),
+				'http://localhost:33333/sourceFile',
+			).should.be.rejected();
 		});
 
 		it('should fail downloading file from a protected path', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			const sourceFilePath = path.join(fileSystemRoot, 'protected', 'protectedFile1');
-			await promisify(fs.writeFile)(sourceFilePath, 'source protected file1');
-
-			await fileSystem
-				.downloadFile('downloadedFile2', 'http://localhost:33333/protected/protectedFile1')
-				.should.be.rejected();
+			const sourceFilePath = getAbsolutePath('protected/protectedFile1');
+			await fs.writeFile(sourceFilePath, 'source protected file1');
+			await fileSystem.downloadFile(
+				getFilePathObject('downloadedFile2'),
+				'http://localhost:33333/protected/protectedFile1',
+			).should.be.rejected();
 		});
 
 		it('should download file from a protected path with a correct Authorization header', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			const sourceFilePath = path.join(fileSystemRoot, 'protected', 'protectedFile2');
-			await promisify(fs.writeFile)(sourceFilePath, 'source protected file2');
-
+			const sourceFilePath = getAbsolutePath('protected/protectedFile2');
+			await fs.writeFile(sourceFilePath, 'source protected file2');
 			await fileSystem.downloadFile(
-				'downloadedFile3',
+				getFilePathObject('downloadedFile3'),
 				'http://localhost:33333/protected/protectedFile2',
 				{ Authorization: 'coolAccessToken' },
 			);
 
-			const downloadedFilePath = path.join(fileSystemRoot, 'downloadedFile3');
-			const downloadedFileContents = await promisify(fs.readFile)(downloadedFilePath);
+			const downloadedFilePath = getAbsolutePath('downloadedFile3');
+			const downloadedFileContents = await fs.readFile(downloadedFilePath);
 			downloadedFileContents.toString().should.equal('source protected file2');
 		});
 	});
@@ -267,9 +263,13 @@ describe('FileSystem', function () {
 
 		it('should upload file and get response with 200 status code and correct body', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			const sourceFilePath = path.join(fileSystemRoot, 'fileToUpload1');
-			await promisify(fs.writeFile)(sourceFilePath, 'file to upload 1');
-			const response = await fileSystem.uploadFile('fileToUpload1', 'file', 'http://localhost:33333/upload');
+			const sourceFilePath = getAbsolutePath('fileToUpload1');
+			await fs.writeFile(sourceFilePath, 'file to upload 1');
+			const response = await fileSystem.uploadFile(
+				getFilePathObject('fileToUpload1'),
+				'file',
+				'http://localhost:33333/upload',
+			);
 			JSON.parse(response).should.be.deepEqual({
 				fileName: 'fileToUpload1',
 				contents: 'file to upload 1',
@@ -278,10 +278,10 @@ describe('FileSystem', function () {
 
 		it('should fail when server returns an error status code', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			const sourceFilePath = path.join(fileSystemRoot, 'fileToUpload2');
-			await promisify(fs.writeFile)(sourceFilePath, 'file to upload 2');
+			const sourceFilePath = getAbsolutePath('fileToUpload2');
+			await fs.writeFile(sourceFilePath, 'file to upload 2');
 			await fileSystem.uploadFile(
-				'fileToUpload2',
+				getFilePathObject('fileToUpload2'),
 				'file',
 				'http://localhost:33333/upload',
 				{ should_fail: 'yes' },
@@ -289,120 +289,284 @@ describe('FileSystem', function () {
 		});
 	});
 
-	describe('getFilesInDirectory', function () {
+	describe('readFile', function () {
 
-		it('should return filenames of all files in a given directory (but not directories or others)', async function () {
+		it('should return contents of an existing file', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-
-			const directory = 'anotherTestDirectory1';
-			const directoryFullPath = path.join(fileSystemRoot, directory);
-			await promisify(fs.mkdir)(directoryFullPath);
-
-			const expectedFileNames: string[] = [];
-			for (let i = 0; i < 10; i++) {
-				const filename = 'file' + i;
-				const fileFullPath = path.join(fileSystemRoot, directory, filename);
-				await promisify(fs.writeFile)(fileFullPath, `test file${i} in a directory`);
-				expectedFileNames.push(filename);
-			}
-
-			for (let i = 0; i < 4; i++) {
-				const subdirName = 'subdir' + i;
-				const subdirFullPath = path.join(fileSystemRoot, directory, subdirName);
-				await promisify(fs.mkdir)(subdirFullPath);
-			}
-
-			const symlinkName = 'file1Symlink';
-			const symlinkFullPath = path.join(fileSystemRoot, directory, symlinkName);
-			const targetFileFullPath = path.join(fileSystemRoot, directory, 'file1');
-			await promisify(fs.symlink)(targetFileFullPath, symlinkFullPath);
-
-			const actualFileNames = await fileSystem.getFilesInDirectory(directory);
-			actualFileNames.should.deepEqual(expectedFileNames);
+			const fileFullPath = getAbsolutePath('file1');
+			await fs.writeFile(fileFullPath, 'test content in file1');
+			const readFileContents = await fileSystem.readFile(getFilePathObject('file1'));
+			readFileContents.should.equal('test content in file1');
 		});
 
-		it('should throw FileOrDirectoryNotFound exception for non-existent directory', async function () {
+		it('should return contents of an existing file in a subdirectory', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			await fileSystem.getFilesInDirectory('invalidDir').should.be.rejectedWith(FileOrDirectoryNotFound);
+			const subdirectoryFullPath = getAbsolutePath('subdirectory');
+			const fileFullPath = getAbsolutePath('subdirectory/file2');
+			await fs.mkdir(subdirectoryFullPath);
+			await fs.writeFile(fileFullPath, 'test content in file2');
+			const readFileContents = await fileSystem.readFile(getFilePathObject('subdirectory/file2'));
+			readFileContents.should.equal('test content in file2');
+		});
+
+		it('should throw FileOrDirectoryNotFound exception for trying to read non-existent file', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			await fileSystem.readFile(getFilePathObject('subdirectory/file3'))
+				.should.be.rejectedWith(FileOrDirectoryNotFound);
 		});
 	});
 
-	describe('readFilesInDirectory', function () {
+	describe('saveToFile', function () {
 
-		it('should return contents of all files in a given directory', async function () {
+		it('should write contents to a file', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-
-			const directory = 'anotherTestDirectory2';
-			const directoryFullPath = path.join(fileSystemRoot, directory);
-			await promisify(fs.mkdir)(directoryFullPath);
-
-			const expectedContents: { [filename: string]: string } = {};
-			for (let i = 0; i < 10; i++) {
-				const filename = 'file' + i;
-				const fileFullPath = path.join(fileSystemRoot, directory, filename);
-				const fileContents = `test file${i} in a directory`;
-				await promisify(fs.writeFile)(fileFullPath, fileContents);
-				expectedContents[filename] = fileContents;
-			}
-
-			const actualContents = await fileSystem.readFilesInDirectory(directory);
-			actualContents.should.deepEqual(expectedContents);
+			await fileSystem.saveToFile(
+				getFilePathObject('file4'),
+				'test write content in file4',
+			);
+			const fileFullPath = getAbsolutePath('file4');
+			const fileContents = await fs.readFile(fileFullPath);
+			fileContents.toString().should.equal('test write content in file4');
 		});
 
-		it('should throw FileOrDirectoryNotFound exception for non-existent directory', async function () {
+		it('should fail writing contents to a file in subdirectory', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			await fileSystem.readFilesInDirectory('invalidDir').should.be.rejectedWith(FileOrDirectoryNotFound);
+			await fileSystem.saveToFile(
+				getFilePathObject('subdirectory2/file5'),
+				'test write content in file5',
+			).should.be.rejected();
 		});
 	});
 
-	describe('getFullPath', function () {
+	describe('deleteFile', function () {
 
-		it('should return absolute path to a given relative path', function () {
+		it('should delete file', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileFullPath = getAbsolutePath('file6');
+			await fs.writeFile(fileFullPath, 'test content in file6');
+			await fileSystem.deleteFile(getFilePathObject('file6'));
+			await fs.pathExists(fileFullPath).should.resolvedWith(false);
+		});
 
-			const fullPath1 = fileSystem.getFullPath('file1');
-			fullPath1.should.equal(path.join(fileSystemRoot, 'file1'));
+		it('should throw FileOrDirectoryNotFound exception for non-existent file', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			await fileSystem.deleteFile(getFilePathObject('invalid'))
+				.should.be.rejectedWith(FileOrDirectoryNotFound);
+		});
 
-			const fullPath2 = fileSystem.getFullPath('file2');
-			fullPath2.should.equal(path.join(fileSystemRoot, 'file2'));
-
-			const fullPath3 = fileSystem.getFullPath('subdir/file3');
-			fullPath3.should.equal(path.join(fileSystemRoot, 'subdir', 'file3'));
-
-			const fullPath4 = fileSystem.getFullPath('/absolute/path/file4');
-			fullPath4.should.equal(path.join('/absolute/path/file4'));
+		it('should throw error when trying to delete root', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			await fileSystem.deleteFile(getFilePathObject('')).should.be.rejected();
 		});
 	});
 
-	describe('isFile', function () {
+	describe('moveFile', function () {
 
-		it('should return true for file', async function () {
+		it('should move file to a new location', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			const fileFullPath = path.join(fileSystemRoot, 'file111');
-			await promisify(fs.writeFile)(fileFullPath, 'file111 contents');
-			await fileSystem.isFile('file111').should.be.resolvedWith(true);
+			const sourceFilePath = getAbsolutePath('source');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fileSystem.moveFile(getFilePathObject('source'), getFilePathObject('destination'));
+			const destinationFilePath = getAbsolutePath('destination');
+			const destinationContents = await fs.readFile(destinationFilePath);
+			destinationContents.toString().should.equal('source file');
 		});
 
-		it('should return false for directory', async function () {
+		it('should throw error for non-existent source file', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			const directoryFullPath = path.join(fileSystemRoot, 'directory2222');
-			await promisify(fs.mkdir)(directoryFullPath);
-			await fileSystem.isFile('directory2222').should.be.resolvedWith(false);
+			await fileSystem.moveFile(getFilePathObject('source'), getFilePathObject('destination'))
+				.should.be.rejected();
+		});
+
+		it('should throw error for already existing destination', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			const sourceFilePath = getAbsolutePath('source');
+			const destinationFilePath = getAbsolutePath('destination');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fs.writeFile(destinationFilePath, 'destination file');
+			await fileSystem.moveFile(getFilePathObject('source'), getFilePathObject('destination'))
+				.should.be.rejected();
+		});
+
+		it('should throw error for non-existent destination parent directory', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			const sourceFilePath = getAbsolutePath('source');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fileSystem.moveFile(getFilePathObject('source'), getFilePathObject('directory/destination'))
+				.should.be.rejected();
+		});
+
+		it('should throw error when trying to move root', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			await fileSystem.moveFile(getFilePathObject(''), getFilePathObject('destination')).should.be.rejected();
 		});
 	});
 
-	describe('pathExists', function () {
+	describe('getFileChecksum', function () {
 
-		it('should return true for existing path', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
-			const fileFullPath = path.join(fileSystemRoot, 'file2222');
-			await promisify(fs.writeFile)(fileFullPath, 'file2222 contents');
-			await fileSystem.pathExists('file2222').should.be.resolvedWith(true);
+		const testCases = [
+			{
+				fileName: 'fileHashTest1',
+				contents: 'test content in file1',
+				hashAlgorithm: 'md5',
+				expectedChecksum: 'cea74dfe3b9857dfff26283f6aad9870',
+			},
+			{
+				fileName: 'fileHashTest2',
+				contents: 'test content in file2',
+				hashAlgorithm: 'sha1',
+				expectedChecksum: 'f29f12e19001f96da9c5a9f7f8a199ddf7b2c4d6',
+			},
+			{
+				fileName: 'fileHashTest3',
+				contents: 'test content in file3',
+				hashAlgorithm: 'sha256',
+				expectedChecksum: '6aac983cc4a926f34cb090071123ce7ea8d45adf2a6399a104148d0a14579a1c',
+			},
+			{
+				fileName: 'fileHashTest4',
+				contents: 'test content in file4',
+				hashAlgorithm: 'sha512',
+				// tslint:disable-next-line
+				expectedChecksum: '18229405423f1da97a3365a757e8832486b43ceef99bab5ecd15564094cc18d422ff6fea48a009a7852121a002800631aacb1b46579cf5333e02ac84ee7e1069',
+			},
+		];
+
+		testCases.forEach((testCase: typeof testCases[0]) => {
+			it('should return file checksum using ' + testCase.hashAlgorithm, async function () {
+				const fileSystem = new FileSystem(fileSystemRoot);
+				const fileFullPath = getAbsolutePath(testCase.fileName);
+				await fs.writeFile(fileFullPath, testCase.contents);
+				const checksum = await fileSystem.getFileChecksum(
+					getFilePathObject(testCase.fileName),
+					testCase.hashAlgorithm as any,
+				);
+				checksum.should.equal(testCase.expectedChecksum);
+			});
 		});
 
-		it('should return false for non-existing path', async function () {
+		it('should throw FileOrDirectoryNotFound for non-existent file', async function () {
 			const fileSystem = new FileSystem(fileSystemRoot);
-			await fileSystem.pathExists('invalidFile').should.be.resolvedWith(false);
+			await fileSystem.getFileChecksum(getFilePathObject('invalidFile'), 'md5' as any)
+				.should.be.rejected();
+		});
+	});
+
+	describe('extractFile', function() {
+
+		it('should extract zip file into a given destination directory', async function() {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			const file1ToZip = getAbsolutePath('file1');
+			const file2ToZip = getAbsolutePath('file2');
+			const file3ToZip = getAbsolutePath('file3');
+			const archiveAbsolutePath = getAbsolutePath('archive');
+			await fs.writeFile(file1ToZip, 'file1 to zip');
+			await fs.writeFile(file2ToZip, 'file2 to zip');
+			await fs.writeFile(file3ToZip, 'file3 to zip');
+			await promisify(child_process.exec)(`zip -j ${archiveAbsolutePath} ${file1ToZip} ${file2ToZip} ${file3ToZip}`);
+			await fileSystem.extractFile(
+				getFilePathObject('archive.zip'),
+				getFilePathObject('destination'),
+				'zip',
+			);
+
+			const unzippedFile1 = getAbsolutePath('destination/file1');
+			const file1Contents = await fs.readFile(unzippedFile1);
+			file1Contents.toString().should.equal('file1 to zip');
+
+			const unzippedFile2 = getAbsolutePath('destination/file2');
+			const file2Contents = await fs.readFile(unzippedFile2);
+			file2Contents.toString().should.equal('file2 to zip');
+
+			const unzippedFile3 = getAbsolutePath('destination/file3');
+			const file3Contents = await fs.readFile(unzippedFile3);
+			file3Contents.toString().should.equal('file3 to zip');
+		});
+
+		it('should throw error for non-existent archive', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			await fileSystem.extractFile(
+				getFilePathObject('non_existent_archive.zip'),
+				getFilePathObject('destination'),
+				'zip',
+			).should.be.rejected();
+		});
+
+		it('should throw error for invalid method', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			const file1ToZip = getAbsolutePath('file1');
+			await fs.writeFile(file1ToZip, 'file1 to zip');
+			const archiveAbsolutePath = getAbsolutePath('archive.tar.gz');
+			await promisify(child_process.exec)(`tar cvzf ${archiveAbsolutePath} ${file1ToZip}`);
+			await fileSystem.extractFile(
+				getFilePathObject('archive.tar.gz'),
+				getFilePathObject('destination'),
+				'tar.gz',
+			).should.be.rejected();
+		});
+	});
+
+	describe('createDirectory', function() {
+
+		it('should create directory', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			await fileSystem.createDirectory(getFilePathObject('new_directory'));
+			const directoryFullPath = getAbsolutePath('new_directory');
+			const stats = await fs.lstat(directoryFullPath);
+			should(stats.isDirectory()).be.true();
+		});
+
+		it('should fail when directory already exists', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			const directoryFullPath = getAbsolutePath('new_directory');
+			await fs.mkdir(directoryFullPath);
+			await fileSystem.createDirectory(getFilePathObject('new_directory'))
+				.should.be.rejected();
+		});
+
+		it('should fail when parent directory doesn\'t exist', async function() {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			await fileSystem.createDirectory(getFilePathObject('parent/new_directory'))
+				.should.be.rejected();
+		});
+	});
+
+	describe('ensureDirectory', function () {
+
+		it('should create directory along with it\'s non-existent parent directory', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			await fileSystem.ensureDirectory(getFilePathObject('parent/new_directory'));
+			const directoryFullPath = getAbsolutePath('parent/new_directory');
+			const stats = await fs.lstat(directoryFullPath);
+			should(stats.isDirectory()).be.true();
+		});
+
+		it('shouldn\'t do anything for a directory that already exists', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			const directoryFullPath = getAbsolutePath('parent/new_directory');
+			await fs.ensureDir(directoryFullPath);
+			await fileSystem.ensureDirectory(getFilePathObject('parent/new_directory'));
+			const stats = await fs.lstat(directoryFullPath);
+			should(stats.isDirectory()).be.true();
+		});
+	});
+
+	describe('isDirectory', function () {
+
+		it('should return true for directory', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			const directoryFullPath = getAbsolutePath('directory');
+			await fs.mkdir(directoryFullPath);
+			const isDirectory = await fileSystem.isDirectory(getFilePathObject('directory'));
+			should(isDirectory).be.true();
+		});
+
+		it('should return false for file', async function () {
+			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileFullPath = getAbsolutePath('file');
+			await fs.writeFile(fileFullPath, 'file1');
+			const isDirectory = await fileSystem.isDirectory(getFilePathObject('file'));
+			should(isDirectory).be.false();
 		});
 	});
 });

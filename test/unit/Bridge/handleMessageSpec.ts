@@ -1,13 +1,37 @@
 import 'should';
 import * as sinon from 'sinon';
-import handleMessage, { InvalidMessageError } from '../../../src/Bridge/handleMessage';
+import { IFilePath, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
+import handleMessage from '../../../src/Bridge/handleMessage';
 import {
 	GetDeviceUid,
-	FileSystemGetFiles,
-	FileSystemFileExists,
-	FileSystemDownloadFile,
-	FileSystemDeleteFile,
 } from '../../../src/Bridge/bridgeSystemMessages';
+import {
+	ListFiles,
+	FileExists,
+	DownloadFile,
+	DeleteFile,
+	MoveFile,
+	GetFileChecksum,
+	ExtractFile,
+	CreateDirectory,
+	IsDirectory,
+	ListStorageUnits,
+} from '../../../src/Bridge/bridgeFileSystemMessages';
+
+const testStorageUnit = {
+	type: 'test',
+	capacity: 0,
+	freeSpace: 0,
+	usableSpace: 0,
+	removable: false,
+} as IStorageUnit;
+
+function getFilePath(filePath: string): IFilePath {
+	return {
+		storageUnit: testStorageUnit,
+		filePath,
+	};
+}
 
 describe('Bridge.handleMessage', function () {
 
@@ -19,88 +43,144 @@ describe('Bridge.handleMessage', function () {
 		result.should.deepEqual({ deviceUid: 'deviceUid1' });
 	});
 
-	it('should process FileSystemGetFiles message and return map of full paths to files', async function () {
+	it('should process ListFiles message', async function () {
 		const fileSystem = {
-			getFilesInDirectory: sinon.stub().withArgs('dir1').resolves(['file1', 'file2', 'file3']),
-			getFullPath: sinon.stub().withArgs('dir1').returns('/absolute/path/dir1'),
+			listFiles: sinon.stub().resolves([
+				getFilePath('directory/file1'),
+				getFilePath('directory/file2'),
+				getFilePath('directory/file3'),
+			]),
 		};
-		const result = await handleMessage(fileSystem as any, {} as any, { type: FileSystemGetFiles, path: 'dir1' } as FileSystemGetFiles);
-		result.should.deepEqual({ files: ['file1', 'file2', 'file3'] });
+		const result = await handleMessage(fileSystem as any, {} as any, {
+			type: ListFiles,
+			directoryPath: getFilePath('directory'),
+		});
+		result.should.deepEqual({
+			files: [
+				getFilePath('directory/file1'),
+				getFilePath('directory/file2'),
+				getFilePath('directory/file3'),
+			],
+		});
 	});
 
-	it('should process FileSystemFileExists message and return true if the file exists or false if it doesn\'t', async function () {
+	it('should process FileExists message', async function () {
 		const fileSystem = {
-			pathExists: sinon.stub().callsFake(async (path: string) => {
-				switch (path) {
-					case 'file1': return true;
-					case 'file2': return true;
-					case 'file3': return false;
-					default: throw new Error('invalid path:' + path);
-				}
-			}),
-			isFile: sinon.stub().callsFake(async (path: string) => {
-				switch (path) {
-					case 'file1': return true;
-					case 'file2': return false;
-					case 'file3': return true;
-					default: throw new Error('invalid path:' + path);
-				}
-			})
+			exists: sinon.stub().resolves(true),
 		};
-
-		const result1 = await handleMessage(
-			fileSystem as any,
-			{} as any,
-			{ type: FileSystemFileExists, path: 'file1' } as FileSystemFileExists,
-		);
-		result1.should.deepEqual({ fileExists: true });
-
-		const result2 = await handleMessage(
-			fileSystem as any,
-			{} as any,
-			{ type: FileSystemFileExists, path: 'file2' } as FileSystemFileExists,
-		);
-		result2.should.deepEqual({ fileExists: false });
-
-		const result3 = await handleMessage(
-			fileSystem as any,
-			{} as any,
-			{ type: FileSystemFileExists, path: 'file3' } as FileSystemFileExists,
-		);
-		result3.should.deepEqual({ fileExists: false });
+		const result = await handleMessage(fileSystem as any, {} as any, {
+			type: FileExists,
+			filePath: getFilePath('file1'),
+		});
+		result.should.deepEqual({ exists: true });
 	});
 
-	it('should process FileSystemDownloadFile message', async function () {
+	it('should process DownloadFile message', async function () {
+		const downloadFile = sinon.stub().resolves();
+		const fileSystem = { downloadFile };
+		const result = await handleMessage(fileSystem as any, {} as any, {
+			type: DownloadFile,
+			filePath: getFilePath('file1'),
+			sourceUri: 'uri1',
+		});
+		result.should.deepEqual({});
+		downloadFile.callCount.should.equal(1);
+	});
+
+	it('should process DeleteFile message', async function () {
+		const deleteFile = sinon.stub().resolves();
+		const fileSystem = { deleteFile };
+		const result = await handleMessage(fileSystem as any, {} as any, {
+			type: DeleteFile,
+			filePath: getFilePath('file1'),
+			recursive: false,
+		});
+		result.should.deepEqual({});
+		deleteFile.callCount.should.equal(1);
+	});
+
+	it('should process MoveFile message', async function () {
+		const moveFile = sinon.stub().resolves();
+		const fileSystem = { moveFile };
+		const result = await handleMessage(fileSystem as any, {} as any, {
+			type: MoveFile,
+			sourceFilePath: getFilePath('source'),
+			destinationFilePath: getFilePath('destination'),
+		});
+		result.should.deepEqual({});
+		moveFile.callCount.should.equal(1);
+	});
+
+	it('should process GetFileChecksum message', async function () {
 		const fileSystem = {
-			downloadFile: sinon.spy(),
+			getFileChecksum: async () => 'result_checksum',
 		};
-		await handleMessage(
-			fileSystem as any,
-			{} as any,
+		const result = await handleMessage(fileSystem as any, {} as any, {
+			type: GetFileChecksum,
+			filePath: getFilePath('file'),
+			hashType: 'md5' as any,
+		});
+		result.should.deepEqual({ checksum: 'result_checksum' });
+	});
+
+	it('should process ExtractFile message', async function () {
+		const extractFile = sinon.stub().resolves();
+		const fileSystem = { extractFile };
+		const result = await handleMessage(fileSystem as any, {} as any, {
+			type: ExtractFile,
+			archiveFilePath: getFilePath('archive.zip'),
+			destinationDirectoryPath: getFilePath('destination'),
+			method: 'zip',
+		});
+		result.should.deepEqual({});
+		extractFile.callCount.should.equal(1);
+	});
+
+	it('should process CreateDirectory message', async function () {
+		const createDirectory = sinon.stub().resolves();
+		const fileSystem = { createDirectory };
+		const result = await handleMessage(fileSystem as any, {} as any, {
+			type: CreateDirectory,
+			directoryPath: getFilePath('directory'),
+		});
+		result.should.deepEqual({});
+		createDirectory.callCount.should.equal(1);
+	});
+
+	it('should process IsDirectory message', async function () {
+		const fileSystem = {
+			isDirectory: async () => true,
+		};
+		const result = await handleMessage(fileSystem as any, {} as any, {
+			type: IsDirectory,
+			filePath: getFilePath('directory'),
+		});
+		result.should.deepEqual({ isDirectory: true });
+	});
+
+	it('should process ListStorageUnits', async function () {
+		const storageUnits = [
 			{
-				type: FileSystemDownloadFile,
-				path: 'destination',
-				uri: 'http://some_url.test',
-				headers: { header1: 'value1', header2: 'value2' },
-			} as FileSystemDownloadFile,
-		);
-		fileSystem.downloadFile.callCount.should.equal(1);
-		fileSystem.downloadFile.getCall(0).args[0].should.equal('destination');
-		fileSystem.downloadFile.getCall(0).args[1].should.equal('http://some_url.test');
-		fileSystem.downloadFile.getCall(0).args[2].should.deepEqual({ header1: 'value1', header2: 'value2' });
-	});
-
-	it('should process FileSystemDeleteFile message', async function () {
+				type: 'first',
+				capacity: 100,
+				freeSpace: 60,
+				usableSpace: 60,
+				removable: false,
+			},
+			{
+				type: 'second',
+				capacity: 150,
+				freeSpace: 90,
+				usableSpace: 90,
+				removable: true,
+			},
+		];
 		const fileSystem = {
-			deleteFile: sinon.spy(),
+			listStorageUnits: async () => storageUnits,
 		};
-		await handleMessage(fileSystem as any, {} as any, { type: FileSystemDeleteFile, path: 'file1' } as FileSystemDeleteFile);
-		fileSystem.deleteFile.callCount.should.equal(1);
-		fileSystem.deleteFile.getCall(0).args[0].should.equal('file1');
-	});
-
-	it('should throw InvalidMessageError exception for invalid message', async function () {
-		const fileSystem = {} as any;
-		await handleMessage(fileSystem, {} as any, {} as any).should.be.rejectedWith(InvalidMessageError);
+		const result = await handleMessage(fileSystem as any, {} as any, {
+			type: ListStorageUnits,
+		});
+		result.should.deepEqual({ storageUnits });
 	});
 });

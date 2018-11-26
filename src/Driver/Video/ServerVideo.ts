@@ -59,7 +59,7 @@ export default class ServerVideo implements IServerVideo {
 			this.videoEventListener.once('ready', resolve);
 		});
 
-		this.childProcess = this.prepareVideoChildProcess(uri, x, y, width, height, orientation, isStream);
+		this.childProcess = await this.prepareVideoChildProcess(uri, x, y, width, height, orientation, isStream);
 		this.videoArguments = { uri, x, y, width, height };
 		this.isStream = isStream;
 		await readyPromise;
@@ -129,7 +129,7 @@ export default class ServerVideo implements IServerVideo {
 		});
 	}
 
-	private prepareVideoChildProcess(
+	private async prepareVideoChildProcess(
 		uri: string,
 		x: number,
 		y: number,
@@ -143,8 +143,9 @@ export default class ServerVideo implements IServerVideo {
 		if (isStream) {
 			videoProcess = this.videoAPI.prepareStream(uri, x, y, width, height, orientation, socketPath);
 		} else {
-			const filePath = this.fileSystem.getFullPath(uri);
-			videoProcess = this.videoAPI.prepareVideo(filePath, x, y, width, height, orientation, socketPath);
+			const filePath = await this.fileSystem.convertRelativePathToFilePath(uri);
+			const fileAbsolutePath = this.fileSystem.getAbsolutePath(filePath);
+			videoProcess = this.videoAPI.prepareVideo(fileAbsolutePath, x, y, width, height, orientation, socketPath);
 		}
 
 		const videoEventSrcArgs = { uri, x, y, width, height };

@@ -38,36 +38,3 @@ export const ScreenTurnOn = 'Screen.TurnOn';
 export interface ScreenTurnOn {
 	type: typeof ScreenTurnOn;
 }
-
-export const FileSystemGetFiles = 'FileSystem.GetFiles';
-export interface FileSystemGetFiles {
-	type: typeof FileSystemGetFiles;
-	path: string;
-}
-
-export const FileSystemFileExists = 'FileSystem.FileExists';
-export interface FileSystemFileExists {
-	type: typeof FileSystemFileExists;
-	path: string;
-}
-
-export const FileSystemDownloadFile = 'FileSystem.DownloadFile';
-export interface FileSystemDownloadFile {
-	type: typeof FileSystemDownloadFile;
-	path: string;
-	uri: string;
-	headers?: { [key: string]: string };
-}
-
-export const FileSystemDeleteFile = 'FileSystem.DeleteFile';
-export interface FileSystemDeleteFile {
-	type: typeof FileSystemDeleteFile;
-	path: string;
-}
-
-export const FileSystemGetFileChecksum = 'FileSystem.GetFileChecksum';
-export interface FileSystemGetFileChecksum {
-	type: typeof FileSystemGetFileChecksum;
-	path: string;
-	hashAlgorithm: string;
-}
