@@ -1,3 +1,4 @@
+const basicParameters = require('./basic_parameters');
 const { assign } = require('lodash');
 const { detectModuleRootPath } = require('@signageos/lib/dist/Path/detector');
 const packageConfig = require('../package.json');
@@ -20,7 +21,7 @@ try {
 
 const ravenEnabled = typeof process.env.raven_enabled !== 'undefined' ? !!parseInt(process.env.raven_enabled) : false;
 
-exports = module.exports = {
+exports = module.exports = Object.assign({}, basicParameters, {
 	environment,
 	paths: {
 		configPath,
@@ -60,14 +61,10 @@ exports = module.exports = {
 		weinreServerUrl: process.env.weinre_server_url,
 		synchronizerServerUrl: process.env.synchronizer_server_url,
 	},
-	server: {
-		bridge_url: 'http://localhost:8080',
-		file_system_url: 'http://localhost:8081',
-	},
 	fileSystem: {
 		root: process.env.fs_root_path,
 	},
 	video: {
 		socket_root: '/tmp'
 	},
-};
+});

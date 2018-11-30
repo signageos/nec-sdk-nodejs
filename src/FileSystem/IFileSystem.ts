@@ -12,7 +12,7 @@ export default interface IFileSystem {
 	downloadFile(filePath: IFilePath, sourceUri: string, headers?: IHeaders): Promise<void>;
 	uploadFile(filePath: IFilePath, formKey: string, uri: string, headers?: { [key: string]: string }): Promise<any>;
 	readFile(filePath: IFilePath): Promise<string>;
-	saveToFile(filePath: IFilePath, contents: string): Promise<void>;
+	saveToFile(filePath: IFilePath, contents: string | Buffer): Promise<void>;
 	deleteFile(filePath: IFilePath, recursive?: boolean): Promise<void>;
 	moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void>;
 	getFileChecksum(filePath: IFilePath, hashType: HashAlgorithm): Promise<string>;

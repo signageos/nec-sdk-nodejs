@@ -14,6 +14,7 @@ import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants'
 import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
 import createSocket from '@signageos/front-display/es6/Socket/WS/createWSSocket';
 const parameters = require('../config/parameters');
+const frontAppletPrefix = parameters.frontApplet.prefix;
 
 if (parameters.raven.enabled) {
 	Raven.config(parameters.raven.dsn, parameters.raven.config).install();
@@ -27,8 +28,15 @@ if (parameters.raven.enabled) {
 		() => console.log('Bridge socket disconnected'),
 		(error: any) => console.error('Bridge socket error', error),
 	);
-	const bridge = new BridgeClient(parameters.server.bridge_url, socketClient);
-	const nativeDriver = new FrontDriver(window, parameters.app.version, bridge, parameters.server.file_system_url);
+	const bridge = new BridgeClient(parameters.server.bridge_url);
+	const nativeDriver = new FrontDriver(
+		window,
+		frontAppletPrefix,
+		parameters.app.version,
+		bridge,
+		socketClient,
+		parameters.server.file_system_url,
+	);
 	const synchronizer = createSocketSynchronizer(
 		parameters.url.synchronizerServerUrl,
 		() => nativeDriver,
@@ -56,7 +64,7 @@ if (parameters.raven.enabled) {
 		parameters.url.staticBaseUrl,
 		parameters.url.uploadBaseUrl,
 		parameters.app.sessionIdKey,
-		parameters.frontApplet.prefix,
+		frontAppletPrefix,
 		parameters.frontDisplay.version,
 		parameters.url.weinreServerUrl,
 		nativeDriver,

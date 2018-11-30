@@ -3,7 +3,7 @@ import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
 import StreamProtocol from '@signageos/front-display/es6/Stream/StreamProtocol';
 import IStream from '@signageos/front-display/es6/Stream/IStream';
 import IVideo from '@signageos/front-display/es6/Video/IVideo';
-import BridgeClient from '../../Bridge/BridgeClient';
+import BridgeVideoClient from '../../Bridge/BridgeVideoClient';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 import { IStreamClosedEvent, IStreamErrorEvent } from '@signageos/front-display/es6/Stream/streamEvents';
@@ -11,7 +11,7 @@ import { IStreamClosedEvent, IStreamErrorEvent } from '@signageos/front-display/
 export default class BridgeStreamPlayer implements IStreamPlayer {
 
 	constructor(
-		private bridge: BridgeClient,
+		private bridgeVideoClient: BridgeVideoClient,
 	) {}
 
 	@locked('video')
@@ -24,13 +24,13 @@ export default class BridgeStreamPlayer implements IStreamPlayer {
 			throw new Error('Streaming protocol is not supported');
 		}
 
-		const videoEmitter = await this.bridge.video.playVideo(uri, x, y, width, height, true);
+		const videoEmitter = await this.bridgeVideoClient.playVideo(uri, x, y, width, height, true);
 		return this.convertVideoEventEmitterToStreamEventEmitter(videoEmitter, protocol);
 	}
 
 	@locked('video')
 	public async stop(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
-		await this.bridge.video.stopVideo(uri, x, y, width, height);
+		await this.bridgeVideoClient.stopVideo(uri, x, y, width, height);
 	}
 
 	@locked('video')

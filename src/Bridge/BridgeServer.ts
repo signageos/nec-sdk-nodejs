@@ -7,10 +7,11 @@ import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import { ISocketServerWrapper, ISocket } from '@signageos/lib/dist/WebSocket/socketServer';
 import { createWsSocketServer } from '@signageos/lib/dist/WebSocket/wsServerFactory';
-import handleMessage, { InvalidMessageError } from './handleMessage';
+import handleMessage, { InvalidMessageError, ResourceNotFound } from './handleMessage';
 import handleSocket from './handleSocket';
 import IFileSystem from '../FileSystem/IFileSystem';
 import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
+import OverlayRenderer from '../Overlay/OverlayRenderer';
 
 export default class BridgeServer {
 
@@ -23,6 +24,7 @@ export default class BridgeServer {
 		private fileSystem: IFileSystem,
 		private nativeDriver: IBasicDriver & IManagementDriver,
 		private videoPlayer: IServerVideoPlayer,
+		private overlayRenderer: OverlayRenderer,
 	) {
 		this.expressApp = express();
 		this.httpServer = http.createServer(this.expressApp);
@@ -59,15 +61,43 @@ export default class BridgeServer {
 		this.expressApp.use(bodyParser.json());
 		this.expressApp.post('/message', async (request: express.Request, response: express.Response) => {
 			try {
-				const responseMessage = await handleMessage(this.fileSystem, this.nativeDriver, request.body);
+				const responseMessage = await handleMessage(this.fileSystem, this.nativeDriver, this.overlayRenderer, request.body);
 				response.send(responseMessage);
 			} catch (error) {
 				if (error instanceof InvalidMessageError) {
 					response.sendStatus(400);
+				} else if (error instanceof ResourceNotFound) {
+					response.sendStatus(404);
 				} else {
 					response.sendStatus(500);
 					throw error;
 				}
+			}
+		});
+
+		const rawBody = bodyParser.raw({ inflate: true, limit: '100mb', type: '*/*' });
+		this.expressApp.post('/overlay', rawBody, async (request: express.Request, response: express.Response) => {
+			const {
+				id, appletUid, width, height, x, y, horizontalTranslation, verticalTranslation, maxHorizontalOffset, maxVerticalOffset,
+			} = request.query;
+			const fileBuffer = request.body;
+			try {
+				await this.overlayRenderer.render(
+					fileBuffer,
+					id,
+					appletUid,
+					width,
+					height,
+					x,
+					y,
+					horizontalTranslation,
+					verticalTranslation,
+					maxHorizontalOffset,
+					maxVerticalOffset,
+				);
+				response.sendStatus(200);
+			} catch (error) {
+				response.status(400).send({ error: error.message });
 			}
 		});
 

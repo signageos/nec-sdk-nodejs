@@ -22,6 +22,7 @@ import { createSameThreadWebWorkerFactory } from '@signageos/front-display/es6/W
 import FileSystem from './FileSystem/FileSystem';
 import FileSystemCache from './Cache/FileSystemCache';
 import { fetch } from './WebWorker/serverFetch';
+import OverlayRenderer from './Overlay/OverlayRenderer';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -79,6 +80,7 @@ if (parameters.raven.enabled) {
 	};
 	const videoPlayer = new ServerVideoPlayer(4, createVideo);
 
-	const bridgeServer = new BridgeServer(parameters.server.bridge_url, fileSystem, nativeDriver, videoPlayer);
+	const overlayRenderer = new OverlayRenderer(fileSystem);
+	const bridgeServer = new BridgeServer(parameters.server.bridge_url, fileSystem, nativeDriver, videoPlayer, overlayRenderer);
 	await bridgeServer.start();
 })().catch((error: any) => console.error(error));

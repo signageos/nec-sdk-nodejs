@@ -11,14 +11,18 @@ import {
 	NetworkGetInfo,
 } from './bridgeSystemMessages';
 import * as FSMessages from './bridgeFileSystemMessages';
+import * as OverlayMessages from './bridgeOverlayMessages';
 import * as SystemAPI from '../API/SystemAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
+import OverlayRenderer from '../Overlay/OverlayRenderer';
 
 export class InvalidMessageError extends Error {}
+export class ResourceNotFound extends Error {}
 
 export default async function handleMessage(
 	fileSystem: IFileSystem,
 	nativeDriver: IBasicDriver & IManagementDriver,
+	overlayRenderer: OverlayRenderer,
 	message:
 		SystemReboot |
 		GetDeviceUid |
@@ -37,7 +41,9 @@ export default async function handleMessage(
 		FSMessages.ExtractFile |
 		FSMessages.CreateDirectory |
 		FSMessages.IsDirectory |
-		FSMessages.ListStorageUnits,
+		FSMessages.ListStorageUnits |
+		OverlayMessages.Hide |
+		OverlayMessages.HideAll,
 ): Promise<object> {
 	switch (message.type) {
 		case SystemReboot:
@@ -115,6 +121,14 @@ export default async function handleMessage(
 		case FSMessages.ListStorageUnits:
 			const storageUnits = await fileSystem.listStorageUnits();
 			return { storageUnits };
+
+		case OverlayMessages.Hide:
+			await overlayRenderer.hide(message.id, message.appletUid);
+			return {};
+
+		case OverlayMessages.HideAll:
+			await overlayRenderer.hideAll();
+			return {};
 
 		default:
 			throw new InvalidMessageError('invalid message type: ' + (message as any).type);
