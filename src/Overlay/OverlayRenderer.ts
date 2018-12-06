@@ -1,6 +1,7 @@
 import { ChildProcess } from 'child_process';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 import { IFilePath, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
+import { checksumString } from '@signageos/front-display/es6/Hash/checksum';
 import IFileSystem from '../FileSystem/IFileSystem';
 import { showOverlay, refreshOverlay } from '../API/OverlayAPI';
 
@@ -9,14 +10,7 @@ class OverlayRenderer {
 	private overlayProcesses: {
 		[id: string]: {
 			process: ChildProcess;
-			width: number;
-			height: number;
-			x?: number;
-			y?: number;
-			horizontalTranslation?: number;
-			verticalTranslation?: number;
-			maxHorizontalOffset?: number;
-			maxVerticalOffset?: number;
+			checksum: string;
 		};
 	} = {};
 
@@ -31,33 +25,28 @@ class OverlayRenderer {
 		height: number,
 		x?: number,
 		y?: number,
-		horizontalTranslation?: number,
-		verticalTranslation?: number,
-		maxHorizontalOffset?: number,
-		maxVerticalOffset?: number,
+		animate: boolean = false,
+		animationDuration?: number,
+		animationKeyframes?: {
+			percentage: number;
+			x: number;
+			y: number;
+		}[],
 	) {
 		const filePath = await this.saveToFile(id, appletUid, fileBuffer);
 		const processId = this.getOverlayId(id, appletUid);
-		const args = [ x, y, horizontalTranslation, verticalTranslation, maxHorizontalOffset, maxVerticalOffset ];
 
 		if (this.overlayProcesses[processId]) {
 			const runningProcess = this.overlayProcesses[processId];
-			if (runningProcess.width === width &&
-				runningProcess.height === height &&
-				runningProcess.x === x &&
-				runningProcess.y === y &&
-				runningProcess.horizontalTranslation === horizontalTranslation &&
-				runningProcess.verticalTranslation === verticalTranslation &&
-				runningProcess.maxHorizontalOffset === maxHorizontalOffset &&
-				runningProcess.maxVerticalOffset === maxVerticalOffset
-			) {
+			const checksum = this.getOverlayInstanceChecksum(width, height, x, y, animate, animationDuration, animationKeyframes);
+			if (runningProcess.checksum === checksum) {
 				await this.refreshProcess(processId);
 			} else {
 				await this.stopProcess(processId);
-				this.startProcess(processId, filePath, width, height, ...args);
+				this.startProcess(processId, filePath, width, height, x, y, animate, animationDuration, animationKeyframes);
 			}
 		} else {
-			this.startProcess(processId, filePath, width, height, ...args);
+			this.startProcess(processId, filePath, width, height, x, y, animate, animationDuration, animationKeyframes);
 		}
 	}
 
@@ -94,24 +83,25 @@ class OverlayRenderer {
 		height: number,
 		x?: number,
 		y?: number,
-		horizontalTranslation?: number,
-		verticalTranslation?: number,
-		maxHorizontalOffset?: number,
-		maxVerticalOffset?: number,
+		animate: boolean = false,
+		animationDuration?: number,
+		animationKeyframes?: {
+			percentage: number;
+			x: number;
+			y: number;
+		}[],
 	) {
 		const fileAbsolutePath = this.fileSystem.getAbsolutePath(overlayFilePath);
 		const childProcess = showOverlay(
 			fileAbsolutePath,
 			x,
 			y,
-			horizontalTranslation,
-			verticalTranslation,
-			maxHorizontalOffset,
-			maxVerticalOffset,
+			animate,
+			animationDuration,
+			animationKeyframes,
 		);
-		this.overlayProcesses[processId] = {
-			process: childProcess, width, height, x, y, horizontalTranslation, verticalTranslation, maxHorizontalOffset, maxVerticalOffset,
-		};
+		const checksum = this.getOverlayInstanceChecksum(width, height, x, y, animate, animationDuration, animationKeyframes);
+		this.overlayProcesses[processId] = { process: childProcess, checksum };
 		childProcess.once('close', (code: number) => {
 			if (code !== 0) {
 				console.warn('overlay process closed with error code: ' + code);
@@ -166,6 +156,28 @@ class OverlayRenderer {
 
 	private getOverlayDirectory(appletUid: string) {
 		return 'overlay/' + appletUid;
+	}
+
+	private getOverlayInstanceChecksum(
+		width: number,
+		height: number,
+		x?: number,
+		y?: number,
+		animate: boolean = false,
+		animationDuration?: number,
+		animationKeyframes?: {
+			percentage: number;
+			x: number;
+			y: number;
+		}[],
+	) {
+		let fullString = '' + width + height + (x || 0) + (y || 0) + (animate ? 1 : 0) + (animationDuration || 0);
+		if (animationKeyframes) {
+			for (let animationKeyframe of animationKeyframes) {
+				fullString += animationKeyframe.percentage + animationKeyframe.x + animationKeyframe.y;
+			}
+		}
+		return checksumString(fullString);
 	}
 }
 

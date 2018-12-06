@@ -33,14 +33,28 @@ export default class BridgeClient {
 		height: number,
 		x: number,
 		y: number,
-		horizontalTranslation?: number,
-		verticalTranslation?: number,
-		maxHorizontalOffset?: number,
-		maxVerticalOffset?: number,
+		animation?: {
+			duration: number;
+			keyframes: {
+				percentage: number;
+				rectangle: {
+					x: number;
+					y: number;
+				};
+			}[];
+		},
 	) {
-		const params: { [key: string]: any } = {
-			id, appletUid, width, height, x, y, horizontalTranslation, verticalTranslation, maxHorizontalOffset, maxVerticalOffset
-		};
+		const params: { [key: string]: any } = { id, appletUid, width, height, x, y };
+		if (animation && animation.keyframes.length > 1) {
+			params.animDuration = animation.duration;
+			params.animKFCount = animation.keyframes.length;
+			for (let i = 0; i < animation.keyframes.length; i++) {
+				params['animKF' + i + '_percent'] = animation.keyframes[i].percentage;
+				params['animKF' + i + '_x'] = animation.keyframes[i].rectangle.x;
+				params['animKF' + i + '_y'] = animation.keyframes[i].rectangle.y;
+			}
+		}
+
 		const paramsString = Object.keys(params)
 			.filter((key: string) => typeof params[key] !== 'undefined')
 			.map((key: string) => `${key}=${params[key]}`)

@@ -8,10 +8,13 @@ export function showOverlay(
 	file: string,
 	x?: number,
 	y?: number,
-	horizontalTranslation?: number,
-	verticalTranslation?: number,
-	maxHorizontalOffset?: number,
-	maxVerticalOffset?: number,
+	animate: boolean = false,
+	animationDuration: number = 0,
+	animationKeyframes: {
+		percentage: number;
+		x: number;
+		y: number;
+	}[] = [],
 ) {
 	const args: string[] = [];
 	if (typeof x !== 'undefined') {
@@ -20,17 +23,11 @@ export function showOverlay(
 	if (typeof y !== 'undefined') {
 		args.push('-y ' + y);
 	}
-	if (typeof horizontalTranslation !== 'undefined') {
-		args.push('-h ' + horizontalTranslation);
-	}
-	if (typeof verticalTranslation !== 'undefined') {
-		args.push('-v ' + verticalTranslation);
-	}
-	if (typeof maxHorizontalOffset !== 'undefined') {
-		args.push('--max-horizontal-offset=' + maxHorizontalOffset);
-	}
-	if (typeof maxVerticalOffset !== 'undefined') {
-		args.push('--max-vertical-offset=' + maxVerticalOffset);
+	if (animate) {
+		args.push('-a ' + animationDuration);
+		for (let keyframe of animationKeyframes) {
+			args.push(`-k ${keyframe.percentage},${keyframe.x},${keyframe.y}`);
+		}
 	}
 
 	return spawnApiCommandChildProcess('overlay', 'show', [
