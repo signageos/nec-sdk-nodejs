@@ -24,9 +24,7 @@ async function handleAttributeOrCharacterDataMutation(window: Window, bridge: Br
 		let visible = false;
 		if (overlayRoot.offsetParent !== null) {
 			const computedStyle = window.getComputedStyle(overlayRoot);
-			if ((!computedStyle.display || computedStyle.display !== 'none') &&
-				(!computedStyle.visibility || computedStyle.visibility !== 'hidden')
-			) {
+			if ((!computedStyle.display || computedStyle.display !== 'none')) {
 				visible = true;
 			}
 		}
@@ -118,13 +116,17 @@ function isOverlay(element: HTMLElement) {
 }
 
 async function renderOverlay(window: Window, bridge: BridgeClient, overlayElement: HTMLElement) {
-	if (overlayElement.id) {
-		const appletUid = ''; // TODO
-		await renderOverlayIntoImageAndUpload(window, bridge, appletUid, overlayElement);
+	if (overlayElement.style.visibility === 'hidden') {
+		if (overlayElement.id) {
+			const appletUid = ''; // TODO
+			await renderOverlayIntoImageAndUpload(window, bridge, appletUid, overlayElement);
+		} else {
+			console.warn("Can\'t render overlay without an id");
+		}
 	} else {
-		console.warn("Can\'t render overlay without an id");
+		// before rendering the element make it invisible, so the action of setting the visibility doesn't trigger double mutation
+		overlayElement.style.visibility = 'hidden';
 	}
-
 }
 
 async function removeOverlay(bridge: BridgeClient, overlayElement: HTMLElement) {
@@ -170,6 +172,7 @@ async function renderOverlayIntoImage(overlayElement: HTMLElement, width: number
 				throw new Error('Error while rendering overlay element - invalid id');
 			}
 			element.style.animation = "none";
+			element.style.visibility = 'visible';
 		},
 	});
 	return await new Promise<Blob | null>((resolve: (blob: Blob | null) => void) => {
