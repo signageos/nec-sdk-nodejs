@@ -140,23 +140,13 @@ async function removeOverlay(bridge: BridgeClient, overlayElement: HTMLElement) 
 }
 
 async function renderOverlayIntoImageAndUpload(window: Window, bridge: BridgeClient, appletUid: string, overlayElement: HTMLElement) {
-	const CANVAS_SIZE_LIMIT = 16383;
 	const attributes = getOverlayElementsAttributes(window, overlayElement);
-	const canvas = await html2canvas(overlayElement, {
-		backgroundColor: null,
-		width: Math.min(attributes.rectangle.width, CANVAS_SIZE_LIMIT),
-		height: Math.min(attributes.rectangle.height, CANVAS_SIZE_LIMIT),
-		logging: false,
-	});
-	const canvasBlob = await new Promise<Blob | null>((resolve: (blob: Blob | null) => void) => {
-		canvas.toBlob(resolve);
-	});
-	if (!canvasBlob) {
+	const overlayBlob = await renderOverlayIntoImage(overlayElement, attributes.rectangle.width, attributes.rectangle.height);
+	if (!overlayBlob) {
 		throw new Error('Couldn\'t render overlay');
 	}
-
 	await bridge.uploadOverlay(
-		canvasBlob,
+		overlayBlob,
 		overlayElement.id,
 		appletUid,
 		attributes.rectangle.width,
@@ -165,6 +155,26 @@ async function renderOverlayIntoImageAndUpload(window: Window, bridge: BridgeCli
 		attributes.rectangle.y,
 		attributes.animation,
 	);
+}
+
+async function renderOverlayIntoImage(overlayElement: HTMLElement, width: number, height: number) {
+	const CANVAS_SIZE_LIMIT = 16383;
+	const canvas = await html2canvas(overlayElement, {
+		backgroundColor: null,
+		width: Math.min(width, CANVAS_SIZE_LIMIT),
+		height: Math.min(height, CANVAS_SIZE_LIMIT),
+		logging: false,
+		onclone: (clonedDocument: Document) => {
+			const element = clonedDocument.getElementById(overlayElement.id);
+			if (!element) {
+				throw new Error('Error while rendering overlay element - invalid id');
+			}
+			element.style.animation = "none";
+		},
+	});
+	return await new Promise<Blob | null>((resolve: (blob: Blob | null) => void) => {
+		canvas.toBlob(resolve);
+	});
 }
 
 interface IRectangle {
