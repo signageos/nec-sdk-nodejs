@@ -123,7 +123,7 @@ export default async function handleMessage(
 			return { storageUnits };
 
 		case OverlayMessages.Hide:
-			await overlayRenderer.hide(message.id, message.appletUid);
+			await overlayRenderer.hide(message.id);
 			return {};
 
 		case OverlayMessages.HideAll:

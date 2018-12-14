@@ -28,7 +28,6 @@ export default class BridgeClient {
 	public async uploadOverlay(
 		fileBlob: Blob,
 		id: string,
-		appletUid: string,
 		width: number,
 		height: number,
 		x: number,
@@ -44,7 +43,7 @@ export default class BridgeClient {
 			}[];
 		},
 	) {
-		const params: { [key: string]: any } = { id, appletUid, width, height, x, y };
+		const params: { [key: string]: any } = { id, width, height, x, y };
 		if (animation && animation.keyframes.length > 1) {
 			params.animDuration = animation.duration;
 			params.animKFCount = animation.keyframes.length;

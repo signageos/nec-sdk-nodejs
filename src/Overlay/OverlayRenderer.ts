@@ -5,6 +5,8 @@ import { checksumString } from '@signageos/front-display/es6/Hash/checksum';
 import IFileSystem from '../FileSystem/IFileSystem';
 import { showOverlay, refreshOverlay } from '../API/OverlayAPI';
 
+const OVERLAY_DIR = 'overlay';
+
 class OverlayRenderer {
 
 	private overlayProcesses: {
@@ -20,7 +22,6 @@ class OverlayRenderer {
 	public async render(
 		fileBuffer: Buffer,
 		id: string,
-		appletUid: string,
 		width: number,
 		height: number,
 		x?: number,
@@ -33,28 +34,26 @@ class OverlayRenderer {
 			y: number;
 		}[],
 	) {
-		const filePath = await this.saveToFile(id, appletUid, fileBuffer);
-		const processId = this.getOverlayId(id, appletUid);
+		const filePath = await this.saveToFile(id, fileBuffer);
 
-		if (this.overlayProcesses[processId]) {
-			const runningProcess = this.overlayProcesses[processId];
+		if (this.overlayProcesses[id]) {
+			const runningProcess = this.overlayProcesses[id];
 			const checksum = this.getOverlayInstanceChecksum(width, height, x, y, animate, animationDuration, animationKeyframes);
 			if (runningProcess.checksum === checksum) {
-				await this.refreshProcess(processId);
+				await this.refreshProcess(id);
 			} else {
-				await this.stopProcess(processId);
-				this.startProcess(processId, filePath, width, height, x, y, animate, animationDuration, animationKeyframes);
+				await this.stopProcess(id);
+				this.startProcess(id, filePath, width, height, x, y, animate, animationDuration, animationKeyframes);
 			}
 		} else {
-			this.startProcess(processId, filePath, width, height, x, y, animate, animationDuration, animationKeyframes);
+			this.startProcess(id, filePath, width, height, x, y, animate, animationDuration, animationKeyframes);
 		}
 	}
 
 	@locked('overlay')
-	public async hide(id: string, appletUid: string) {
-		const processId = this.getOverlayId(id, appletUid);
-		await this.stopProcess(processId);
-		delete this.overlayProcesses[processId];
+	public async hide(id: string) {
+		await this.stopProcess(id);
+		delete this.overlayProcesses[id];
 	}
 
 	@locked('overlay')
@@ -67,11 +66,11 @@ class OverlayRenderer {
 		this.overlayProcesses = {};
 	}
 
-	private async saveToFile(id: string, appletUid: string, fileBuffer: Buffer) {
+	private async saveToFile(id: string, fileBuffer: Buffer) {
 		const storageUnit = this.fileSystem.getTmpStorageUnit();
-		const directoryPath = await this.getOverlayDirectoryFilePath(appletUid, storageUnit);
+		const directoryPath = await this.getOverlayDirectoryFilePath(storageUnit);
 		await this.fileSystem.ensureDirectory(directoryPath);
-		const filePath = await this.getOverlayFilePath(id, appletUid, storageUnit);
+		const filePath = await this.getOverlayFilePath(id, storageUnit);
 		await this.fileSystem.saveToFile(filePath, fileBuffer);
 		return filePath;
 	}
@@ -135,27 +134,18 @@ class OverlayRenderer {
 		overlayChildProcess.process.kill('SIGTERM');
 	}
 
-	private getOverlayId(id: string, appletUid: string) {
-		return appletUid + '_' + id;
-	}
-
-	private async getOverlayDirectoryFilePath(appletUid: string, storageUnit: IStorageUnit): Promise<IFilePath> {
+	private async getOverlayDirectoryFilePath(storageUnit: IStorageUnit): Promise<IFilePath> {
 		return {
-			filePath: this.getOverlayDirectory(appletUid),
+			filePath: OVERLAY_DIR,
 			storageUnit,
 		};
 	}
 
-	private async getOverlayFilePath(id: string, appletUid: string, storageUnit: IStorageUnit): Promise<IFilePath> {
-		const directoryPath = this.getOverlayDirectory(appletUid);
+	private async getOverlayFilePath(id: string, storageUnit: IStorageUnit): Promise<IFilePath> {
 		return {
-			filePath: directoryPath + '/' + id + '.png',
+			filePath: OVERLAY_DIR + '/' + id + '.png',
 			storageUnit: storageUnit,
 		};
-	}
-
-	private getOverlayDirectory(appletUid: string) {
-		return 'overlay/' + appletUid;
 	}
 
 	private getOverlayInstanceChecksum(

@@ -118,8 +118,7 @@ function isOverlay(element: HTMLElement) {
 async function renderOverlay(window: Window, bridge: BridgeClient, overlayElement: HTMLElement) {
 	if (overlayElement.style.visibility === 'hidden') {
 		if (overlayElement.id) {
-			const appletUid = ''; // TODO
-			await renderOverlayIntoImageAndUpload(window, bridge, appletUid, overlayElement);
+			await renderOverlayIntoImageAndUpload(window, bridge, overlayElement);
 		} else {
 			console.warn("Can\'t render overlay without an id");
 		}
@@ -134,14 +133,13 @@ async function removeOverlay(bridge: BridgeClient, overlayElement: HTMLElement) 
 		await bridge.invoke<Hide, {}>({
 			type: Hide,
 			id: overlayElement.id,
-			appletUid: '', // TODO
 		});
 	} else {
 		console.warn("Can\'t render overlay without an id");
 	}
 }
 
-async function renderOverlayIntoImageAndUpload(window: Window, bridge: BridgeClient, appletUid: string, overlayElement: HTMLElement) {
+async function renderOverlayIntoImageAndUpload(window: Window, bridge: BridgeClient, overlayElement: HTMLElement) {
 	const attributes = getOverlayElementsAttributes(window, overlayElement);
 	const overlayBlob = await renderOverlayIntoImage(overlayElement, attributes.rectangle.width, attributes.rectangle.height);
 	if (!overlayBlob) {
@@ -150,7 +148,6 @@ async function renderOverlayIntoImageAndUpload(window: Window, bridge: BridgeCli
 	await bridge.uploadOverlay(
 		overlayBlob,
 		overlayElement.id,
-		appletUid,
 		attributes.rectangle.width,
 		attributes.rectangle.height,
 		attributes.rectangle.x,

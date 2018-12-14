@@ -77,7 +77,7 @@ export default class BridgeServer {
 
 		const rawBody = bodyParser.raw({ inflate: true, limit: '100mb', type: '*/*' });
 		this.expressApp.post('/overlay', rawBody, async (request: express.Request, response: express.Response) => {
-			const { id, appletUid, width, height, x, y } = request.query;
+			const { id, width, height, x, y } = request.query;
 			const fileBuffer = request.body;
 			const animationDuration = request.query.animDuration ? parseInt(request.query.animDuration) : 0;
 			const animationKeyframesCount = request.query.animKFCount || 0;
@@ -112,7 +112,6 @@ export default class BridgeServer {
 				await this.overlayRenderer.render(
 					fileBuffer,
 					id,
-					appletUid,
 					width,
 					height,
 					x,
