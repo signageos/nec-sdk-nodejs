@@ -1,11 +1,10 @@
 const webpack = require('webpack');
 const path = require('path');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
-const NpmPackPlugin = require('@signageos/lib/dist/Webpack/NpmPackPlugin').default;
 const parameters = require('./config/parameters');
-const { exec } = require('child_process');
 
 module.exports = {
+	name: 'client',
 	entry: {
 		bundle: ['babel-polyfill', './src/client'],
 		overlay: './src/overlay',
@@ -28,13 +27,6 @@ module.exports = {
 			'process.env.synchronizer_server_url': '"' + parameters.url.synchronizerServerUrl + '"',
 		}),
 		new ExtractTextPlugin({ filename: "styles.css" }),
-		new NpmPackPlugin({
-			name: parameters.app.name,
-			environment: parameters.environment,
-			rootPath: parameters.paths.rootPath,
-			packagesPath: parameters.paths.packagesPath,
-			dependencies: ['@signageos/front-display'],
-		}),
 	],
 	resolve: {
 		extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.js', '.json']
