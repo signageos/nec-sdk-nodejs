@@ -3,32 +3,32 @@ import IVideoPlayer from '@signageos/front-display/es6/Video/IVideoPlayer';
 import IVideo from '@signageos/front-display/es6/Video/IVideo';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
-import BridgeClient from '../../Bridge/BridgeClient';
+import BridgeVideoClient from '../../Bridge/BridgeVideoClient';
 
 export default class BridgeVideoPlayer implements IVideoPlayer {
 
 	constructor(
 		private fileSystemUrl: string,
-		private bridge: BridgeClient,
+		private bridgeVideoClient: BridgeVideoClient,
 	) {}
 
 	@locked('video')
 	public async prepare(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const uriRelative = this.stripFileSystemRootFromUri(uri);
-		await this.bridge.video.prepareVideo(uriRelative, x, y, width, height, false);
+		await this.bridgeVideoClient.prepareVideo(uriRelative, x, y, width, height, false);
 	}
 
 	@locked('video')
 	public async play(uri: string, x: number, y: number, width: number, height: number): Promise<IVideo> {
 		const uriRelative = this.stripFileSystemRootFromUri(uri);
-		const videoEventEmitter = await this.bridge.video.playVideo(uriRelative, x, y, width, height, false);
+		const videoEventEmitter = await this.bridgeVideoClient.playVideo(uriRelative, x, y, width, height, false);
 		return this.convertEventEmitterWithRelativeUriToAbsoluteUri(videoEventEmitter);
 	}
 
 	@locked('video')
 	public async stop(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const uriRelative = this.stripFileSystemRootFromUri(uri);
-		await this.bridge.video.stopVideo(uriRelative, x, y, width, height);
+		await this.bridgeVideoClient.stopVideo(uriRelative, x, y, width, height);
 	}
 
 	@locked('video')
@@ -43,7 +43,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 
 	@locked('video')
 	public async clearAll(): Promise<void> {
-		await this.bridge.video.clearAll();
+		await this.bridgeVideoClient.clearAll();
 	}
 
 	private stripFileSystemRootFromUri(uri: string) {

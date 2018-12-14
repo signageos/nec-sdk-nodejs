@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Update front display to version 5
 - New improved file system management
+- Out-of-the-box handling of overlay HTML elements
 
 ## [0.1.0] - 2018-11-21
 ### Added

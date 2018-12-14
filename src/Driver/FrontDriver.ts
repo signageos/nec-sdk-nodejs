@@ -21,6 +21,7 @@ import { KeyMap } from '@signageos/front-display/es6/NativeDevice/Default/Defaul
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/Front/IFileSystem';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
+import BridgeVideoClient from '../Bridge/BridgeVideoClient';
 import {
 	GetDeviceUid,
 	GetModel,
@@ -35,6 +36,8 @@ import BridgeVideoPlayer from './Video/BridgeVideoPlayer';
 import BridgeStreamPlayer from './Video/BridgeStreamPlayer';
 import PrivateOrientation, { convertScreenOrientationToAngle } from './Orientation';
 import FrontFileSystem from './FrontFileSystem';
+import OverlayHandler from '../Overlay/OverlayHandler';
+import ISocket from '@signageos/front-display/es6/Socket/ISocket';
 
 export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
@@ -55,21 +58,27 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	private deviceUid: string;
 	private lock: AsyncLock;
 	private cache: ICache;
+	private bridgeVideoClient: BridgeVideoClient;
+	private overlay: OverlayHandler;
 
 	private isDisplayOn: boolean = true;
 
 	constructor(
 		private window: Window,
+		private frontAppletPrefix: string,
 		private applicationVersion: string,
 		private bridge: BridgeClient,
+		socketClient: ISocket,
 		private fileSystemUrl: string,
 	) {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
 		this.lock = new AsyncLock();
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
-		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridge);
-		this.stream = new BridgeStreamPlayer(this.bridge);
+		this.bridgeVideoClient = new BridgeVideoClient(this.window, () => this.getScreenOrientation(), this.lock, socketClient);
+		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridgeVideoClient);
+		this.stream = new BridgeStreamPlayer(this.bridgeVideoClient);
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge);
+		this.overlay = new OverlayHandler(this.window, this.frontAppletPrefix, this.bridge);
 	}
 
 	public async getConfigurationBaseUrl(): Promise<string | null> {
@@ -244,7 +253,8 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	public async restoreDisplayArea() {
 		await this.video.clearAll();
 		await this.stream.clearAll();
-		await this.bridge.video.clearAll();
+		await this.bridgeVideoClient.clearAll();
+		await this.overlay.clearAll();
 	}
 
 	public areTimersSupported(powerTimerLevel: TimerLevel) {
@@ -312,7 +322,6 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	private initialize() {
 		this.screenUpdateOrientation();
-		this.bridge.initialize(this.window, () => this.getScreenOrientation(), this.lock);
 	}
 
 	private screenUpdateOrientation() {

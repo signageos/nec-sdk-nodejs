@@ -6,10 +6,13 @@ const parameters = require('./config/parameters');
 const { exec } = require('child_process');
 
 module.exports = {
-	entry: ['babel-polyfill', './src/client'],
+	entry: {
+		bundle: ['babel-polyfill', './src/client'],
+		overlay: './src/overlay',
+	},
 	output: {
 		path: parameters.paths.distPath + '/client',
-		filename: 'bundle.js',
+		filename: '[name].js',
 	},
 	devtool: 'source-map',
 	plugins: [
