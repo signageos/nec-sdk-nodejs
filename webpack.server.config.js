@@ -1,9 +1,9 @@
 const webpack = require('webpack');
-const NpmPackPlugin = require('@signageos/lib/dist/Webpack/NpmPackPlugin').default;
 const parameters = require('./config/parameters');
 const packageFile = require('./package');
 
 module.exports = {
+	name: 'server',
 	entry: './src/server',
 	target: 'node',
 	node: {
@@ -25,13 +25,6 @@ module.exports = {
 			'process.env.socket_uri': '"' + parameters.url.socketUri + '"',
 			'process.env.static_base_url': '"' + parameters.url.staticBaseUrl + '"',
 			'process.env.upload_base_url': '"' + parameters.url.uploadBaseUrl + '"',
-		}),
-		new NpmPackPlugin({
-			name: parameters.app.name,
-			environment: parameters.environment,
-			rootPath: parameters.paths.rootPath,
-			packagesPath: parameters.paths.packagesPath,
-			dependencies: ['@signageos/front-display'],
 		}),
 	],
 	resolve: {
