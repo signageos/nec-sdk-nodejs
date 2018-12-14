@@ -1,5 +1,6 @@
 import { resolve4 as resolveDns } from 'dns';
 import { networkInterfaces as osGetNetworkInterfaces } from 'os';
+import { execApiCommand } from './apiCommand';
 
 export enum NetworkInterfaceType {
 	WIFI,
@@ -11,32 +12,45 @@ export interface INetworkInterface {
 	name: string;
 	ip: string;
 	mac: string;
+	netmask: string;
 }
 
-export async function getNetworkInterfaces(): Promise<INetworkInterface[]> {
+export async function getEthernet(): Promise<INetworkInterface | null> {
 	const networkInterfaces = osGetNetworkInterfaces();
-	const result: INetworkInterface[] = [];
 
 	for (let name of Object.keys(networkInterfaces)) {
 		const networkInterface = networkInterfaces[name][0];
 		if (name.startsWith('eth')) {
-			result.push({
+			return {
 				type: NetworkInterfaceType.ETHERNET,
 				name,
 				ip: networkInterface.address,
 				mac: networkInterface.mac,
-			});
-		} else if (name.startsWith('wlan')) {
-			result.push({
+				netmask: networkInterface.netmask,
+			};
+		}
+	}
+
+	return null;
+}
+
+export async function getWifi(): Promise<INetworkInterface | null> {
+	const networkInterfaces = osGetNetworkInterfaces();
+
+	for (let name of Object.keys(networkInterfaces)) {
+		const networkInterface = networkInterfaces[name][0];
+		if (name.startsWith('wlan')) {
+			return {
 				type: NetworkInterfaceType.WIFI,
 				name,
 				ip: networkInterface.address,
 				mac: networkInterface.mac,
-			});
+				netmask: networkInterface.netmask,
+			};
 		}
 	}
 
-	return result;
+	return null;
 }
 
 export function isConnectedToInternet(domainToContact: string) {
@@ -49,4 +63,13 @@ export function isConnectedToInternet(domainToContact: string) {
 			}
 		});
 	});
+}
+
+export async function getDefaultGateway() {
+	return await execApiCommand('network', 'gateway');
+}
+
+export async function getDNSSettings() {
+	const dnsSettings = await execApiCommand('network', 'dns');
+	return dnsSettings.split("\n");
 }

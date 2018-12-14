@@ -1,5 +1,5 @@
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
-import IManagementDriver from '@signageos/front-display/es6/NativeDevice/IManagementDriver';
+import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import {
 	SystemReboot,
 	GetDeviceUid,
@@ -8,14 +8,9 @@ import {
 	SetNativeDebug,
 	ScreenTurnOff,
 	ScreenTurnOn,
-	NetworkGetEthernetMacAddress,
-	NetworkGetWifiMacAddress,
-	FileSystemGetFiles,
-	FileSystemFileExists,
-	FileSystemDownloadFile,
-	FileSystemDeleteFile,
-	FileSystemGetFileChecksum,
+	NetworkGetInfo,
 } from './bridgeSystemMessages';
+import * as FSMessages from './bridgeFileSystemMessages';
 import * as SystemAPI from '../API/SystemAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
 
@@ -32,13 +27,17 @@ export default async function handleMessage(
 		SetNativeDebug |
 		ScreenTurnOff |
 		ScreenTurnOn |
-		NetworkGetEthernetMacAddress |
-		NetworkGetWifiMacAddress |
-		FileSystemGetFiles |
-		FileSystemFileExists |
-		FileSystemDownloadFile |
-		FileSystemDeleteFile |
-		FileSystemGetFileChecksum,
+		NetworkGetInfo |
+		FSMessages.ListFiles |
+		FSMessages.FileExists |
+		FSMessages.DownloadFile |
+		FSMessages.DeleteFile |
+		FSMessages.MoveFile |
+		FSMessages.GetFileChecksum |
+		FSMessages.ExtractFile |
+		FSMessages.CreateDirectory |
+		FSMessages.IsDirectory |
+		FSMessages.ListStorageUnits,
 ): Promise<object> {
 	switch (message.type) {
 		case SystemReboot:
@@ -73,34 +72,50 @@ export default async function handleMessage(
 			await SystemAPI.turnScreenOn();
 			return {};
 
-		case NetworkGetEthernetMacAddress:
-			const ethernetMacAddress = await nativeDriver.getEthernetMacAddress();
-			return { macAddress: ethernetMacAddress };
+		case NetworkGetInfo:
+			const networkInfo = await nativeDriver.getNetworkInfo();
+			return { networkInfo };
 
-		case NetworkGetWifiMacAddress:
-			const wifiMacAddress = await nativeDriver.getWifiMacAddress();
-			return { macAddress: wifiMacAddress };
-
-		case FileSystemGetFiles:
-			const files = await fileSystem.getFilesInDirectory(message.path);
+		case FSMessages.ListFiles:
+			const files = await fileSystem.listFiles(message.directoryPath);
 			return { files };
 
-		case FileSystemFileExists:
-			const pathExists = await fileSystem.pathExists(message.path);
-			const isFile = pathExists && await fileSystem.isFile(message.path);
-			return { fileExists: isFile };
+		case FSMessages.FileExists:
+			const exists = await fileSystem.exists(message.filePath);
+			return { exists };
 
-		case FileSystemDownloadFile:
-			await fileSystem.downloadFile(message.path, message.uri, message.headers);
+		case FSMessages.DownloadFile:
+			await fileSystem.downloadFile(message.filePath, message.sourceUri, message.headers);
 			return {};
 
-		case FileSystemDeleteFile:
-			await fileSystem.deleteFile(message.path);
+		case FSMessages.DeleteFile:
+			await fileSystem.deleteFile(message.filePath, message.recursive);
 			return {};
 
-		case FileSystemGetFileChecksum:
-			const checksum = await fileSystem.getFileChecksum(message.path, message.hashAlgorithm);
+		case FSMessages.MoveFile:
+			await fileSystem.moveFile(message.sourceFilePath, message.destinationFilePath);
+			return {};
+
+		case FSMessages.GetFileChecksum:
+			const checksum = await fileSystem.getFileChecksum(message.filePath, message.hashType);
 			return { checksum };
+
+		case FSMessages.ExtractFile:
+			await fileSystem.extractFile(message.archiveFilePath, message.destinationDirectoryPath, message.method);
+			return {};
+
+		case FSMessages.CreateDirectory:
+			await fileSystem.createDirectory(message.directoryPath);
+			return {};
+
+		case FSMessages.IsDirectory:
+			const isDirectory = await fileSystem.isDirectory(message.filePath);
+			return { isDirectory };
+
+		case FSMessages.ListStorageUnits:
+			const storageUnits = await fileSystem.listStorageUnits();
+			return { storageUnits };
+
 		default:
 			throw new InvalidMessageError('invalid message type: ' + (message as any).type);
 	}

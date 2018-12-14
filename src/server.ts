@@ -34,6 +34,7 @@ if (parameters.raven.enabled) {
 
 (async () => {
 	const fileSystem = new FileSystem(parameters.fileSystem.root);
+	await fileSystem.initialize();
 	const cache = new FileSystemCache(fileSystem);
 
 	const nativeDriver = new ManagementDriver(
