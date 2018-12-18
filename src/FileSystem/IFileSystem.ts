@@ -2,6 +2,7 @@ import { IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 
 export const TMP_ABSOLUTE_PATH = '/tmp/signageos';
+export const EXTERNAL_STORAGE_UNITS_PATH = 'external';
 export const DATA_DIRECTORY_PATH = 'data';
 export const TMP_STORAGE_UNIT = 'tmp';
 export const INTERNAL_STORAGE_UNIT = 'internal';

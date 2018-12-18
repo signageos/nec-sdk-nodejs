@@ -13,6 +13,7 @@ import IFileSystem, {
 	INTERNAL_STORAGE_UNIT,
 	TMP_ABSOLUTE_PATH,
 	DATA_DIRECTORY_PATH,
+	EXTERNAL_STORAGE_UNITS_PATH,
 	FileOrDirectoryNotFound,
 } from './IFileSystem';
 import { downloadFile } from './downloadFile';
@@ -24,12 +25,16 @@ export default class FileSystem implements IFileSystem {
 	constructor(private baseDirectory: string) {}
 
 	public async initialize() {
-		const internalStorageUnit = await this.getInternalStorageUnit();
-		const rootFilePath = {
-			filePath: '',
-			storageUnit: internalStorageUnit,
-		} as IFilePath;
-		await this.ensureDirectory(rootFilePath);
+		const storageUnits = await this.listStorageUnits();
+		await Promise.all(
+			storageUnits.map(async (storageUnit: IStorageUnit) => {
+				const rootFilePath = {
+					filePath: '',
+					storageUnit,
+				} as IFilePath;
+				await this.ensureDirectory(rootFilePath);
+			}),
+		);
 	}
 
 	public async listFiles(directoryPath: IFilePath): Promise<IFilePath[]> {
@@ -247,20 +252,47 @@ export default class FileSystem implements IFileSystem {
 		if (filePath.storageUnit.type === TMP_STORAGE_UNIT) {
 			return path.join(TMP_ABSOLUTE_PATH, filePath.filePath.trim());
 		}
-		return path.join(this.baseDirectory, filePath.storageUnit.type, DATA_DIRECTORY_PATH, filePath.filePath.trim());
+		let basePath = this.baseDirectory;
+		if (filePath.storageUnit.removable) {
+			basePath = path.join(basePath, EXTERNAL_STORAGE_UNITS_PATH);
+		}
+
+		return path.join(basePath, filePath.storageUnit.type, DATA_DIRECTORY_PATH, filePath.filePath.trim());
 	}
 
 	public async convertRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
-		const [storageUnitType, dataSubdir] = relativePath.split('/', 2);
-		if (!storageUnitType) {
-			throw new Error('Missing storage type');
+		if (relativePath.startsWith(EXTERNAL_STORAGE_UNITS_PATH)) {
+			return await this.convertExternalRelativePathToFilePath(relativePath);
+		} else {
+			return await this.convertInternalRelativePathToFilePath(relativePath);
 		}
-		if (dataSubdir !== DATA_DIRECTORY_PATH) {
-			throw new Error('Invalid path');
+	}
+
+	private async convertInternalRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
+		const startsWith = INTERNAL_STORAGE_UNIT + '/' + DATA_DIRECTORY_PATH;
+		if (!relativePath.startsWith(startsWith)) {
+			throw new Error('Invalid path ' + relativePath);
 		}
 
-		const storageUnitSubstring = storageUnitType + '/' + dataSubdir + '/';
-		const filePath = relativePath.substring(storageUnitSubstring.length);
+		let filePath = relativePath.substring(startsWith.length);
+		filePath = this.trimSlashesAndDots(filePath);
+		const internalStorageUnit = await this.getInternalStorageUnit();
+
+		return {
+			storageUnit: internalStorageUnit,
+			filePath,
+		};
+	}
+
+	private async convertExternalRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
+		const [external, storageUnitType, dataSubdir] = relativePath.split('/', 3);
+		if (external !== EXTERNAL_STORAGE_UNITS_PATH || dataSubdir !== DATA_DIRECTORY_PATH) {
+			throw new Error('Invalid path ' + relativePath);
+		}
+
+		const startsWith = external + '/' + storageUnitType + '/' + dataSubdir;
+		let filePath = relativePath.substring(startsWith.length);
+		filePath = this.trimSlashesAndDots(filePath);
 
 		const storageUnits = await this.listStorageUnits();
 		for (let storageUnit of storageUnits) {
@@ -272,7 +304,7 @@ export default class FileSystem implements IFileSystem {
 			}
 		}
 
-		throw new Error('Invalid path');
+		throw new Error('Invalid path ' + relativePath);
 	}
 
 	private getParentDirectoryFilePath(filePath: IFilePath): IFilePath {
