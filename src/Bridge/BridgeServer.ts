@@ -8,10 +8,12 @@ import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Managem
 import { ISocketServerWrapper, ISocket } from '@signageos/lib/dist/WebSocket/socketServer';
 import { createWsSocketServer } from '@signageos/lib/dist/WebSocket/wsServerFactory';
 import handleMessage, { InvalidMessageError, ResourceNotFound } from './handleMessage';
-import handleSocket from './handleSocket';
+import socketHandleVideo from './socketHandleVideo';
+import socketHandleCEC from './socketHandleCEC';
 import IFileSystem from '../FileSystem/IFileSystem';
 import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
+import ICECListener from '../CEC/ICECListener';
 
 export default class BridgeServer {
 
@@ -25,6 +27,7 @@ export default class BridgeServer {
 		private nativeDriver: IBasicDriver & IManagementDriver,
 		private videoPlayer: IServerVideoPlayer,
 		private overlayRenderer: OverlayRenderer,
+		private cecListener: ICECListener,
 	) {
 		this.expressApp = express();
 		this.httpServer = http.createServer(this.expressApp);
@@ -54,6 +57,7 @@ export default class BridgeServer {
 		});
 
 		await this.socketServer.listen();
+		await this.cecListener.listen();
 	}
 
 	private defineHttpRoutes() {
@@ -133,7 +137,8 @@ export default class BridgeServer {
 
 	private handleSocketMessage() {
 		this.socketServer.server.on('connection', (socket: ISocket) => {
-			handleSocket(socket, this.videoPlayer);
+			socketHandleVideo(socket, this.videoPlayer);
+			socketHandleCEC(socket, this.cecListener);
 		});
 	}
 }

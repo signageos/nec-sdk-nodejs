@@ -17,7 +17,6 @@ import VideoOrientation from "@signageos/front-display/es6/Video/Orientation";
 import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver';
 import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheStorageInfo';
 import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
-import { KeyMap } from '@signageos/front-display/es6/NativeDevice/Default/DefaultHelper';
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/Front/IFileSystem';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
@@ -38,6 +37,8 @@ import PrivateOrientation, { convertScreenOrientationToAngle } from './Orientati
 import FrontFileSystem from './FrontFileSystem';
 import OverlayHandler from '../Overlay/OverlayHandler';
 import ISocket from '@signageos/front-display/es6/Socket/ISocket';
+import keyMap from './Input/keyMap';
+import Key from '../CEC/Key';
 
 export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
@@ -68,7 +69,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		private frontAppletPrefix: string,
 		private applicationVersion: string,
 		private bridge: BridgeClient,
-		socketClient: ISocket,
+		private socketClient: ISocket,
 		private fileSystemUrl: string,
 	) {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
@@ -186,11 +187,13 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	}
 
 	public bindKeyUp(keyUpListener: (keyUpEvent: IKeyUpEvent) => void) {
-		this.window.addEventListener('keyup', (event: KeyboardEvent) => {
-			if (typeof KeyMap[event.keyCode as keyof typeof KeyMap] !== 'undefined') {
-				keyUpListener({ keyCode: KeyMap[event.keyCode as keyof typeof KeyMap] });
+		this.socketClient.on('keypress', (key: Key) => {
+			if (typeof keyMap[key] !== 'undefined') {
+				keyUpListener({
+					keyCode: keyMap[key],
+				});
 			} else {
-				console.warn(new Error('Not supported keyCode ' + event.keyCode));
+				console.warn(new Error('Not supported keyCode ' + key));
 			}
 		});
 	}

@@ -23,6 +23,7 @@ import FileSystem from './FileSystem/FileSystem';
 import FileSystemCache from './Cache/FileSystemCache';
 import { fetch } from './WebWorker/serverFetch';
 import OverlayRenderer from './Overlay/OverlayRenderer';
+import CECListener from './CEC/CECListener';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -81,6 +82,9 @@ if (parameters.raven.enabled) {
 	const videoPlayer = new ServerVideoPlayer(4, createVideo);
 
 	const overlayRenderer = new OverlayRenderer(fileSystem);
-	const bridgeServer = new BridgeServer(parameters.server.bridge_url, fileSystem, nativeDriver, videoPlayer, overlayRenderer);
+	const cecListener = new CECListener(parameters.video.socket_root);
+	const bridgeServer = new BridgeServer(
+		parameters.server.bridge_url, fileSystem, nativeDriver, videoPlayer, overlayRenderer, cecListener,
+	);
 	await bridgeServer.start();
 })().catch((error: any) => console.error(error));
