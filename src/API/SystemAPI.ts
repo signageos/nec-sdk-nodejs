@@ -1,4 +1,4 @@
-import { execApiCommand } from './apiCommand';
+import { execApiCommand, spawnApiCommandChildProcess } from './apiCommand';
 
 export async function getSerialNumber() {
 	return await execApiCommand('system_info', 'serial');
@@ -70,6 +70,10 @@ export async function turnScreenOn() {
 
 export async function takeScreenshot(destination: string) {
 	await execApiCommand('screen', 'screenshot', destination);
+}
+
+export function listenToCECKeypresses(socketPath: string) {
+	return spawnApiCommandChildProcess('cec', 'listen', [socketPath]);
 }
 
 function escapeBashArgument(argument: string) {

@@ -1,0 +1,15 @@
+enum Key {
+	SELECT = 0x00,
+	UP = 0x01,
+	DOWN = 0x02,
+	LEFT = 0x03,
+	RIGHT = 0x04,
+	EXIT = 0x0d,
+	BACKWARD = 0x4c,
+	FORWARD = 0x4b,
+	PLAY = 0x44,
+	STOP = 0x45,
+	PAUSE = 0x46,
+}
+
+export default Key;

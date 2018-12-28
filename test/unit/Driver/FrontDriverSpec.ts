@@ -1,7 +1,6 @@
 import 'should';
 import { EventEmitter } from 'events';
 import * as sinon from 'sinon';
-import KeyCode from '@signageos/front-display/es6/NativeDevice/Input/KeyCode';
 import FrontDriver from '../../../src/Driver/FrontDriver';
 import {
 	GetModel,
@@ -78,26 +77,6 @@ describe('Driver.FrontDriver', function () {
 			const frontDriver = new FrontDriver(createWindow(), 'hug', '1.0.0', bridge as any, createMockSocket(), 'http://localhost:8081');
 			const applicationVersion = await frontDriver.getApplicationVersion();
 			applicationVersion.should.equal('1.0.0');
-		});
-	});
-
-	describe('bindKeyUp', function () {
-
-		it('should bind callback to key presses', function () {
-			const eventEmitter = new EventEmitter();
-			const window = createWindow({
-				addEventListener: (type: string, listener: any) => eventEmitter.addListener(type, listener),
-			});
-			const bridge = {
-				socketClient: new EventEmitter(),
-			};
-
-			const frontDriver = new FrontDriver(window as any, 'hug', '1.0.0', bridge as any, createMockSocket(), 'http://localhost:8081');
-			const callback = sinon.spy();
-			frontDriver.bindKeyUp(callback);
-			eventEmitter.emit('keyup', { keyCode: 0x25 });
-			callback.callCount.should.equal(1);
-			callback.getCall(0).args[0].should.deepEqual({ keyCode: KeyCode.ARROW_LEFT });
 		});
 	});
 });

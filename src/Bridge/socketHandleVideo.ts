@@ -18,7 +18,7 @@ import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 
 const eventEmitter = new EventEmitter();
 
-export default function handleSocket(
+export default function socketHandleVideo(
 	socket: ISocket,
 	videoPlayer: IServerVideoPlayer,
 ) {
