@@ -10,6 +10,7 @@ import { createWsSocketServer } from '@signageos/lib/dist/WebSocket/wsServerFact
 import handleMessage, { InvalidMessageError, ResourceNotFound } from './handleMessage';
 import socketHandleVideo from './socketHandleVideo';
 import socketHandleCEC from './socketHandleCEC';
+import socketHandleApplication from './socketHandleApplication';
 import IFileSystem from '../FileSystem/IFileSystem';
 import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
@@ -139,6 +140,7 @@ export default class BridgeServer {
 		this.socketServer.server.on('connection', (socket: ISocket) => {
 			socketHandleVideo(socket, this.videoPlayer);
 			socketHandleCEC(socket, this.cecListener);
+			socketHandleApplication(socket);
 		});
 	}
 }

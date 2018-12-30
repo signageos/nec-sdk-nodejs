@@ -1,3 +1,8 @@
+export const NotifyApplicationAlive = 'Application.NotifyAlive';
+export interface NotifyApplicationAlive {
+	type: typeof NotifyApplicationAlive;
+}
+
 export const SystemReboot = 'System.Reboot';
 export interface SystemReboot {
 	type: typeof SystemReboot;

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Support CEC (Consumer Electronics Control, i.e. remote control over HDMI)
 - Support USB external storage
+- Restart frontend if it stops responding
 
 ## [0.2.0] - 2018-12-14
 ### Added
