@@ -99,6 +99,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 			case FrontCapability.APP_RESTART_LOCAL:
 			case FrontCapability.DISPLAY_POWER_LOCAL:
 			case FrontCapability.FILE_SYSTEM_INTERNAL_STORAGE:
+			case FrontCapability.FILE_SYSTEM_EXTERNAL_STORAGE:
 				return true;
 			default:
 				return false;
