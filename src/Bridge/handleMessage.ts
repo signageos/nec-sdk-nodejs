@@ -1,6 +1,7 @@
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import {
+	ApplicationRestart,
 	SystemReboot,
 	GetDeviceUid,
 	GetModel,
@@ -24,6 +25,7 @@ export default async function handleMessage(
 	nativeDriver: IBasicDriver & IManagementDriver,
 	overlayRenderer: OverlayRenderer,
 	message:
+		ApplicationRestart |
 		SystemReboot |
 		GetDeviceUid |
 		GetModel |
@@ -46,6 +48,10 @@ export default async function handleMessage(
 		OverlayMessages.HideAll,
 ): Promise<object> {
 	switch (message.type) {
+		case ApplicationRestart:
+			await SystemAPI.restartApplication();
+			return {};
+
 		case SystemReboot:
 			await SystemAPI.reboot();
 			return {};

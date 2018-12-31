@@ -38,6 +38,10 @@ export async function reboot() {
 	await execApiCommand('device', 'reboot');
 }
 
+export async function restartApplication() {
+	await execApiCommand('application', 'restart');
+}
+
 export async function upgradeApp(debFile: string) {
 	const escapedDebFile = escapeBashArgument(debFile);
 	await execApiCommand('application', 'upgrade', escapedDebFile);

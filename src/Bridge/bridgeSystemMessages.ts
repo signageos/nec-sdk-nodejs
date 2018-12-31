@@ -1,3 +1,13 @@
+export const NotifyApplicationAlive = 'Application.NotifyAlive';
+export interface NotifyApplicationAlive {
+	type: typeof NotifyApplicationAlive;
+}
+
+export const ApplicationRestart = 'Application.Restart';
+export interface ApplicationRestart {
+	type: typeof ApplicationRestart;
+}
+
 export const SystemReboot = 'System.Reboot';
 export interface SystemReboot {
 	type: typeof SystemReboot;

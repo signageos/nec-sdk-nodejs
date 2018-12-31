@@ -28,6 +28,7 @@ import {
 	ScreenTurnOff,
 	ScreenTurnOn,
 	NetworkGetInfo,
+	ApplicationRestart,
 	SystemReboot,
 	SetNativeDebug,
 } from '../Bridge/bridgeSystemMessages';
@@ -124,8 +125,8 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		await this.bridge.invoke<SystemReboot, {}>({ type: SystemReboot });
 	}
 
-	public appRestart() {
-		this.window.location.reload();
+	public async appRestart() {
+		await this.bridge.invoke<ApplicationRestart, {}>({ type: ApplicationRestart });
 	}
 
 	public async packageInstall(_baseUrl: string, _packageName: string, _version: string, _build: string | null): Promise<void> {
