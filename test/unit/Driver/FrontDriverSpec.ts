@@ -4,6 +4,7 @@ import * as sinon from 'sinon';
 import FrontDriver from '../../../src/Driver/FrontDriver';
 import {
 	GetModel,
+	ApplicationRestart,
 	SystemReboot,
 } from '../../../src/Bridge/bridgeSystemMessages';
 import ISocket from '@signageos/front-display/es6/Socket/ISocket';
@@ -55,18 +56,15 @@ describe('Driver.FrontDriver', function () {
 	describe('appRestart', function () {
 
 		it('should invoke restarting of the application', async function () {
-			const window: any = createWindow({
-				location: {
-					reload: sinon.spy(),
-				},
-			});
 			const bridge = {
+				invoke: sinon.spy(),
 				socketClient: new EventEmitter(),
 			};
 
-			const frontDriver = new FrontDriver(window as any, 'hug', '1.0.0', bridge as any, createMockSocket(), 'http://localhost:8081');
+			const frontDriver = new FrontDriver(createWindow(), 'hug', '1.0.0', bridge as any, createMockSocket(), 'http://localhost:8081');
 			await frontDriver.appRestart();
-			window.location.reload.callCount.should.equal(1);
+			bridge.invoke.callCount.should.equal(1);
+			bridge.invoke.getCall(0).args[0].should.deepEqual({ type: ApplicationRestart });
 		});
 	});
 
