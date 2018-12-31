@@ -16,7 +16,6 @@ dist-raspbian: dist
 	mkdir -p $(RASPBIAN_DIST)/usr/lib/signageos/client
 	mkdir -p $(RASPBIAN_DIST)/var/lib/signageos/fs/internal
 	mkdir -p $(RASPBIAN_DIST)/var/lib/signageos/system
-	mkdir -p $(RASPBIAN_DIST)/var/log/signageos
 	cp -r $(DIST)/client/* $(RASPBIAN_DIST)/usr/lib/signageos/client
 	cp -r $(DIST)/server/* $(RASPBIAN_DIST)/usr/lib/signageos/server
 
