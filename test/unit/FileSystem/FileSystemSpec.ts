@@ -6,7 +6,7 @@ describe('FileSystem', function () {
 	describe('getAbsolutePath', function () {
 
 		it('should return correct path for internal storage unit', function () {
-			const fileSystem = new FileSystem('/base/directory');
+			const fileSystem = new FileSystem('/base/directory', '/tmp');
 			const internalStorageUnit = {
 				type: 'internal',
 				capacity: 0,
@@ -22,7 +22,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should return correct path for external storage unit', function () {
-			const fileSystem = new FileSystem('/base/directory');
+			const fileSystem = new FileSystem('/base/directory', '/tmp');
 			const externalStorageUnit = {
 				type: 'sda1',
 				capacity: 0,
@@ -38,7 +38,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should return correct path for tmp storage unit', function () {
-			const fileSystem = new FileSystem('/base/directory');
+			const fileSystem = new FileSystem('/base/directory', '/tmp');
 			const tmpStorageUnit = fileSystem.getTmpStorageUnit();
 			const absolutePath = fileSystem.getAbsolutePath({
 				filePath: 'test3/file3',

@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as checksum from 'checksum';
 import { IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
+import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 import {
 	IStorageUnit as ISystemStorageUnit,
 	getStorageStatus,
@@ -11,7 +12,7 @@ import {
 import IFileSystem, {
 	TMP_STORAGE_UNIT,
 	INTERNAL_STORAGE_UNIT,
-	TMP_ABSOLUTE_PATH,
+	TMP_DIRECTORY_PATH,
 	DATA_DIRECTORY_PATH,
 	EXTERNAL_STORAGE_UNITS_PATH,
 	FileOrDirectoryNotFound,
@@ -22,7 +23,10 @@ import { unzip } from './archive';
 
 export default class FileSystem implements IFileSystem {
 
-	constructor(private baseDirectory: string) {}
+	constructor(
+		private baseDirectory: string,
+		private tmpDirectory: string,
+	) {}
 
 	public async initialize() {
 		const storageUnits = await this.listStorageUnits();
@@ -74,9 +78,13 @@ export default class FileSystem implements IFileSystem {
 			throw new Error('Download destination isn\'t a directory');
 		}
 
-		const absolutePath = this.getAbsolutePath(filePath);
-		const file = fs.createWriteStream(absolutePath);
+		const tmpDownloadFilePath = this.getTmpDownloadFilePath();
+		const tmpDownloadDirPath = this.getParentDirectoryFilePath(tmpDownloadFilePath);
+		await this.ensureDirectory(tmpDownloadDirPath);
+		const tmpDownloadAbsolutePath = this.getAbsolutePath(tmpDownloadFilePath);
+		const file = fs.createWriteStream(tmpDownloadAbsolutePath);
 		await downloadFile(file, sourceUri, headers);
+		await this.moveFile(tmpDownloadFilePath, filePath);
 	}
 
 	public async uploadFile(filePath: IFilePath, formKey: string, uri: string, headers?: { [key: string]: string }) {
@@ -250,7 +258,7 @@ export default class FileSystem implements IFileSystem {
 
 	public getAbsolutePath(filePath: IFilePath) {
 		if (filePath.storageUnit.type === TMP_STORAGE_UNIT) {
-			return path.join(TMP_ABSOLUTE_PATH, filePath.filePath.trim());
+			return path.join(this.tmpDirectory, TMP_DIRECTORY_PATH, filePath.filePath.trim());
 		}
 		let basePath = this.baseDirectory;
 		if (filePath.storageUnit.removable) {
@@ -305,6 +313,16 @@ export default class FileSystem implements IFileSystem {
 		}
 
 		throw new Error('Invalid path ' + relativePath);
+	}
+
+	private getTmpDownloadFilePath(): IFilePath {
+		const DOWNLOAD_DIR = 'downloads';
+		const fileName = generateUniqueHash(20);
+		const tmpStorageUnit = this.getTmpStorageUnit();
+		return {
+			storageUnit: tmpStorageUnit,
+			filePath: path.join(DOWNLOAD_DIR, fileName),
+		};
 	}
 
 	private getParentDirectoryFilePath(filePath: IFilePath): IFilePath {

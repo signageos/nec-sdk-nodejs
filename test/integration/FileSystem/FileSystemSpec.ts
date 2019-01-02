@@ -14,6 +14,7 @@ import FileSystem from '../../../src/FileSystem/FileSystem';
 
 const parameters = require('../../../config/parameters');
 const fileSystemRoot = parameters.fileSystem.root;
+const tmpFileSystemRoot = parameters.fileSystem.tmp;
 
 const testStorageUnit = {
 	type: 'test',
@@ -22,6 +23,10 @@ const testStorageUnit = {
 	usableSpace: 0,
 	removable: false,
 } as IStorageUnit;
+
+function createFileSystem() {
+	return new FileSystem(fileSystemRoot, tmpFileSystemRoot);
+}
 
 function getRootPath() {
 	return path.join(fileSystemRoot, 'test', DATA_DIRECTORY_PATH);
@@ -41,20 +46,26 @@ function getFilePathObject(filePath: string): IFilePath {
 
 describe('FileSystem', function () {
 
-	beforeEach(async function () {
+	beforeEach('create clean FS root', async function () {
 		await fs.remove(fileSystemRoot);
 		const rootPath = getRootPath();
 		await fs.ensureDir(rootPath);
 	});
 
+	beforeEach('create clean tmp FS root', async function () {
+		await fs.remove(tmpFileSystemRoot);
+		await fs.ensureDir(tmpFileSystemRoot);
+	});
+
 	after(async function () {
 		await fs.remove(fileSystemRoot);
+		await fs.remove(tmpFileSystemRoot);
 	});
 
 	describe('listFiles', function () {
 
 		it('should return list of files in a directory', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const directoryFullPath = getAbsolutePath('directory');
 			const file1FullPath = getAbsolutePath('directory/file1');
 			const file2FullPath = getAbsolutePath('directory/file2');
@@ -77,14 +88,14 @@ describe('FileSystem', function () {
 		});
 
 		it('should fail if the path isn\'t directory', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const fileFullPath = getAbsolutePath('file');
 			await fs.writeFile(fileFullPath, 'contents');
 			await fileSystem.listFiles(getFilePathObject('file')).should.be.rejected();
 		});
 
 		it('should fail if the path doesn\'t exist', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.listFiles(getFilePathObject('non_existent_directory')).should.be.rejected();
 		});
 	});
@@ -92,7 +103,7 @@ describe('FileSystem', function () {
 	describe('exists', function () {
 
 		it('should return true if the file exists', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const fileFullPath = getAbsolutePath('file');
 			await fs.writeFile(fileFullPath, 'contents');
 			const exists = await fileSystem.exists(getFilePathObject('file'));
@@ -100,7 +111,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should return true if the directory exists', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const dirFullPath = getAbsolutePath('directory');
 			await fs.ensureDir(dirFullPath);
 			const exists = await fileSystem.exists(getFilePathObject('directory'));
@@ -108,7 +119,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should return false if the path doesn\'t exist', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const exists = await fileSystem.exists(getFilePathObject('non_existent_directory'));
 			should(exists).be.false();
 		});
@@ -148,7 +159,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should download file', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 
 			const sourceFilePath = getAbsolutePath('sourceFile');
 			await fs.writeFile(sourceFilePath, 'source file to download');
@@ -164,7 +175,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should download file into a directory', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 
 			const sourceFilePath = getAbsolutePath('sourceFile');
 			await fs.writeFile(sourceFilePath, 'source file to download');
@@ -182,7 +193,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should fail when destination directory doesn\'t exist', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 
 			const sourceFilePath = getAbsolutePath('sourceFile');
 			await fs.writeFile(sourceFilePath, 'source file to download');
@@ -194,7 +205,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should fail downloading file from a protected path', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const sourceFilePath = getAbsolutePath('protected/protectedFile1');
 			await fs.writeFile(sourceFilePath, 'source protected file1');
 			await fileSystem.downloadFile(
@@ -204,7 +215,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should download file from a protected path with a correct Authorization header', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const sourceFilePath = getAbsolutePath('protected/protectedFile2');
 			await fs.writeFile(sourceFilePath, 'source protected file2');
 			await fileSystem.downloadFile(
@@ -262,7 +273,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should upload file and get response with 200 status code and correct body', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const sourceFilePath = getAbsolutePath('fileToUpload1');
 			await fs.writeFile(sourceFilePath, 'file to upload 1');
 			const response = await fileSystem.uploadFile(
@@ -277,7 +288,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should fail when server returns an error status code', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const sourceFilePath = getAbsolutePath('fileToUpload2');
 			await fs.writeFile(sourceFilePath, 'file to upload 2');
 			await fileSystem.uploadFile(
@@ -292,7 +303,7 @@ describe('FileSystem', function () {
 	describe('readFile', function () {
 
 		it('should return contents of an existing file', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const fileFullPath = getAbsolutePath('file1');
 			await fs.writeFile(fileFullPath, 'test content in file1');
 			const readFileContents = await fileSystem.readFile(getFilePathObject('file1'));
@@ -300,7 +311,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should return contents of an existing file in a subdirectory', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const subdirectoryFullPath = getAbsolutePath('subdirectory');
 			const fileFullPath = getAbsolutePath('subdirectory/file2');
 			await fs.mkdir(subdirectoryFullPath);
@@ -310,7 +321,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should throw FileOrDirectoryNotFound exception for trying to read non-existent file', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.readFile(getFilePathObject('subdirectory/file3'))
 				.should.be.rejectedWith(FileOrDirectoryNotFound);
 		});
@@ -319,7 +330,7 @@ describe('FileSystem', function () {
 	describe('saveToFile', function () {
 
 		it('should write contents to a file', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.saveToFile(
 				getFilePathObject('file4'),
 				'test write content in file4',
@@ -330,7 +341,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should fail writing contents to a file in subdirectory', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.saveToFile(
 				getFilePathObject('subdirectory2/file5'),
 				'test write content in file5',
@@ -341,7 +352,7 @@ describe('FileSystem', function () {
 	describe('deleteFile', function () {
 
 		it('should delete file', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const fileFullPath = getAbsolutePath('file6');
 			await fs.writeFile(fileFullPath, 'test content in file6');
 			await fileSystem.deleteFile(getFilePathObject('file6'));
@@ -349,13 +360,13 @@ describe('FileSystem', function () {
 		});
 
 		it('should throw FileOrDirectoryNotFound exception for non-existent file', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.deleteFile(getFilePathObject('invalid'))
 				.should.be.rejectedWith(FileOrDirectoryNotFound);
 		});
 
 		it('should throw error when trying to delete root', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.deleteFile(getFilePathObject('')).should.be.rejected();
 		});
 	});
@@ -363,7 +374,7 @@ describe('FileSystem', function () {
 	describe('moveFile', function () {
 
 		it('should move file to a new location', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const sourceFilePath = getAbsolutePath('source');
 			await fs.writeFile(sourceFilePath, 'source file');
 			await fileSystem.moveFile(getFilePathObject('source'), getFilePathObject('destination'));
@@ -373,13 +384,13 @@ describe('FileSystem', function () {
 		});
 
 		it('should throw error for non-existent source file', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.moveFile(getFilePathObject('source'), getFilePathObject('destination'))
 				.should.be.rejected();
 		});
 
 		it('should throw error for already existing destination', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const sourceFilePath = getAbsolutePath('source');
 			const destinationFilePath = getAbsolutePath('destination');
 			await fs.writeFile(sourceFilePath, 'source file');
@@ -389,7 +400,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should throw error for non-existent destination parent directory', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const sourceFilePath = getAbsolutePath('source');
 			await fs.writeFile(sourceFilePath, 'source file');
 			await fileSystem.moveFile(getFilePathObject('source'), getFilePathObject('directory/destination'))
@@ -397,7 +408,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should throw error when trying to move root', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.moveFile(getFilePathObject(''), getFilePathObject('destination')).should.be.rejected();
 		});
 	});
@@ -434,7 +445,7 @@ describe('FileSystem', function () {
 
 		testCases.forEach((testCase: typeof testCases[0]) => {
 			it('should return file checksum using ' + testCase.hashAlgorithm, async function () {
-				const fileSystem = new FileSystem(fileSystemRoot);
+				const fileSystem = createFileSystem();
 				const fileFullPath = getAbsolutePath(testCase.fileName);
 				await fs.writeFile(fileFullPath, testCase.contents);
 				const checksum = await fileSystem.getFileChecksum(
@@ -446,7 +457,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should throw FileOrDirectoryNotFound for non-existent file', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.getFileChecksum(getFilePathObject('invalidFile'), 'md5' as any)
 				.should.be.rejected();
 		});
@@ -455,7 +466,7 @@ describe('FileSystem', function () {
 	describe('extractFile', function() {
 
 		it('should extract zip file into a given destination directory', async function() {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const file1ToZip = getAbsolutePath('file1');
 			const file2ToZip = getAbsolutePath('file2');
 			const file3ToZip = getAbsolutePath('file3');
@@ -484,7 +495,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should throw error for non-existent archive', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.extractFile(
 				getFilePathObject('non_existent_archive.zip'),
 				getFilePathObject('destination'),
@@ -493,7 +504,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should throw error for invalid method', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const file1ToZip = getAbsolutePath('file1');
 			await fs.writeFile(file1ToZip, 'file1 to zip');
 			const archiveAbsolutePath = getAbsolutePath('archive.tar.gz');
@@ -509,7 +520,7 @@ describe('FileSystem', function () {
 	describe('createDirectory', function() {
 
 		it('should create directory', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.createDirectory(getFilePathObject('new_directory'));
 			const directoryFullPath = getAbsolutePath('new_directory');
 			const stats = await fs.lstat(directoryFullPath);
@@ -517,7 +528,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should fail when directory already exists', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const directoryFullPath = getAbsolutePath('new_directory');
 			await fs.mkdir(directoryFullPath);
 			await fileSystem.createDirectory(getFilePathObject('new_directory'))
@@ -525,7 +536,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should fail when parent directory doesn\'t exist', async function() {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.createDirectory(getFilePathObject('parent/new_directory'))
 				.should.be.rejected();
 		});
@@ -534,7 +545,7 @@ describe('FileSystem', function () {
 	describe('ensureDirectory', function () {
 
 		it('should create directory along with it\'s non-existent parent directory', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			await fileSystem.ensureDirectory(getFilePathObject('parent/new_directory'));
 			const directoryFullPath = getAbsolutePath('parent/new_directory');
 			const stats = await fs.lstat(directoryFullPath);
@@ -542,7 +553,7 @@ describe('FileSystem', function () {
 		});
 
 		it('shouldn\'t do anything for a directory that already exists', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const directoryFullPath = getAbsolutePath('parent/new_directory');
 			await fs.ensureDir(directoryFullPath);
 			await fileSystem.ensureDirectory(getFilePathObject('parent/new_directory'));
@@ -554,7 +565,7 @@ describe('FileSystem', function () {
 	describe('isDirectory', function () {
 
 		it('should return true for directory', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const directoryFullPath = getAbsolutePath('directory');
 			await fs.mkdir(directoryFullPath);
 			const isDirectory = await fileSystem.isDirectory(getFilePathObject('directory'));
@@ -562,7 +573,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should return false for file', async function () {
-			const fileSystem = new FileSystem(fileSystemRoot);
+			const fileSystem = createFileSystem();
 			const fileFullPath = getAbsolutePath('file');
 			await fs.writeFile(fileFullPath, 'file1');
 			const isDirectory = await fileSystem.isDirectory(getFilePathObject('file'));

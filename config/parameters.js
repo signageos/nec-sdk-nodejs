@@ -63,6 +63,7 @@ exports = module.exports = Object.assign({}, basicParameters, {
 	},
 	fileSystem: {
 		root: process.env.fs_root_path,
+		tmp: process.env.fs_tmp_path || '/tmp',
 	},
 	video: {
 		socket_root: '/tmp'
