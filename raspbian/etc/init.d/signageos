@@ -19,7 +19,7 @@ NODE_ENVIRONMENT=production
 FS_ROOT=/var/lib/signageos/fs
 
 pidfile=/var/run/$NAME.pid
-logfile=/var/log/signageos/$NAME.log
+logfile=/var/log/$NAME.log
 forever=forever
 
 
