@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Support USB external storage
 - Restart frontend if it stops responding
 - Restart application won't reload the page anymore, instead it will restart whole frontend to force purge all browser cache
+# Fixed
+- Uploading screenshots
 
 ## [0.2.0] - 2018-12-14
 ### Added

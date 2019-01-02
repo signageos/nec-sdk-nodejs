@@ -1,4 +1,5 @@
 import * as url from 'url';
+import * as path from 'path';
 import { checksumString } from '@signageos/lib/dist/Hash/checksum';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import ManagementCapability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
@@ -140,20 +141,25 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 
 	public async screenshotUpload(uploadBaseUrl: string): Promise<string> {
 		const SCREENSHOT_DIR = 'screenshots';
+		const screenshotFilename = new Date().valueOf() + 'png';
 		const tmpStorageUnit = this.internalFileSystem.getTmpStorageUnit();
-		const destination = {
+		const destinationDir = {
 			storageUnit: tmpStorageUnit,
 			filePath: SCREENSHOT_DIR,
 		} as IFilePath;
-		await this.internalFileSystem.ensureDirectory(destination);
-		const destinationAbsolutePath = this.internalFileSystem.getAbsolutePath(destination);
+		const destinationFile = {
+			...destinationDir,
+			filePath: path.join(destinationDir.filePath, screenshotFilename),
+		};
+		await this.internalFileSystem.ensureDirectory(destinationDir);
+		const destinationAbsolutePath = this.internalFileSystem.getAbsolutePath(destinationFile);
 		await SystemAPI.takeScreenshot(destinationAbsolutePath);
 		const uploadUri = uploadBaseUrl + '/upload/file?prefix=screenshot/';
-		const response = await this.internalFileSystem.uploadFile(destination, 'file', uploadUri);
+		const response = await this.internalFileSystem.uploadFile(destinationFile, 'file', uploadUri);
 		const data = JSON.parse(response);
 
 		try {
-			await this.internalFileSystem.deleteFile(destination);
+			await this.internalFileSystem.deleteFile(destinationFile);
 		} catch (error) {
 			console.error('failed to cleanup screenshot after upload');
 		}
