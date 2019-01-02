@@ -35,7 +35,7 @@ if (parameters.raven.enabled) {
 }
 
 (async () => {
-	const fileSystem = new FileSystem(parameters.fileSystem.root);
+	const fileSystem = new FileSystem(parameters.fileSystem.root, parameters.fileSystem.tmp);
 	await fileSystem.initialize();
 	const cache = new FileSystemCache(fileSystem);
 
