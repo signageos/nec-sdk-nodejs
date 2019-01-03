@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Restart application won't reload the page anymore, instead it will restart whole frontend to force purge all browser cache
 # Fixed
 - Uploading screenshots
+- When there are multiple requests to download a file, allow only one at a time to prevent running out of RAM
 
 ## [0.2.0] - 2018-12-14
 ### Added

@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as checksum from 'checksum';
 import { IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
+import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 import {
 	IStorageUnit as ISystemStorageUnit,
@@ -65,6 +66,7 @@ export default class FileSystem implements IFileSystem {
 		return await fs.pathExists(absolutePath);
 	}
 
+	@locked('server_download')
 	public async downloadFile(filePath: IFilePath, sourceUri: string, headers?: IHeaders) {
 		if (await this.exists(filePath) && await this.isDirectory(filePath)) {
 			throw new Error('Trying to download file but a directory already exists in the destination');
