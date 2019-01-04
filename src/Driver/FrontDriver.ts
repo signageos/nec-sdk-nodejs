@@ -91,7 +91,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		return APPLICATION_TYPE;
 	}
 
-	public frontSupports(capability: FrontCapability): boolean {
+	public async frontSupports(capability: FrontCapability): Promise<boolean> {
 		switch (capability) {
 			case FrontCapability.SYSTEM_REBOOT_REMOTE:
 			case FrontCapability.APP_RESTART_REMOTE:
