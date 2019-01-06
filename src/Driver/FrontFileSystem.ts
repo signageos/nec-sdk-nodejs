@@ -1,6 +1,7 @@
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/Front/IFileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { IFile, IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
+import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 import BridgeClient from '../Bridge/BridgeClient';
 import * as FSMessages from '../Bridge/bridgeFileSystemMessages';
 import {
@@ -46,6 +47,7 @@ class FrontFileSystem implements IFileSystem {
 		return exists;
 	}
 
+	@locked('client_download')
 	public async downloadFile(filePath: IFilePath, sourceUri: string, headers?: IHeaders): Promise<void> {
 		await this.bridge.invoke<FSMessages.DownloadFile, any>({
 			type: FSMessages.DownloadFile,
