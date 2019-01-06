@@ -9,7 +9,7 @@ import * as cors from 'cors';
 import * as bodyParser from 'body-parser';
 import * as multer from 'multer';
 import { IFilePath, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
-import { DATA_DIRECTORY_PATH, FileOrDirectoryNotFound } from '../../../src/FileSystem/IFileSystem';
+import { FileOrDirectoryNotFound } from '../../../src/FileSystem/IFileSystem';
 import FileSystem from '../../../src/FileSystem/FileSystem';
 
 const parameters = require('../../../config/parameters');
@@ -29,7 +29,7 @@ function createFileSystem() {
 }
 
 function getRootPath() {
-	return path.join(fileSystemRoot, 'test', DATA_DIRECTORY_PATH);
+	return path.join(fileSystemRoot, 'test');
 }
 
 function getAbsolutePath(relativePath: string) {

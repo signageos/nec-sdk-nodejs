@@ -14,7 +14,6 @@ import IFileSystem, {
 	TMP_STORAGE_UNIT,
 	INTERNAL_STORAGE_UNIT,
 	TMP_DIRECTORY_PATH,
-	DATA_DIRECTORY_PATH,
 	EXTERNAL_STORAGE_UNITS_PATH,
 	FileOrDirectoryNotFound,
 } from './IFileSystem';
@@ -28,19 +27,6 @@ export default class FileSystem implements IFileSystem {
 		private baseDirectory: string,
 		private tmpDirectory: string,
 	) {}
-
-	public async initialize() {
-		const storageUnits = await this.listStorageUnits();
-		await Promise.all(
-			storageUnits.map(async (storageUnit: IStorageUnit) => {
-				const rootFilePath = {
-					filePath: '',
-					storageUnit,
-				} as IFilePath;
-				await this.ensureDirectory(rootFilePath);
-			}),
-		);
-	}
 
 	public async listFiles(directoryPath: IFilePath): Promise<IFilePath[]> {
 		const directoryExists = await this.exists(directoryPath);
@@ -267,7 +253,7 @@ export default class FileSystem implements IFileSystem {
 			basePath = path.join(basePath, EXTERNAL_STORAGE_UNITS_PATH);
 		}
 
-		return path.join(basePath, filePath.storageUnit.type, DATA_DIRECTORY_PATH, filePath.filePath.trim());
+		return path.join(basePath, filePath.storageUnit.type, filePath.filePath.trim());
 	}
 
 	public async convertRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
@@ -279,7 +265,7 @@ export default class FileSystem implements IFileSystem {
 	}
 
 	private async convertInternalRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
-		const startsWith = INTERNAL_STORAGE_UNIT + '/' + DATA_DIRECTORY_PATH;
+		const startsWith = INTERNAL_STORAGE_UNIT;
 		if (!relativePath.startsWith(startsWith)) {
 			throw new Error('Invalid path ' + relativePath);
 		}
@@ -295,12 +281,12 @@ export default class FileSystem implements IFileSystem {
 	}
 
 	private async convertExternalRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
-		const [external, storageUnitType, dataSubdir] = relativePath.split('/', 3);
-		if (external !== EXTERNAL_STORAGE_UNITS_PATH || dataSubdir !== DATA_DIRECTORY_PATH) {
+		const [external, storageUnitType] = relativePath.split('/', 2);
+		if (external !== EXTERNAL_STORAGE_UNITS_PATH) {
 			throw new Error('Invalid path ' + relativePath);
 		}
 
-		const startsWith = external + '/' + storageUnitType + '/' + dataSubdir;
+		const startsWith = external + '/' + storageUnitType;
 		let filePath = relativePath.substring(startsWith.length);
 		filePath = this.trimSlashesAndDots(filePath);
 

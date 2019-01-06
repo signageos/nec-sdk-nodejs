@@ -5,7 +5,6 @@ import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 import BridgeClient from '../Bridge/BridgeClient';
 import * as FSMessages from '../Bridge/bridgeFileSystemMessages';
 import {
-	DATA_DIRECTORY_PATH,
 	EXTERNAL_STORAGE_UNITS_PATH,
 } from '../FileSystem/IFileSystem';
 
@@ -26,7 +25,7 @@ class FrontFileSystem implements IFileSystem {
 
 	public async getFile(filePath: IFilePath): Promise<IFile | null> {
 		if (await this.exists(filePath)) {
-			let uriPath = `${filePath.storageUnit.type}/${DATA_DIRECTORY_PATH}/${filePath.filePath}`;
+			let uriPath = `${filePath.storageUnit.type}/${filePath.filePath}`;
 			if (filePath.storageUnit.removable) {
 				uriPath = EXTERNAL_STORAGE_UNITS_PATH + '/' + uriPath;
 			}

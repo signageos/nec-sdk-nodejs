@@ -18,7 +18,7 @@ describe('FileSystem', function () {
 				filePath: 'test/file1',
 				storageUnit: internalStorageUnit,
 			});
-			absolutePath.should.equal('/base/directory/internal/data/test/file1');
+			absolutePath.should.equal('/base/directory/internal/test/file1');
 		});
 
 		it('should return correct path for external storage unit', function () {
@@ -34,7 +34,7 @@ describe('FileSystem', function () {
 				filePath: 'test2/file2',
 				storageUnit: externalStorageUnit,
 			});
-			absolutePath.should.equal('/base/directory/external/sda1/data/test2/file2');
+			absolutePath.should.equal('/base/directory/external/sda1/test2/file2');
 		});
 
 		it('should return correct path for tmp storage unit', function () {
