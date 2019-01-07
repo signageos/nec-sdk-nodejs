@@ -22,6 +22,7 @@ export default interface IFileSystem {
 	isDirectory(filePath: IFilePath): Promise<boolean>;
 	listStorageUnits(): Promise<IStorageUnit[]>;
 	onStorageUnitsChanged(listener: () => void): void;
+	removeStorageUnitsChangedListener(listener: () => void): void;
 	getInternalStorageUnit(): Promise<IStorageUnit>;
 	getTmpStorageUnit(): IStorageUnit;
 	getAbsolutePath(filePath: IFilePath): string;

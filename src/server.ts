@@ -35,7 +35,7 @@ if (parameters.raven.enabled) {
 }
 
 (async () => {
-	const fileSystem = new FileSystem(parameters.fileSystem.root, parameters.fileSystem.tmp);
+	const fileSystem = new FileSystem(parameters.fileSystem.root, parameters.fileSystem.tmp, 'SIGUSR2');
 	const cache = new FileSystemCache(fileSystem);
 
 	const nativeDriver = new ManagementDriver(

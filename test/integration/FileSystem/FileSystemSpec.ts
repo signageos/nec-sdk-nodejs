@@ -25,7 +25,7 @@ const testStorageUnit = {
 } as IStorageUnit;
 
 function createFileSystem() {
-	return new FileSystem(fileSystemRoot, tmpFileSystemRoot);
+	return new FileSystem(fileSystemRoot, tmpFileSystemRoot, 'SIGUSR2');
 }
 
 function getRootPath() {

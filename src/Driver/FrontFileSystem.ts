@@ -2,6 +2,7 @@ import IFileSystem from '@signageos/front-display/es6/NativeDevice/Front/IFileSy
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { IFile, IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
+import ISocket from '@signageos/front-display/es6/Socket/ISocket';
 import BridgeClient from '../Bridge/BridgeClient';
 import * as FSMessages from '../Bridge/bridgeFileSystemMessages';
 import {
@@ -13,6 +14,7 @@ class FrontFileSystem implements IFileSystem {
 	constructor(
 		private fileSystemUrl: string,
 		private bridge: BridgeClient,
+		private socketClient: ISocket,
 	) {}
 
 	public async listFiles(directoryPath: IFilePath): Promise<IFilePath[]> {
@@ -112,8 +114,8 @@ class FrontFileSystem implements IFileSystem {
 		return storageUnits;
 	}
 
-	public onStorageUnitsChanged(_listener: () => void): void {
-		// TODO implement
+	public onStorageUnitsChanged(listener: () => void) {
+		this.socketClient.on('storage_units_changed', listener);
 	}
 }
 

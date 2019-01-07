@@ -11,6 +11,7 @@ import handleMessage, { InvalidMessageError, ResourceNotFound } from './handleMe
 import socketHandleVideo from './socketHandleVideo';
 import socketHandleCEC from './socketHandleCEC';
 import socketHandleApplication from './socketHandleApplication';
+import socketHandleStorageUnitsChanged from './socketHandleStorageUnitsChanged';
 import IFileSystem from '../FileSystem/IFileSystem';
 import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
@@ -141,6 +142,7 @@ export default class BridgeServer {
 			socketHandleVideo(socket, this.videoPlayer);
 			socketHandleCEC(socket, this.cecListener);
 			socketHandleApplication(socket);
+			socketHandleStorageUnitsChanged(socket, this.fileSystem);
 		});
 	}
 }

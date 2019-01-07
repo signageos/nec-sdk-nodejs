@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { promisify } from 'util';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -21,12 +22,20 @@ import { downloadFile } from './downloadFile';
 import { uploadFile } from './uploadFile';
 import { unzip } from './archive';
 
+const EVENT_STORAGE_UNITS_CHANGED = 'storage_units_changed';
+
 export default class FileSystem implements IFileSystem {
+
+	private eventEmitter: EventEmitter;
 
 	constructor(
 		private baseDirectory: string,
 		private tmpDirectory: string,
-	) {}
+		private storageUnitsChangedSignal: NodeJS.Signals,
+	) {
+		this.eventEmitter = new EventEmitter();
+		this.listenToStorageUnitsChanged();
+	}
 
 	public async listFiles(directoryPath: IFilePath): Promise<IFilePath[]> {
 		const directoryExists = await this.exists(directoryPath);
@@ -219,8 +228,12 @@ export default class FileSystem implements IFileSystem {
 		}));
 	}
 
-	public onStorageUnitsChanged(_listener: () => void): void {
-		// implement
+	public onStorageUnitsChanged(listener: () => void) {
+		this.eventEmitter.addListener(EVENT_STORAGE_UNITS_CHANGED, listener);
+	}
+
+	public removeStorageUnitsChangedListener(listener: () => void) {
+		this.eventEmitter.removeListener(EVENT_STORAGE_UNITS_CHANGED, listener);
 	}
 
 	public async getInternalStorageUnit(): Promise<IStorageUnit> {
@@ -333,5 +346,11 @@ export default class FileSystem implements IFileSystem {
 		filePath = filePath.replace(/\/+$/g, '');
 		filePath = filePath.replace(/^\/+/g, '');
 		return filePath;
+	}
+
+	private listenToStorageUnitsChanged() {
+		process.on(this.storageUnitsChangedSignal, () => {
+			this.eventEmitter.emit(EVENT_STORAGE_UNITS_CHANGED);
+		});
 	}
 }
