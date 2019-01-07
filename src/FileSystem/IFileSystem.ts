@@ -1,5 +1,6 @@
 import { IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
+import { IFileDetails } from './IFileDetails';
 
 export const EXTERNAL_STORAGE_UNITS_PATH = 'external';
 export const TMP_DIRECTORY_PATH = 'signageos';
@@ -11,6 +12,7 @@ export default interface IFileSystem {
 	exists(filePath: IFilePath): Promise<boolean>;
 	downloadFile(filePath: IFilePath, sourceUri: string, headers?: IHeaders): Promise<void>;
 	uploadFile(filePath: IFilePath, formKey: string, uri: string, headers?: { [key: string]: string }): Promise<any>;
+	getFileDetails(filePath: IFilePath): Promise<IFileDetails>;
 	readFile(filePath: IFilePath): Promise<string>;
 	saveToFile(filePath: IFilePath, contents: string | Buffer): Promise<void>;
 	deleteFile(filePath: IFilePath, recursive?: boolean): Promise<void>;

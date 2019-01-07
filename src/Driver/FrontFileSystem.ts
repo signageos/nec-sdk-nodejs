@@ -8,6 +8,7 @@ import * as FSMessages from '../Bridge/bridgeFileSystemMessages';
 import {
 	EXTERNAL_STORAGE_UNITS_PATH,
 } from '../FileSystem/IFileSystem';
+import { IFileDetails } from '../FileSystem/IFileDetails';
 
 class FrontFileSystem implements IFileSystem {
 
@@ -32,9 +33,20 @@ class FrontFileSystem implements IFileSystem {
 				uriPath = EXTERNAL_STORAGE_UNITS_PATH + '/' + uriPath;
 			}
 			const fileLocalUri = this.fileSystemUrl + '/' + uriPath;
-			return {
+			const basicFile = {
 				localUri: fileLocalUri,
 			};
+
+			try {
+				const fileDetails = await this.getFileDetails(filePath);
+				return {
+					...basicFile,
+					...fileDetails,
+				};
+			} catch (error) {
+				console.warn('Get file details failed', error);
+				return basicFile;
+			}
 		}
 
 		return null;
@@ -116,6 +128,14 @@ class FrontFileSystem implements IFileSystem {
 
 	public onStorageUnitsChanged(listener: () => void) {
 		this.socketClient.on('storage_units_changed', listener);
+	}
+
+	private async getFileDetails(filePath: IFilePath) {
+		const { fileDetails } = await this.bridge.invoke<FSMessages.GetFileDetails, { fileDetails: IFileDetails }>({
+			type: FSMessages.GetFileDetails,
+			filePath,
+		});
+		return fileDetails;
 	}
 }
 

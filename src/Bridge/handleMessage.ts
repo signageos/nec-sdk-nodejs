@@ -15,6 +15,7 @@ import * as FSMessages from './bridgeFileSystemMessages';
 import * as OverlayMessages from './bridgeOverlayMessages';
 import * as SystemAPI from '../API/SystemAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
+import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 
 export class InvalidMessageError extends Error {}
@@ -22,6 +23,7 @@ export class ResourceNotFound extends Error {}
 
 export default async function handleMessage(
 	fileSystem: IFileSystem,
+	fileDetailsProvider: IFileDetailsProvider,
 	nativeDriver: IBasicDriver & IManagementDriver,
 	overlayRenderer: OverlayRenderer,
 	message:
@@ -39,6 +41,7 @@ export default async function handleMessage(
 		FSMessages.DownloadFile |
 		FSMessages.DeleteFile |
 		FSMessages.MoveFile |
+		FSMessages.GetFileDetails |
 		FSMessages.GetFileChecksum |
 		FSMessages.ExtractFile |
 		FSMessages.CreateDirectory |
@@ -107,6 +110,10 @@ export default async function handleMessage(
 		case FSMessages.MoveFile:
 			await fileSystem.moveFile(message.sourceFilePath, message.destinationFilePath);
 			return {};
+
+		case FSMessages.GetFileDetails:
+			const fileDetails = await fileDetailsProvider.getFileDetails(message.filePath);
+			return { fileDetails };
 
 		case FSMessages.GetFileChecksum:
 			const checksum = await fileSystem.getFileChecksum(message.filePath, message.hashType);

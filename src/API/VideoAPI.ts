@@ -18,6 +18,7 @@ export interface IVideoAPI {
 	): ChildProcess;
 	playVideo(videoProcess: ChildProcess): Promise<void>;
 	stopVideo(videoProcess: ChildProcess): Promise<void>;
+	getVideoDurationMs(filePath: string): Promise<number>;
 	prepareStream(
 		filePath: string,
 		x: number,
@@ -79,6 +80,16 @@ export function createVideoAPI(): IVideoAPI {
 
 			videoProcess.kill('SIGINT');
 			await stoppedPromise;
+		},
+
+		async getVideoDurationMs(filePath: string): Promise<number> {
+			const durationSecString = await execApiCommand('video', 'duration', filePath);
+			const durationSec = parseFloat(durationSecString);
+			if (isNaN(durationSec)) {
+				throw new Error('Failed to get video duration, got NaN');
+			}
+			const durationMs = durationSec * 1000;
+			return Math.trunc(durationMs);
 		},
 
 		prepareStream(

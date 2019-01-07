@@ -10,6 +10,7 @@ import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 import {
 	IStorageUnit as ISystemStorageUnit,
 	getStorageStatus,
+	getFileMimeType,
 } from '../API/SystemAPI';
 import IFileSystem, {
 	TMP_STORAGE_UNIT,
@@ -18,6 +19,7 @@ import IFileSystem, {
 	EXTERNAL_STORAGE_UNITS_PATH,
 	FileOrDirectoryNotFound,
 } from './IFileSystem';
+import { IFileDetails } from './IFileDetails';
 import { downloadFile } from './downloadFile';
 import { uploadFile } from './uploadFile';
 import { unzip } from './archive';
@@ -98,6 +100,34 @@ export default class FileSystem implements IFileSystem {
 		const absolutePath = this.getAbsolutePath(filePath);
 		const file = fs.createReadStream(absolutePath);
 		return await uploadFile(file, formKey, uri, headers);
+	}
+
+	public async getFileDetails(filePath: IFilePath): Promise<IFileDetails> {
+		const fileExists = await this.exists(filePath);
+		if (!fileExists) {
+			throw new FileOrDirectoryNotFound();
+		}
+
+		if (await this.isDirectory(filePath)) {
+			throw new Error('only can get details of files, not directories');
+		}
+
+		const absolutePath = this.getAbsolutePath(filePath);
+		const fileStats = await fs.stat(absolutePath);
+
+		let mimeType: string | undefined = undefined;
+		try {
+			mimeType = await getFileMimeType(absolutePath);
+		} catch (error) {
+			console.warn('failed to get mime type', error);
+		}
+
+		return {
+			createdAt: fileStats.birthtime.valueOf(),
+			lastModifiedAt: fileStats.birthtime.valueOf(),
+			sizeBytes: fileStats.size,
+			mimeType,
+		};
 	}
 
 	public async readFile(filePath: IFilePath): Promise<string> {

@@ -80,6 +80,11 @@ export function listenToCECKeypresses(socketPath: string) {
 	return spawnApiCommandChildProcess('cec', 'listen', [socketPath]);
 }
 
+export async function getFileMimeType(filePath: string) {
+	const mimeType = await execApiCommand('file', 'mime_type', filePath);
+	return mimeType.trim();
+}
+
 function escapeBashArgument(argument: string) {
 	return argument.replace(/\'/g, "\\'");
 }
