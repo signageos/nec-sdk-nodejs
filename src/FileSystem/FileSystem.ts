@@ -21,6 +21,7 @@ import IFileSystem, {
 import { downloadFile } from './downloadFile';
 import { uploadFile } from './uploadFile';
 import { unzip } from './archive';
+import { trimSlashesAndDots } from './helper';
 
 const EVENT_STORAGE_UNITS_CHANGED = 'storage_units_changed';
 
@@ -52,7 +53,7 @@ export default class FileSystem implements IFileSystem {
 		const filenames: string[] = await fs.readdir(absolutePath);
 		return filenames.map((filename: string) => ({
 			storageUnit: directoryPath.storageUnit,
-			filePath: this.trimSlashesAndDots(path.join(directoryPath.filePath, filename)),
+			filePath: trimSlashesAndDots(path.join(directoryPath.filePath, filename)),
 		} as IFilePath));
 	}
 
@@ -284,7 +285,7 @@ export default class FileSystem implements IFileSystem {
 		}
 
 		let filePath = relativePath.substring(startsWith.length);
-		filePath = this.trimSlashesAndDots(filePath);
+		filePath = trimSlashesAndDots(filePath);
 		const internalStorageUnit = await this.getInternalStorageUnit();
 
 		return {
@@ -301,7 +302,7 @@ export default class FileSystem implements IFileSystem {
 
 		const startsWith = external + '/' + storageUnitType;
 		let filePath = relativePath.substring(startsWith.length);
-		filePath = this.trimSlashesAndDots(filePath);
+		filePath = trimSlashesAndDots(filePath);
 
 		const storageUnits = await this.listStorageUnits();
 		for (let storageUnit of storageUnits) {
@@ -335,17 +336,6 @@ export default class FileSystem implements IFileSystem {
 
 	private isRootDirectory(filePath: IFilePath) {
 		return filePath.filePath.trim() === "";
-	}
-
-	private trimSlashesAndDots(filePath: string) {
-		if (filePath.indexOf('.') === 0) {
-			filePath = filePath.substring(1);
-		}
-		filePath = filePath.replace(/\/\.\//g, '/');
-		filePath = filePath.replace(/\/+/g, '/');
-		filePath = filePath.replace(/\/+$/g, '');
-		filePath = filePath.replace(/^\/+/g, '');
-		return filePath;
 	}
 
 	private listenToStorageUnitsChanged() {
