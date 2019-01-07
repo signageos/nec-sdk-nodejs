@@ -43,7 +43,7 @@ export function createVideoAPI(): IVideoAPI {
 			orientation: Orientation,
 			eventSocketPath: string,
 		) {
-			const windowCoords = `${x},${y},${width},${height}`;
+			const windowCoords = getVideoWindowArgsString(x, y, width, height);
 			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
 
 			return spawnApiCommandChildProcess('video', 'init', [
@@ -90,7 +90,7 @@ export function createVideoAPI(): IVideoAPI {
 			orientation: Orientation,
 			eventSocketPath: string,
 		) {
-			const windowCoords = `${x},${y},${width},${height}`;
+			const windowCoords = getVideoWindowArgsString(x, y, width, height);
 			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
 
 			return spawnApiCommandChildProcess('stream', 'init', [
@@ -109,6 +109,10 @@ export function createVideoAPI(): IVideoAPI {
 			await this.stopVideo(streamProcess);
 		},
 	};
+}
+
+function getVideoWindowArgsString(x: number, y: number, width: number, height: number) {
+	return `${x},${y},${x + width},${y + height}`;
 }
 
 function convertOrientationToRotationAngle(orientation: Orientation) {
