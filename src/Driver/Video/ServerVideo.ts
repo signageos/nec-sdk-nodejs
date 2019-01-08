@@ -62,7 +62,14 @@ export default class ServerVideo implements IServerVideo {
 		this.childProcess = await this.prepareVideoChildProcess(uri, x, y, width, height, orientation, isStream);
 		this.videoArguments = { uri, x, y, width, height };
 		this.isStream = isStream;
-		await readyPromise;
+
+		const closedPromise = new Promise<void>((_resolve: () => void, reject: (error: Error) => void) => {
+			this.childProcess!.once('close', () => {
+				reject(new Error('Video process closed while preparing'));
+			});
+		});
+
+		await Promise.race([readyPromise, closedPromise]);
 	}
 
 	public async play() {
@@ -70,8 +77,11 @@ export default class ServerVideo implements IServerVideo {
 			throw new Error('Trying to play video that\'s not prepared, video key: ' + this.key);
 		}
 
-		const playingPromise = new Promise<void>((resolve: () => void) => {
+		const playingPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
 			this.videoEventListener.once('started', resolve);
+			this.childProcess!.once('close', () => {
+				reject(new Error('Video process closed before it could play'));
+			});
 		});
 
 		if (this.isStream) {
