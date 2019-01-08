@@ -25,6 +25,7 @@ import { fetch } from './WebWorker/serverFetch';
 import OverlayRenderer from './Overlay/OverlayRenderer';
 import CECListener from './CEC/CECListener';
 import FileDetailsProvider from './FileSystem/FileDetailsProvider';
+import FileMetadataCache from './FileSystem/FileMetadataCache';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -38,7 +39,8 @@ if (parameters.raven.enabled) {
 (async () => {
 	const fileSystem = new FileSystem(parameters.fileSystem.root, parameters.fileSystem.tmp, 'SIGUSR2');
 	const videoAPI = createVideoAPI();
-	const fileDetailsProvider = new FileDetailsProvider(fileSystem, videoAPI);
+	const fileMetadataCache = new FileMetadataCache(fileSystem);
+	const fileDetailsProvider = new FileDetailsProvider(fileSystem, videoAPI, fileMetadataCache);
 	const cache = new FileSystemCache(fileSystem);
 
 	const nativeDriver = new ManagementDriver(

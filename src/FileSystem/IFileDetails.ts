@@ -5,6 +5,8 @@ export interface IFileDetails {
 	mimeType?: string;
 }
 
-export interface IVideoFileDetails extends IFileDetails {
+export interface IVideoFileDetails {
 	videoDurationMs?: number;
 }
+
+export type IExtendedFileDetails = IVideoFileDetails;
