@@ -47,16 +47,20 @@ export function createVideoAPI(): IVideoAPI {
 			const windowCoords = getVideoWindowArgsString(x, y, width, height);
 			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
 
-			return spawnApiCommandChildProcess('video', 'init', [
-				windowCoords,
-				rotationAngle,
-				eventSocketPath,
-				filePath,
-			]);
+			return spawnApiCommandChildProcess(
+				'video',
+				'init',
+				[
+					windowCoords,
+					rotationAngle,
+					eventSocketPath,
+					filePath,
+				],
+			);
 		},
 
 		async playVideo(videoProcess: ChildProcess) {
-			await execApiCommand('video', 'play', videoProcess.pid.toString());
+			await execApiCommand('video', 'play', [videoProcess.pid.toString()]);
 		},
 
 		async stopVideo(videoProcess: ChildProcess) {
@@ -83,7 +87,7 @@ export function createVideoAPI(): IVideoAPI {
 		},
 
 		async getVideoDurationMs(filePath: string): Promise<number> {
-			const durationSecString = await execApiCommand('video', 'duration', filePath);
+			const durationSecString = await execApiCommand('video', 'duration', [filePath]);
 			const durationSec = parseFloat(durationSecString);
 			if (isNaN(durationSec)) {
 				throw new Error('Failed to get video duration, got NaN');
@@ -104,16 +108,22 @@ export function createVideoAPI(): IVideoAPI {
 			const windowCoords = getVideoWindowArgsString(x, y, width, height);
 			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
 
-			return spawnApiCommandChildProcess('stream', 'init', [
-				windowCoords,
-				rotationAngle,
-				eventSocketPath,
-				filePath,
-			]);
+			return spawnApiCommandChildProcess(
+				'stream',
+				'init',
+				[
+					windowCoords,
+					rotationAngle,
+					eventSocketPath,
+					filePath,
+				],
+				false,
+				true,
+			);
 		},
 
 		async playStream(streamProcess: ChildProcess) {
-			await execApiCommand('stream', 'play', streamProcess.pid.toString());
+			await execApiCommand('stream', 'play', [streamProcess.pid.toString()]);
 		},
 
 		async stopStream(streamProcess: ChildProcess) {
