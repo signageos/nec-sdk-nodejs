@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events';
 import { ISocket } from '@signageos/lib/dist/WebSocket/socketServer';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import {
@@ -13,29 +12,14 @@ import {
 	VideoError,
 	AllVideosStopped,
 } from './bridgeVideoMessages';
-import IVideo from '../../node_modules/@signageos/front-display/es6/Video/IVideo';
 import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
-
-const eventEmitter = new EventEmitter();
 
 export default function socketHandleVideo(
 	socket: ISocket,
 	videoPlayer: IServerVideoPlayer,
 ) {
-	forwardEventEmitterToSocket(socket);
 	listenToVideoEventsFromClient(socket, videoPlayer);
-}
-
-function forwardEventEmitterToSocket(socket: ISocket) {
-	const videoEventListener = async (event: { type: string, payload: any }) => {
-		await socket.send(event.type, event.payload);
-	};
-
-	eventEmitter.on('video_event', videoEventListener);
-
-	socket.on('disconnect', () => {
-		eventEmitter.removeListener('video_event', videoEventListener);
-	});
+	forwardVideoEventsToClient(socket, videoPlayer);
 }
 
 function listenToVideoEventsFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
@@ -50,20 +34,13 @@ function listenToPrepareVideoEventFromClient(socket: ISocket, videoPlayer: IServ
 		const { uri, x, y, width, height, orientation, isStream } = message;
 		try {
 			await videoPlayer.prepare(uri, x, y, width, height, orientation, isStream);
-
-			eventEmitter.emit('video_event', {
-				type: VideoPrepared,
-				payload: {
-					uri, x, y, width, height,
-				},
+			await socket.send(VideoPrepared, {
+				uri, x, y, width, height,
 			});
 		} catch (error) {
-			eventEmitter.emit('video_event', {
-				type: VideoError,
-				payload: {
-					uri, x, y, width, height,
-					data: { message: 'Failed to prepare video' },
-				},
+			await socket.send(VideoError, {
+				uri, x, y, width, height,
+				data: { message: 'Failed to prepare video' },
 			});
 		}
 	});
@@ -72,44 +49,15 @@ function listenToPrepareVideoEventFromClient(socket: ISocket, videoPlayer: IServ
 function listenToPlayVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	socket.on(PlayVideo, async (message: PlayVideo) => {
 		const { uri, x, y, width, height } = message;
-		let video: IVideo;
 		try {
-			video = await videoPlayer.play(uri, x, y, width, height, message.orientation, message.isStream);
-			video.on('ended', async (event: IVideoEvent) => {
-				eventEmitter.emit('video_event', {
-					type: VideoEnded,
-					payload: { ...event.srcArguments },
-				});
-			});
-			video.on('stopped', async (event: IVideoEvent) => {
-				eventEmitter.emit('video_event', {
-					type: VideoStopped,
-					payload: { ...event.srcArguments },
-				});
-			});
-			video.on('error', async (event: IVideoEvent) => {
-				eventEmitter.emit('video_event', {
-					type: VideoError,
-					payload: {
-						...event.srcArguments,
-						data: event.data,
-					},
-				});
-			});
-
-			eventEmitter.emit('video_event', {
-				type: VideoStarted,
-				payload: {
-					uri, x, y, width, height,
-				},
+			await videoPlayer.play(uri, x, y, width, height, message.orientation, message.isStream);
+			await socket.send(VideoStarted, {
+				uri, x, y, width, height,
 			});
 		} catch (error) {
-			eventEmitter.emit('video_event', {
-				type: VideoError,
-				payload: {
-					uri, x, y, width, height,
-					data: { message: 'Failed to start video playback' },
-				},
+			await socket.send(VideoError, {
+				uri, x, y, width, height,
+				data: { message: 'Failed to start video playback' },
 			});
 		}
 	});
@@ -120,20 +68,13 @@ function listenToStopVideoEventFromClient(socket: ISocket, videoPlayer: IServerV
 		const { uri, x, y, width, height } = message;
 		try {
 			await videoPlayer.stop(uri, x, y, width, height);
-
-			eventEmitter.emit('video_event', {
-				type: VideoStopped,
-				payload: {
-					uri, x, y, width, height,
-				},
+			await socket.send(VideoStopped, {
+				uri, x, y, width, height,
 			});
 		} catch (error) {
-			eventEmitter.emit('video_event', {
-				type: VideoError,
-				payload: {
-					uri, x, y, width, height,
-					data: { message: 'Failed to stop video playback' },
-				},
+			await socket.send(VideoError, {
+				uri, x, y, width, height,
+				data: { message: 'Failed to stop video playback' },
 			});
 		}
 	});
@@ -142,10 +83,31 @@ function listenToStopVideoEventFromClient(socket: ISocket, videoPlayer: IServerV
 function listenToStopAllVideosEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	socket.on(StopAllVideos, async () => {
 		await videoPlayer.clearAll();
+		await socket.send(AllVideosStopped, {});
+	});
+}
 
-		eventEmitter.emit('video_event', {
-			type: AllVideosStopped,
-			payload: {},
+function forwardVideoEventsToClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
+	const onEnded = async (event: IVideoEvent) => {
+		await socket.send(VideoEnded, { ...event.srcArguments });
+	};
+	const onStopped = async (event: IVideoEvent) => {
+		await socket.send(VideoStopped, { ...event.srcArguments });
+	};
+	const onError = async (event: IVideoEvent) => {
+		await socket.send(VideoError, {
+			...event.srcArguments,
+			data: event.data,
 		});
+	};
+
+	videoPlayer.addEventListener('ended', onEnded);
+	videoPlayer.addEventListener('stopped', onStopped);
+	videoPlayer.addEventListener('error', onError);
+
+	socket.on('disconnect', () => {
+		videoPlayer.removeEventListener('ended', onEnded);
+		videoPlayer.removeEventListener('stopped', onStopped);
+		videoPlayer.removeEventListener('error', onError);
 	});
 }
