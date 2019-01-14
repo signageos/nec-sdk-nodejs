@@ -38,6 +38,10 @@ export async function reboot() {
 	await execApiCommand('device', 'reboot');
 }
 
+export async function applicationReady() {
+	await execApiCommand('application', 'ready');
+}
+
 export async function restartApplication() {
 	await execApiCommand('application', 'restart');
 }

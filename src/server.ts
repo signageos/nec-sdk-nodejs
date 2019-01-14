@@ -26,6 +26,7 @@ import OverlayRenderer from './Overlay/OverlayRenderer';
 import CECListener from './CEC/CECListener';
 import FileDetailsProvider from './FileSystem/FileDetailsProvider';
 import FileMetadataCache from './FileSystem/FileMetadataCache';
+import { applicationReady } from './API/SystemAPI';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -90,4 +91,5 @@ if (parameters.raven.enabled) {
 		parameters.server.bridge_url, fileSystem, fileDetailsProvider, nativeDriver, videoPlayer, overlayRenderer, cecListener,
 	);
 	await bridgeServer.start();
+	await applicationReady();
 })().catch((error: any) => console.error(error));
