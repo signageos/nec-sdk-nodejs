@@ -32,6 +32,9 @@ import {
 	SystemReboot,
 	SetNativeDebug,
 } from '../Bridge/bridgeSystemMessages';
+import {
+	IsWifiSupported,
+} from '../Bridge/bridgeNetworkMessages';
 import BridgeVideoPlayer from './Video/BridgeVideoPlayer';
 import BridgeStreamPlayer from './Video/BridgeStreamPlayer';
 import PrivateOrientation, { convertScreenOrientationToAngle } from './Orientation';
@@ -40,19 +43,14 @@ import OverlayHandler from '../Overlay/OverlayHandler';
 import ISocket from '@signageos/front-display/es6/Socket/ISocket';
 import keyMap from './Input/keyMap';
 import Key from '../CEC/Key';
+import Led from './Hardware/Led';
+import FrontWifi from './Hardware/FrontWifi';
 
 export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	private static ORIENTATION_KEY: string = 'local-config-ORIENTATION_KEY';
 
-	public readonly hardware: Hardware = {
-		led: {
-			async setColor(_color: string) {
-				console.warn(new Error('Not implemented hardware led set color'));
-			},
-		},
-	};
-
+	public readonly hardware: Hardware;
 	public readonly video: BridgeVideoPlayer;
 	public readonly stream: IStreamPlayer;
 	public readonly fileSystem: IFileSystem;
@@ -81,6 +79,10 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		this.stream = new BridgeStreamPlayer(this.bridgeVideoClient);
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);
 		this.overlay = new OverlayHandler(this.window, this.frontAppletPrefix, this.bridge);
+		this.hardware = {
+			led: new Led(),
+			wifi: new FrontWifi(this.bridge),
+		};
 	}
 
 	public async getConfigurationBaseUrl(): Promise<string | null> {
@@ -102,6 +104,9 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 			case FrontCapability.FILE_SYSTEM_INTERNAL_STORAGE:
 			case FrontCapability.FILE_SYSTEM_EXTERNAL_STORAGE:
 				return true;
+			case FrontCapability.WIFI:
+			case FrontCapability.WIFI_SCAN:
+				return await this.isWifiSupported();
 			default:
 				return false;
 		}
@@ -396,5 +401,12 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		}
 
 		this.window.localStorage.setItem(FrontDriver.ORIENTATION_KEY, privateOrientation as string);
+	}
+
+	private async isWifiSupported() {
+		const { isWifiSupported } = await this.bridge.invoke<IsWifiSupported, { isWifiSupported: boolean }>({
+			type: IsWifiSupported,
+		});
+		return isWifiSupported;
 	}
 }
