@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Get extended file details (mime type, video duration)
 - Support WiFi
 - OSD
+- Support setting volume
 # Fixed
 - Uploading screenshots
 - When there are multiple requests to download a file, allow only one at a time to prevent running out of RAM

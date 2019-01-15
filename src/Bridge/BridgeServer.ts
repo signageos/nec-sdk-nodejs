@@ -17,6 +17,7 @@ import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
 import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 import ICECListener from '../CEC/ICECListener';
+import ISystemSettings from '../SystemSettings/ISystemSettings';
 
 export default class BridgeServer {
 
@@ -29,6 +30,7 @@ export default class BridgeServer {
 		private fileSystem: IFileSystem,
 		private fileDetailsProvider: IFileDetailsProvider,
 		private nativeDriver: IBasicDriver & IManagementDriver,
+		private systemSettings: ISystemSettings,
 		private videoPlayer: IServerVideoPlayer,
 		private overlayRenderer: OverlayRenderer,
 		private cecListener: ICECListener,
@@ -73,6 +75,7 @@ export default class BridgeServer {
 					this.fileSystem,
 					this.fileDetailsProvider,
 					this.nativeDriver,
+					this.systemSettings,
 					this.overlayRenderer,
 					request.body,
 				);

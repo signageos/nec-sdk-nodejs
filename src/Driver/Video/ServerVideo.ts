@@ -9,6 +9,7 @@ import {
 import IUnixSocketEventListener from '../../UnixSocket/IUnixSocketEventListener';
 import IFileSystem from '../../FileSystem/IFileSystem';
 import IServerVideo from './IServerVideo';
+import ISystemSettings from '../../SystemSettings/ISystemSettings';
 
 export enum State {
 	IDLE,
@@ -35,6 +36,7 @@ export default class ServerVideo implements IServerVideo {
 
 	constructor(
 		private fileSystem: IFileSystem,
+		private systemSettings: ISystemSettings,
 		private key: string,
 		private videoAPI: IVideoAPI,
 		private videoEventListener: IUnixSocketEventListener,
@@ -142,13 +144,14 @@ export default class ServerVideo implements IServerVideo {
 		isStream: boolean,
 	) {
 		const socketPath = this.videoEventListener.getSocketPath();
+		const volume = await this.systemSettings.getVolume();
 		let videoProcess: ChildProcess;
 		if (isStream) {
-			videoProcess = this.videoAPI.prepareStream(uri, x, y, width, height, orientation, socketPath);
+			videoProcess = this.videoAPI.prepareStream(uri, x, y, width, height, orientation, socketPath, volume);
 		} else {
 			const filePath = await this.fileSystem.convertRelativePathToFilePath(uri);
 			const fileAbsolutePath = this.fileSystem.getAbsolutePath(filePath);
-			videoProcess = this.videoAPI.prepareVideo(fileAbsolutePath, x, y, width, height, orientation, socketPath);
+			videoProcess = this.videoAPI.prepareVideo(fileAbsolutePath, x, y, width, height, orientation, socketPath, volume);
 		}
 
 		const videoEventSrcArgs = { uri, x, y, width, height };

@@ -41,6 +41,7 @@ test:general:
     - tags
   variables:
     fs_root_path: /test_fs
+    fs_system_path: /test_system_fs
   script:
     - npm test
 

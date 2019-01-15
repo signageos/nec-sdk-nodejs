@@ -17,6 +17,7 @@ SOURCE_NAME=server.js
 USER=signageos
 NODE_ENVIRONMENT=production
 FS_ROOT=/var/lib/signageos/fs
+FS_SYSTEM=/var/lib/signageos/system
 
 pidfile=/var/run/$NAME.pid
 logfile=/var/log/$NAME.log
@@ -32,7 +33,10 @@ start() {
     touch $logfile
     chown $USER $logfile
 
-    sudo -H -u $USER fs_root_path=$FS_ROOT $forever start --pidFile $pidfile -l $logfile -a --sourceDir $SOURCEC_DIR -c $COMMAND $SOURCE_NAME
+    sudo -H -u $USER \
+        fs_root_path=$FS_ROOT \
+        fs_system_path=$FS_SYSTEM \
+        $forever start --pidFile $pidfile -l $logfile -a --sourceDir $SOURCEC_DIR -c $COMMAND $SOURCE_NAME
 
     RETVAL=$?
 }

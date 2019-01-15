@@ -40,7 +40,9 @@ describe('Bridge.handleMessage', function () {
 		const nativeDriver = {
 			getDeviceUid: sinon.stub().resolves('deviceUid1'),
 		};
-		const result = await handleMessage({} as any, {} as any, nativeDriver as any, {} as any, { type: GetDeviceUid } as GetDeviceUid);
+		const result = await handleMessage(
+			{} as any, {} as any, nativeDriver as any, {} as any, {} as any, { type: GetDeviceUid } as GetDeviceUid,
+		);
 		result.should.deepEqual({ deviceUid: 'deviceUid1' });
 	});
 
@@ -52,7 +54,7 @@ describe('Bridge.handleMessage', function () {
 				getFilePath('directory/file3'),
 			]),
 		};
-		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
 			type: ListFiles,
 			directoryPath: getFilePath('directory'),
 		});
@@ -69,7 +71,7 @@ describe('Bridge.handleMessage', function () {
 		const fileSystem = {
 			exists: sinon.stub().resolves(true),
 		};
-		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
 			type: FileExists,
 			filePath: getFilePath('file1'),
 		});
@@ -79,7 +81,7 @@ describe('Bridge.handleMessage', function () {
 	it('should process DownloadFile message', async function () {
 		const downloadFile = sinon.stub().resolves();
 		const fileSystem = { downloadFile };
-		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
 			type: DownloadFile,
 			filePath: getFilePath('file1'),
 			sourceUri: 'uri1',
@@ -91,7 +93,7 @@ describe('Bridge.handleMessage', function () {
 	it('should process DeleteFile message', async function () {
 		const deleteFile = sinon.stub().resolves();
 		const fileSystem = { deleteFile };
-		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
 			type: DeleteFile,
 			filePath: getFilePath('file1'),
 			recursive: false,
@@ -103,7 +105,7 @@ describe('Bridge.handleMessage', function () {
 	it('should process MoveFile message', async function () {
 		const moveFile = sinon.stub().resolves();
 		const fileSystem = { moveFile };
-		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
 			type: MoveFile,
 			sourceFilePath: getFilePath('source'),
 			destinationFilePath: getFilePath('destination'),
@@ -116,7 +118,7 @@ describe('Bridge.handleMessage', function () {
 		const fileSystem = {
 			getFileChecksum: async () => 'result_checksum',
 		};
-		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
 			type: GetFileChecksum,
 			filePath: getFilePath('file'),
 			hashType: 'md5' as any,
@@ -134,7 +136,7 @@ describe('Bridge.handleMessage', function () {
 				videoDuration: 3000,
 			}),
 		};
-		const result = await handleMessage({} as any, fileDetailsProvider as any, {} as any, {} as any, {
+		const result = await handleMessage({} as any, fileDetailsProvider as any, {} as any, {} as any, {} as any, {
 			type: GetFileDetails,
 			filePath: getFilePath('file'),
 		});
@@ -152,7 +154,7 @@ describe('Bridge.handleMessage', function () {
 	it('should process ExtractFile message', async function () {
 		const extractFile = sinon.stub().resolves();
 		const fileSystem = { extractFile };
-		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
 			type: ExtractFile,
 			archiveFilePath: getFilePath('archive.zip'),
 			destinationDirectoryPath: getFilePath('destination'),
@@ -165,7 +167,7 @@ describe('Bridge.handleMessage', function () {
 	it('should process CreateDirectory message', async function () {
 		const createDirectory = sinon.stub().resolves();
 		const fileSystem = { createDirectory };
-		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
 			type: CreateDirectory,
 			directoryPath: getFilePath('directory'),
 		});
@@ -177,7 +179,7 @@ describe('Bridge.handleMessage', function () {
 		const fileSystem = {
 			isDirectory: async () => true,
 		};
-		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
 			type: IsDirectory,
 			filePath: getFilePath('directory'),
 		});
@@ -204,7 +206,7 @@ describe('Bridge.handleMessage', function () {
 		const fileSystem = {
 			listStorageUnits: async () => storageUnits,
 		};
-		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
 			type: ListStorageUnits,
 		});
 		result.should.deepEqual({ storageUnits });

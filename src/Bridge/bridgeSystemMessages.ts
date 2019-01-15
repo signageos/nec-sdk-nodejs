@@ -48,3 +48,14 @@ export const ScreenTurnOn = 'Screen.TurnOn';
 export interface ScreenTurnOn {
 	type: typeof ScreenTurnOn;
 }
+
+export const AudioGetVolume = 'Audio.GetVolume';
+export interface AudioGetVolume {
+	type: typeof AudioGetVolume;
+}
+
+export const AudioSetVolume = 'Audio.SetVolume';
+export interface AudioSetVolume {
+	type: typeof AudioSetVolume;
+	volume: number;
+}
