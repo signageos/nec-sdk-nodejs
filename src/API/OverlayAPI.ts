@@ -30,14 +30,16 @@ export function showOverlay(
 		}
 	}
 
-	return spawnApiCommandChildProcess('overlay', 'show', [
-		'-l 2',
-		...args,
-		file,
-	]);
+	return spawnApiCommandChildProcess(
+		'overlay',
+		'show',
+		['-l 2', ...args, file],
+		false,
+		true,
+	);
 }
 
 export async function refreshOverlay(overlayProcess: ChildProcess) {
 	const pid = overlayProcess.pid;
-	await execApiCommand('overlay', 'refresh', pid.toString());
+	await execApiCommand('overlay', 'refresh', [pid.toString()]);
 }

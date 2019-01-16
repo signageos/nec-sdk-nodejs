@@ -38,13 +38,16 @@ export async function reboot() {
 	await execApiCommand('device', 'reboot');
 }
 
+export async function applicationReady() {
+	await execApiCommand('application', 'ready');
+}
+
 export async function restartApplication() {
 	await execApiCommand('application', 'restart');
 }
 
 export async function upgradeApp(debFile: string) {
-	const escapedDebFile = escapeBashArgument(debFile);
-	await execApiCommand('application', 'upgrade', escapedDebFile);
+	await execApiCommand('application', 'upgrade', [debFile], true, true);
 }
 
 export async function getFirmwareVersion() {
@@ -52,8 +55,7 @@ export async function getFirmwareVersion() {
 }
 
 export async function upgradeFirmware(sourceUrl: string) {
-	const escapedSourceUrl = escapeBashArgument(sourceUrl);
-	await execApiCommand('firmware', 'upgrade', escapedSourceUrl);
+	await execApiCommand('firmware', 'upgrade', [sourceUrl], true, true);
 }
 
 export async function enableNativeDebug() {
@@ -73,13 +75,14 @@ export async function turnScreenOn() {
 }
 
 export async function takeScreenshot(destination: string) {
-	await execApiCommand('screen', 'screenshot', destination);
+	await execApiCommand('screen', 'screenshot', [destination]);
 }
 
 export function listenToCECKeypresses(socketPath: string) {
 	return spawnApiCommandChildProcess('cec', 'listen', [socketPath]);
 }
 
-function escapeBashArgument(argument: string) {
-	return argument.replace(/\'/g, "\\'");
+export async function getFileMimeType(filePath: string) {
+	const mimeType = await execApiCommand('file', 'mime_type', [filePath]);
+	return mimeType.trim();
 }

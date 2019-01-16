@@ -8,7 +8,9 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 	describe('constructor', function () {
 
 		it('should create number of videos defined in the arguments', function () {
-			const createVideo = sinon.stub().returns({});
+			const createVideo = sinon.stub().returns({
+				addEventListener: sinon.spy(),
+			});
 			const videoPlayer = new ServerVideoPlayer(3, createVideo);
 			videoPlayer.should.be.ok();
 			createVideo.callCount.should.equal(3);
@@ -52,6 +54,7 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 							orientation.should.equal(Orientation.LANDSCAPE);
 							isStream.should.be.true();
 						},
+						addEventListener: sinon.spy(),
 					};
 				};
 
@@ -64,6 +67,7 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 		it('should throw error if there are no idle video players available', async function () {
 			const createVideo = () => ({
 				isIdle: () => false,
+				addEventListener: sinon.spy(),
 			});
 			const videoPlayer = new ServerVideoPlayer(5, createVideo as any);
 			await videoPlayer.prepare('video1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true)

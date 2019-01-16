@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import IServerVideo from '../../../../src/Driver/Video/IServerVideo';
 import { IVideoArguments } from '../../../../src/Driver/Video/ServerVideo';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 
 enum State {
 	IDLE,
@@ -65,16 +66,8 @@ class MockServerVideo implements IServerVideo {
 		return !!this.videoArguments;
 	}
 
-	public addEventListener(event: string, callback: () => void): void {
-		this.eventEmitter.addListener(event, callback);
-	}
-
-	public removeAllListeners(): void {
-		this.eventEmitter.removeAllListeners();
-	}
-
-	public emitEvent(event: string, ...args: any[]) {
-		this.eventEmitter.emit(event, ...args);
+	public addEventListener(eventName: string, callback: (event: IVideoEvent) => void): void {
+		this.eventEmitter.addListener(eventName, callback);
 	}
 }
 

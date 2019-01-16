@@ -24,6 +24,9 @@ import FileSystemCache from './Cache/FileSystemCache';
 import { fetch } from './WebWorker/serverFetch';
 import OverlayRenderer from './Overlay/OverlayRenderer';
 import CECListener from './CEC/CECListener';
+import FileDetailsProvider from './FileSystem/FileDetailsProvider';
+import FileMetadataCache from './FileSystem/FileMetadataCache';
+import { applicationReady } from './API/SystemAPI';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -35,8 +38,10 @@ if (parameters.raven.enabled) {
 }
 
 (async () => {
-	const fileSystem = new FileSystem(parameters.fileSystem.root, parameters.fileSystem.tmp);
-	await fileSystem.initialize();
+	const fileSystem = new FileSystem(parameters.fileSystem.root, parameters.fileSystem.tmp, 'SIGUSR2');
+	const videoAPI = createVideoAPI();
+	const fileMetadataCache = new FileMetadataCache(fileSystem);
+	const fileDetailsProvider = new FileDetailsProvider(fileSystem, videoAPI, fileMetadataCache);
 	const cache = new FileSystemCache(fileSystem);
 
 	const nativeDriver = new ManagementDriver(
@@ -73,7 +78,6 @@ if (parameters.raven.enabled) {
 		webWorkerFactory,
 	);
 
-	const videoAPI = createVideoAPI();
 	const createVideo = (key: string) => {
 		const unixSocketPath = path.join(parameters.video.socket_root, key + '.sock');
 		const videoEventListener = new UnixSocketEventListener(unixSocketPath);
@@ -84,7 +88,8 @@ if (parameters.raven.enabled) {
 	const overlayRenderer = new OverlayRenderer(fileSystem);
 	const cecListener = new CECListener(parameters.video.socket_root);
 	const bridgeServer = new BridgeServer(
-		parameters.server.bridge_url, fileSystem, nativeDriver, videoPlayer, overlayRenderer, cecListener,
+		parameters.server.bridge_url, fileSystem, fileDetailsProvider, nativeDriver, videoPlayer, overlayRenderer, cecListener,
 	);
 	await bridgeServer.start();
+	await applicationReady();
 })().catch((error: any) => console.error(error));

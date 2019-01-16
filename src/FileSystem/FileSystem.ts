@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { promisify } from 'util';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -9,37 +10,34 @@ import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 import {
 	IStorageUnit as ISystemStorageUnit,
 	getStorageStatus,
+	getFileMimeType,
 } from '../API/SystemAPI';
 import IFileSystem, {
 	TMP_STORAGE_UNIT,
 	INTERNAL_STORAGE_UNIT,
 	TMP_DIRECTORY_PATH,
-	DATA_DIRECTORY_PATH,
 	EXTERNAL_STORAGE_UNITS_PATH,
 	FileOrDirectoryNotFound,
 } from './IFileSystem';
+import { IFileDetails } from './IFileDetails';
 import { downloadFile } from './downloadFile';
 import { uploadFile } from './uploadFile';
 import { unzip } from './archive';
+import { trimSlashesAndDots } from './helper';
+
+const EVENT_STORAGE_UNITS_CHANGED = 'storage_units_changed';
 
 export default class FileSystem implements IFileSystem {
+
+	private eventEmitter: EventEmitter;
 
 	constructor(
 		private baseDirectory: string,
 		private tmpDirectory: string,
-	) {}
-
-	public async initialize() {
-		const storageUnits = await this.listStorageUnits();
-		await Promise.all(
-			storageUnits.map(async (storageUnit: IStorageUnit) => {
-				const rootFilePath = {
-					filePath: '',
-					storageUnit,
-				} as IFilePath;
-				await this.ensureDirectory(rootFilePath);
-			}),
-		);
+		private storageUnitsChangedSignal: NodeJS.Signals,
+	) {
+		this.eventEmitter = new EventEmitter();
+		this.listenToStorageUnitsChanged();
 	}
 
 	public async listFiles(directoryPath: IFilePath): Promise<IFilePath[]> {
@@ -57,7 +55,7 @@ export default class FileSystem implements IFileSystem {
 		const filenames: string[] = await fs.readdir(absolutePath);
 		return filenames.map((filename: string) => ({
 			storageUnit: directoryPath.storageUnit,
-			filePath: this.trimSlashesAndDots(path.join(directoryPath.filePath, filename)),
+			filePath: trimSlashesAndDots(path.join(directoryPath.filePath, filename)),
 		} as IFilePath));
 	}
 
@@ -102,6 +100,34 @@ export default class FileSystem implements IFileSystem {
 		const absolutePath = this.getAbsolutePath(filePath);
 		const file = fs.createReadStream(absolutePath);
 		return await uploadFile(file, formKey, uri, headers);
+	}
+
+	public async getFileDetails(filePath: IFilePath): Promise<IFileDetails> {
+		const fileExists = await this.exists(filePath);
+		if (!fileExists) {
+			throw new FileOrDirectoryNotFound();
+		}
+
+		if (await this.isDirectory(filePath)) {
+			throw new Error('only can get details of files, not directories');
+		}
+
+		const absolutePath = this.getAbsolutePath(filePath);
+		const fileStats = await fs.stat(absolutePath);
+
+		let mimeType: string | undefined = undefined;
+		try {
+			mimeType = await getFileMimeType(absolutePath);
+		} catch (error) {
+			console.warn('failed to get mime type', error);
+		}
+
+		return {
+			createdAt: fileStats.birthtime.valueOf(),
+			lastModifiedAt: fileStats.birthtime.valueOf(),
+			sizeBytes: fileStats.size,
+			mimeType,
+		};
 	}
 
 	public async readFile(filePath: IFilePath): Promise<string> {
@@ -233,8 +259,12 @@ export default class FileSystem implements IFileSystem {
 		}));
 	}
 
-	public onStorageUnitsChanged(_listener: () => void): void {
-		// implement
+	public onStorageUnitsChanged(listener: () => void) {
+		this.eventEmitter.addListener(EVENT_STORAGE_UNITS_CHANGED, listener);
+	}
+
+	public removeStorageUnitsChangedListener(listener: () => void) {
+		this.eventEmitter.removeListener(EVENT_STORAGE_UNITS_CHANGED, listener);
 	}
 
 	public async getInternalStorageUnit(): Promise<IStorageUnit> {
@@ -267,7 +297,7 @@ export default class FileSystem implements IFileSystem {
 			basePath = path.join(basePath, EXTERNAL_STORAGE_UNITS_PATH);
 		}
 
-		return path.join(basePath, filePath.storageUnit.type, DATA_DIRECTORY_PATH, filePath.filePath.trim());
+		return path.join(basePath, filePath.storageUnit.type, filePath.filePath.trim());
 	}
 
 	public async convertRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
@@ -279,13 +309,13 @@ export default class FileSystem implements IFileSystem {
 	}
 
 	private async convertInternalRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
-		const startsWith = INTERNAL_STORAGE_UNIT + '/' + DATA_DIRECTORY_PATH;
+		const startsWith = INTERNAL_STORAGE_UNIT;
 		if (!relativePath.startsWith(startsWith)) {
 			throw new Error('Invalid path ' + relativePath);
 		}
 
 		let filePath = relativePath.substring(startsWith.length);
-		filePath = this.trimSlashesAndDots(filePath);
+		filePath = trimSlashesAndDots(filePath);
 		const internalStorageUnit = await this.getInternalStorageUnit();
 
 		return {
@@ -295,14 +325,14 @@ export default class FileSystem implements IFileSystem {
 	}
 
 	private async convertExternalRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
-		const [external, storageUnitType, dataSubdir] = relativePath.split('/', 3);
-		if (external !== EXTERNAL_STORAGE_UNITS_PATH || dataSubdir !== DATA_DIRECTORY_PATH) {
+		const [external, storageUnitType] = relativePath.split('/', 2);
+		if (external !== EXTERNAL_STORAGE_UNITS_PATH) {
 			throw new Error('Invalid path ' + relativePath);
 		}
 
-		const startsWith = external + '/' + storageUnitType + '/' + dataSubdir;
+		const startsWith = external + '/' + storageUnitType;
 		let filePath = relativePath.substring(startsWith.length);
-		filePath = this.trimSlashesAndDots(filePath);
+		filePath = trimSlashesAndDots(filePath);
 
 		const storageUnits = await this.listStorageUnits();
 		for (let storageUnit of storageUnits) {
@@ -338,14 +368,9 @@ export default class FileSystem implements IFileSystem {
 		return filePath.filePath.trim() === "";
 	}
 
-	private trimSlashesAndDots(filePath: string) {
-		if (filePath.indexOf('.') === 0) {
-			filePath = filePath.substring(1);
-		}
-		filePath = filePath.replace(/\/\.\//g, '/');
-		filePath = filePath.replace(/\/+/g, '/');
-		filePath = filePath.replace(/\/+$/g, '');
-		filePath = filePath.replace(/^\/+/g, '');
-		return filePath;
+	private listenToStorageUnitsChanged() {
+		process.on(this.storageUnitsChangedSignal, () => {
+			this.eventEmitter.emit(EVENT_STORAGE_UNITS_CHANGED);
+		});
 	}
 }

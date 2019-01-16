@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";
 import wait from '@signageos/lib/dist/Timer/wait';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import {
 	IVideoAPI,
 } from '../../API/VideoAPI';
@@ -39,7 +40,6 @@ export default class ServerVideo implements IServerVideo {
 		private videoEventListener: IUnixSocketEventListener,
 	) {
 		this.eventEmitter = new EventEmitter();
-		this.removeAllListeners();
 	}
 
 	public async initialize() {
@@ -62,7 +62,14 @@ export default class ServerVideo implements IServerVideo {
 		this.childProcess = await this.prepareVideoChildProcess(uri, x, y, width, height, orientation, isStream);
 		this.videoArguments = { uri, x, y, width, height };
 		this.isStream = isStream;
-		await readyPromise;
+
+		const closedPromise = new Promise<void>((_resolve: () => void, reject: (error: Error) => void) => {
+			this.childProcess!.once('close', () => {
+				reject(new Error('Video process closed while preparing'));
+			});
+		});
+
+		await Promise.race([readyPromise, closedPromise]);
 	}
 
 	public async play() {
@@ -70,8 +77,11 @@ export default class ServerVideo implements IServerVideo {
 			throw new Error('Trying to play video that\'s not prepared, video key: ' + this.key);
 		}
 
-		const playingPromise = new Promise<void>((resolve: () => void) => {
+		const playingPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
 			this.videoEventListener.once('started', resolve);
+			this.childProcess!.once('close', () => {
+				reject(new Error('Video process closed before it could play'));
+			});
 		});
 
 		if (this.isStream) {
@@ -118,15 +128,8 @@ export default class ServerVideo implements IServerVideo {
 		return this.state === State.PAUSED;
 	}
 
-	public addEventListener(event: string, callback: () => void) {
-		this.eventEmitter.on(event, callback);
-	}
-
-	public removeAllListeners() {
-		this.eventEmitter.removeAllListeners();
-		this.eventEmitter.on('error', () => {
-			// do nothing, there has to be at least one listener always, otherwise it will throw an error when error is emitted
-		});
+	public addEventListener(eventName: string, listener: (event: IVideoEvent) => void) {
+		this.eventEmitter.on(eventName, listener);
 	}
 
 	private async prepareVideoChildProcess(

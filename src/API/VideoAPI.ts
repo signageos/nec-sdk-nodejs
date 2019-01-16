@@ -18,6 +18,7 @@ export interface IVideoAPI {
 	): ChildProcess;
 	playVideo(videoProcess: ChildProcess): Promise<void>;
 	stopVideo(videoProcess: ChildProcess): Promise<void>;
+	getVideoDurationMs(filePath: string): Promise<number>;
 	prepareStream(
 		filePath: string,
 		x: number,
@@ -43,19 +44,23 @@ export function createVideoAPI(): IVideoAPI {
 			orientation: Orientation,
 			eventSocketPath: string,
 		) {
-			const windowCoords = `${x},${y},${width},${height}`;
+			const windowCoords = getVideoWindowArgsString(x, y, width, height);
 			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
 
-			return spawnApiCommandChildProcess('video', 'init', [
-				windowCoords,
-				rotationAngle,
-				eventSocketPath,
-				filePath,
-			]);
+			return spawnApiCommandChildProcess(
+				'video',
+				'init',
+				[
+					windowCoords,
+					rotationAngle,
+					eventSocketPath,
+					filePath,
+				],
+			);
 		},
 
 		async playVideo(videoProcess: ChildProcess) {
-			await execApiCommand('video', 'play', videoProcess.pid.toString());
+			await execApiCommand('video', 'play', [videoProcess.pid.toString()]);
 		},
 
 		async stopVideo(videoProcess: ChildProcess) {
@@ -81,6 +86,16 @@ export function createVideoAPI(): IVideoAPI {
 			await stoppedPromise;
 		},
 
+		async getVideoDurationMs(filePath: string): Promise<number> {
+			const durationSecString = await execApiCommand('video', 'duration', [filePath]);
+			const durationSec = parseFloat(durationSecString);
+			if (isNaN(durationSec)) {
+				throw new Error('Failed to get video duration, got NaN');
+			}
+			const durationMs = durationSec * 1000;
+			return Math.trunc(durationMs);
+		},
+
 		prepareStream(
 			filePath: string,
 			x: number,
@@ -90,25 +105,35 @@ export function createVideoAPI(): IVideoAPI {
 			orientation: Orientation,
 			eventSocketPath: string,
 		) {
-			const windowCoords = `${x},${y},${width},${height}`;
+			const windowCoords = getVideoWindowArgsString(x, y, width, height);
 			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
 
-			return spawnApiCommandChildProcess('stream', 'init', [
-				windowCoords,
-				rotationAngle,
-				eventSocketPath,
-				filePath,
-			]);
+			return spawnApiCommandChildProcess(
+				'stream',
+				'init',
+				[
+					windowCoords,
+					rotationAngle,
+					eventSocketPath,
+					filePath,
+				],
+				false,
+				true,
+			);
 		},
 
 		async playStream(streamProcess: ChildProcess) {
-			await execApiCommand('stream', 'play', streamProcess.pid.toString());
+			await execApiCommand('stream', 'play', [streamProcess.pid.toString()]);
 		},
 
 		async stopStream(streamProcess: ChildProcess) {
 			await this.stopVideo(streamProcess);
 		},
 	};
+}
+
+function getVideoWindowArgsString(x: number, y: number, width: number, height: number) {
+	return `${x},${y},${x + width},${y + height}`;
 }
 
 function convertOrientationToRotationAngle(orientation: Orientation) {

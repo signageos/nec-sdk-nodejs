@@ -2,18 +2,20 @@ import IFileSystem from '@signageos/front-display/es6/NativeDevice/Front/IFileSy
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { IFile, IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
+import ISocket from '@signageos/front-display/es6/Socket/ISocket';
 import BridgeClient from '../Bridge/BridgeClient';
 import * as FSMessages from '../Bridge/bridgeFileSystemMessages';
 import {
-	DATA_DIRECTORY_PATH,
 	EXTERNAL_STORAGE_UNITS_PATH,
 } from '../FileSystem/IFileSystem';
+import { IFileDetails } from '../FileSystem/IFileDetails';
 
 class FrontFileSystem implements IFileSystem {
 
 	constructor(
 		private fileSystemUrl: string,
 		private bridge: BridgeClient,
+		private socketClient: ISocket,
 	) {}
 
 	public async listFiles(directoryPath: IFilePath): Promise<IFilePath[]> {
@@ -26,14 +28,25 @@ class FrontFileSystem implements IFileSystem {
 
 	public async getFile(filePath: IFilePath): Promise<IFile | null> {
 		if (await this.exists(filePath)) {
-			let uriPath = `${filePath.storageUnit.type}/${DATA_DIRECTORY_PATH}/${filePath.filePath}`;
+			let uriPath = `${filePath.storageUnit.type}/${filePath.filePath}`;
 			if (filePath.storageUnit.removable) {
 				uriPath = EXTERNAL_STORAGE_UNITS_PATH + '/' + uriPath;
 			}
 			const fileLocalUri = this.fileSystemUrl + '/' + uriPath;
-			return {
+			const basicFile = {
 				localUri: fileLocalUri,
 			};
+
+			try {
+				const fileDetails = await this.getFileDetails(filePath);
+				return {
+					...basicFile,
+					...fileDetails,
+				};
+			} catch (error) {
+				console.warn('Get file details failed', error);
+				return basicFile;
+			}
 		}
 
 		return null;
@@ -113,8 +126,16 @@ class FrontFileSystem implements IFileSystem {
 		return storageUnits;
 	}
 
-	public onStorageUnitsChanged(_listener: () => void): void {
-		// TODO implement
+	public onStorageUnitsChanged(listener: () => void) {
+		this.socketClient.on('storage_units_changed', listener);
+	}
+
+	private async getFileDetails(filePath: IFilePath) {
+		const { fileDetails } = await this.bridge.invoke<FSMessages.GetFileDetails, { fileDetails: IFileDetails }>({
+			type: FSMessages.GetFileDetails,
+			filePath,
+		});
+		return fileDetails;
 	}
 }
 

@@ -1,4 +1,5 @@
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import { IVideoArguments } from './ServerVideo';
 
 interface IServerVideo {
@@ -10,8 +11,7 @@ interface IServerVideo {
 	isIdle(): boolean;
 	isPlaying(): boolean;
 	isPaused(): boolean;
-	addEventListener(event: string, callback: () => void): void;
-	removeAllListeners(): void;
+	addEventListener(eventName: string, listener: (event: IVideoEvent) => void): void;
 }
 
 export default IServerVideo;

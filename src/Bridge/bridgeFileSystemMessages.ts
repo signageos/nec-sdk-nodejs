@@ -35,6 +35,12 @@ export interface MoveFile {
 	destinationFilePath: IFilePath;
 }
 
+export const GetFileDetails = 'FileSystem.GetFileDetails';
+export interface GetFileDetails {
+	type: typeof GetFileDetails;
+	filePath: IFilePath;
+}
+
 export const GetFileChecksum = 'FileSystem.GetFileChecksum';
 export interface GetFileChecksum {
 	type: typeof GetFileChecksum;

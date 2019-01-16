@@ -1,12 +1,13 @@
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
-import IVideo from '@signageos/front-display/es6/Video/IVideo';
 import IServerVideoPlayer from './IServerVideoPlayer';
 import IServerVideo from './IServerVideo';
 import { EventEmitter } from "events";
+import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 
 export default class ServerVideoPlayer implements IServerVideoPlayer {
 
 	private videos: IServerVideo[] = [];
+	private eventEmitter: EventEmitter;
 
 	constructor(
 		supportedVideosCount: number,
@@ -16,6 +17,8 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 			const video = createVideo('video_' + i);
 			this.videos.push(video);
 		}
+		this.eventEmitter = new EventEmitter();
+		this.forwardVideoEventsToSingleOwnEventEmitter();
 	}
 
 	public async initialize() {
@@ -45,7 +48,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		height: number,
 		orientation: Orientation,
 		isStream: boolean,
-	): Promise<IVideo> {
+	): Promise<void> {
 		let video: IServerVideo;
 		try {
 			video = this.getVideoByArgumentsOrThrowException(uri, x, y, width, height);
@@ -55,13 +58,11 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		}
 
 		await video.play();
-		return this.createVideoEventEmitter(video);
 	}
 
 	public async stop(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const video = this.getVideoByArgumentsOrThrowException(uri, x, y, width, height);
 		await video.stop();
-		video.removeAllListeners();
 	}
 
 	public async pause(_uri: string, _x: number, _y: number, _width: number, _height: number): Promise<void> {
@@ -70,6 +71,14 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 
 	public async resume(_uri: string, _x: number, _y: number, _width: number, _height: number): Promise<void> {
 		throw new Error('Not implemented yet'); // TODO
+	}
+
+	public addEventListener(event: string, listener: (event: IVideoEvent) => void): void {
+		this.eventEmitter.addListener(event, listener);
+	}
+
+	public removeEventListener(event: string, listener: (event: IVideoEvent) => void): void {
+		this.eventEmitter.removeListener(event, listener);
 	}
 
 	public async clearAll(): Promise<void> {
@@ -111,21 +120,13 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		throw new Error('Video with arguments ' + JSON.stringify({ uri, x, y, width, height }) + ' not found');
 	}
 
-	private createVideoEventEmitter(video: IServerVideo): IVideo {
-		const videoEventEmitter = new EventEmitter();
-		const videoEvent = {
-			srcArguments: video.getVideoArguments(),
-		};
-		video.addEventListener('ended', () => {
-			videoEventEmitter.emit('ended', { type: 'ended', ...videoEvent });
-		});
-		video.addEventListener('error', () => {
-			videoEventEmitter.emit('error', { type: 'error', ...videoEvent });
-		});
-		video.addEventListener('stopped', () => {
-			videoEventEmitter.emit('stopped', { type: 'stopped', ...videoEvent });
-		});
-
-		return videoEventEmitter;
+	private forwardVideoEventsToSingleOwnEventEmitter() {
+		for (let video of this.videos) {
+			for (let eventName of ['ended', 'stopped', 'error']) {
+				video.addEventListener(eventName, (event: IVideoEvent) => {
+					this.eventEmitter.emit(eventName, event);
+				});
+			}
+		}
 	}
 }
