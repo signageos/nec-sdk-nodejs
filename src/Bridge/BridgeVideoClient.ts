@@ -122,7 +122,7 @@ export default class BridgeVideoClient {
 				) {
 					this.socketClient.removeListener(VideoStarted, successListener);
 					this.socketClient.removeListener(VideoError, errorListener);
-					reject(new Error('Failed to prepare video'));
+					reject(new Error('Failed to play video'));
 				}
 			};
 
@@ -174,7 +174,7 @@ export default class BridgeVideoClient {
 				) {
 					this.socketClient.removeListener(VideoStopped, successListener);
 					this.socketClient.removeListener(VideoError, errorListener);
-					reject(new Error('Failed to prepare video'));
+					reject(new Error('Failed to stop video'));
 				}
 			};
 
