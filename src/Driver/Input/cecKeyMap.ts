@@ -1,7 +1,7 @@
 import KeyCode from '@signageos/front-display/es6/NativeDevice/Input/KeyCode';
 import Key from '../../CEC/Key';
 
-const keyMap: { [key: number]: KeyCode } = {
+const cecKeyMap: { [key: number]: KeyCode } = {
 	[Key.SELECT]: KeyCode.OK,
 	[Key.UP]: KeyCode.ARROW_UP,
 	[Key.DOWN]: KeyCode.ARROW_DOWN,
@@ -15,4 +15,4 @@ const keyMap: { [key: number]: KeyCode } = {
 	[Key.PAUSE]: KeyCode.PAUSE,
 };
 
-export default keyMap;
+export default cecKeyMap;

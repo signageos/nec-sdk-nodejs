@@ -41,7 +41,8 @@ import PrivateOrientation, { convertScreenOrientationToAngle } from './Orientati
 import FrontFileSystem from './FrontFileSystem';
 import OverlayHandler from '../Overlay/OverlayHandler';
 import ISocket from '@signageos/front-display/es6/Socket/ISocket';
-import keyMap from './Input/keyMap';
+import cecKeyMap from './Input/cecKeyMap';
+import keyboardKeyMap from './Input/keyboardKeyMap';
 import Key from '../CEC/Key';
 import Led from './Hardware/Led';
 import FrontWifi from './Hardware/FrontWifi';
@@ -194,10 +195,19 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	}
 
 	public bindKeyUp(keyUpListener: (keyUpEvent: IKeyUpEvent) => void) {
+		// keyboard
+		this.window.addEventListener('keyup', (event: KeyboardEvent) => {
+			if (typeof keyboardKeyMap[event.key] !== 'undefined') {
+				keyUpListener({ keyCode: keyboardKeyMap[event.key] });
+			} else {
+				console.warn(new Error('Not supported key ' + event.key));
+			}
+		});
+		// CEC
 		this.socketClient.on('keypress', (key: Key) => {
-			if (typeof keyMap[key] !== 'undefined') {
+			if (typeof cecKeyMap[key] !== 'undefined') {
 				keyUpListener({
-					keyCode: keyMap[key],
+					keyCode: cecKeyMap[key],
 				});
 			} else {
 				console.warn(new Error('Not supported keyCode ' + key));
