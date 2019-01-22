@@ -25,5 +25,6 @@ dist:
 	cp README.md $(DIST)
 	envsubst < index.html > $(DIST)/client/index.html
 	cp node_modules/@signageos/front-display/dist/webWorker.js $(DIST)/client/webWorker.js
+	cp node_modules/@signageos/front-osd/dist/index.html $(DIST)/client/osd.html
 
 

@@ -330,6 +330,10 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		throw new Error("Not implemented"); // TODO : implement
 	}
 
+	public getOSDUri(): string {
+		return "osd.html";
+	}
+
 	private initialize() {
 		this.screenUpdateOrientation();
 	}
