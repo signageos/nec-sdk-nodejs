@@ -15,6 +15,7 @@ export interface IVideoAPI {
 		height: number,
 		orientation: Orientation,
 		eventSocketPath: string,
+		volume: number,
 	): ChildProcess;
 	playVideo(videoProcess: ChildProcess): Promise<void>;
 	stopVideo(videoProcess: ChildProcess): Promise<void>;
@@ -27,6 +28,7 @@ export interface IVideoAPI {
 		height: number,
 		orientation: Orientation,
 		eventSocketPath: string,
+		volume: number,
 	): ChildProcess;
 
 	playStream(streamProcess: ChildProcess): Promise<void>;
@@ -43,6 +45,7 @@ export function createVideoAPI(): IVideoAPI {
 			height: number,
 			orientation: Orientation,
 			eventSocketPath: string,
+			volume: number,
 		) {
 			const windowCoords = getVideoWindowArgsString(x, y, width, height);
 			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
@@ -55,6 +58,7 @@ export function createVideoAPI(): IVideoAPI {
 					rotationAngle,
 					eventSocketPath,
 					filePath,
+					volume.toString(10),
 				],
 			);
 		},
@@ -104,6 +108,7 @@ export function createVideoAPI(): IVideoAPI {
 			height: number,
 			orientation: Orientation,
 			eventSocketPath: string,
+			volume: number,
 		) {
 			const windowCoords = getVideoWindowArgsString(x, y, width, height);
 			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
@@ -116,6 +121,7 @@ export function createVideoAPI(): IVideoAPI {
 					rotationAngle,
 					eventSocketPath,
 					filePath,
+					volume.toString(10),
 				],
 				false,
 				true,

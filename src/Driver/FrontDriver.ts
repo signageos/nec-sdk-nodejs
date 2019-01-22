@@ -31,6 +31,8 @@ import {
 	ApplicationRestart,
 	SystemReboot,
 	SetNativeDebug,
+	AudioGetVolume,
+	AudioSetVolume,
 } from '../Bridge/bridgeSystemMessages';
 import {
 	IsWifiSupported,
@@ -333,11 +335,20 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	}
 
 	public async getVolume(): Promise<number> {
-		throw new Error("Not implemented"); // TODO : implement
+		const { volume } = await this.bridge.invoke<AudioGetVolume, { volume: number }>({
+			type: AudioGetVolume,
+		});
+		return volume;
 	}
 
-	public async setVolume(_volume: number): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
+	public async setVolume(volume: number): Promise<void> {
+		if (volume < 0 || volume > 100) {
+			throw new Error('Invalid volume, must be an integer between 0-100');
+		}
+		await this.bridge.invoke<AudioSetVolume, {}>({
+			type: AudioSetVolume,
+			volume: Math.trunc(volume),
+		});
 	}
 
 	public getOSDUri(): string {

@@ -27,6 +27,7 @@ import CECListener from './CEC/CECListener';
 import FileDetailsProvider from './FileSystem/FileDetailsProvider';
 import FileMetadataCache from './FileSystem/FileMetadataCache';
 import { applicationReady } from './API/SystemAPI';
+import FSSystemSettings from './SystemSettings/FSSystemSettings';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -78,17 +79,19 @@ if (parameters.raven.enabled) {
 		webWorkerFactory,
 	);
 
+	const systemSettings = new FSSystemSettings(parameters.fileSystem.system);
+
 	const createVideo = (key: string) => {
 		const unixSocketPath = path.join(parameters.video.socket_root, key + '.sock');
 		const videoEventListener = new UnixSocketEventListener(unixSocketPath);
-		return new ServerVideo(fileSystem, key, videoAPI, videoEventListener);
+		return new ServerVideo(fileSystem, systemSettings, key, videoAPI, videoEventListener);
 	};
 	const videoPlayer = new ServerVideoPlayer(4, createVideo);
 
 	const overlayRenderer = new OverlayRenderer(fileSystem);
 	const cecListener = new CECListener(parameters.video.socket_root);
 	const bridgeServer = new BridgeServer(
-		parameters.server.bridge_url, fileSystem, fileDetailsProvider, nativeDriver, videoPlayer, overlayRenderer, cecListener,
+		parameters.server.bridge_url, fileSystem, fileDetailsProvider, nativeDriver, systemSettings, videoPlayer, overlayRenderer, cecListener,
 	);
 	await bridgeServer.start();
 	await applicationReady();

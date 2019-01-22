@@ -56,6 +56,7 @@ function createServerVideo(
 	videoEventListener: IUnixSocketEventListener,
 	mockVideoAPI: IMockVideoAPI = {},
 	key: string = 'test_video',
+	volume: number = 100,
 ) {
 	function createMockChildProcess() {
 		return new EventEmitter();
@@ -86,7 +87,11 @@ function createServerVideo(
 		},
 	};
 
-	return new ServerVideo(mockFileSystem as any, key, videoAPI as any, videoEventListener);
+	const mockSystemSettings = {
+		getVolume: sinon.stub().resolves(volume),
+	};
+
+	return new ServerVideo(mockFileSystem as any, mockSystemSettings as any, key, videoAPI as any, videoEventListener);
 }
 
 describe('Driver.Video.ServerVideo', function () {
@@ -106,13 +111,15 @@ describe('Driver.Video.ServerVideo', function () {
 			const prepareVideo = sinon.stub().returns(new EventEmitter());
 			const prepareStream = sinon.spy();
 			const videoEventListener = new MockVideoEventListener();
-			const serverVideo = createServerVideo(videoEventListener, { prepareVideo, prepareStream });
+			const serverVideo = createServerVideo(videoEventListener, { prepareVideo, prepareStream }, undefined, 55);
 
 			const preparedPromise = serverVideo.prepare('test/video1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
 			videoEventListener.emit('ready');
 			await preparedPromise;
 			prepareVideo.calledOnce.should.be.true();
-			prepareVideo.getCall(0).args.should.deepEqual(['test/video1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, '/tmp/test.sock']);
+			prepareVideo.getCall(0).args.should.deepEqual([
+				'test/video1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, '/tmp/test.sock', 55,
+			]);
 			prepareStream.called.should.be.false();
 			serverVideo.isIdle().should.be.true();
 			serverVideo.getVideoArguments()!.should.deepEqual({ uri: 'test/video1Uri', x: 0, y: 1, width: 1920, height: 1080 });
@@ -122,13 +129,15 @@ describe('Driver.Video.ServerVideo', function () {
 			const prepareVideo = sinon.spy();
 			const prepareStream = sinon.stub().returns(new EventEmitter());
 			const videoEventListener = new MockVideoEventListener();
-			const serverVideo = createServerVideo(videoEventListener, { prepareVideo, prepareStream });
+			const serverVideo = createServerVideo(videoEventListener, { prepareVideo, prepareStream }, undefined, 10);
 
 			const preparedPromise = serverVideo.prepare('stream1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
 			videoEventListener.emit('ready');
 			await preparedPromise;
 			prepareStream.calledOnce.should.be.true();
-			prepareStream.getCall(0).args.should.deepEqual(['stream1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, '/tmp/test.sock']);
+			prepareStream.getCall(0).args.should.deepEqual([
+				'stream1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, '/tmp/test.sock', 10,
+			]);
 			prepareVideo.called.should.be.false();
 			serverVideo.isIdle().should.be.true();
 			serverVideo.getVideoArguments()!.should.deepEqual({ uri: 'stream1Uri', x: 0, y: 1, width: 1920, height: 1080 });

@@ -10,6 +10,8 @@ import {
 	ScreenTurnOff,
 	ScreenTurnOn,
 	NetworkGetInfo,
+	AudioGetVolume,
+	AudioSetVolume,
 } from './bridgeSystemMessages';
 import * as NetworkMessages from './bridgeNetworkMessages';
 import * as FSMessages from './bridgeFileSystemMessages';
@@ -19,6 +21,7 @@ import * as NetworkAPI from '../API/NetworkAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
 import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
+import ISystemSettings from '../SystemSettings/ISystemSettings';
 
 export class InvalidMessageError extends Error {}
 
@@ -28,6 +31,7 @@ export default async function handleMessage(
 	fileSystem: IFileSystem,
 	fileDetailsProvider: IFileDetailsProvider,
 	nativeDriver: IBasicDriver & IManagementDriver,
+	systemSettings: ISystemSettings,
 	overlayRenderer: OverlayRenderer,
 	message:
 		ApplicationRestart |
@@ -38,6 +42,8 @@ export default async function handleMessage(
 		SetNativeDebug |
 		ScreenTurnOff |
 		ScreenTurnOn |
+		AudioGetVolume |
+		AudioSetVolume |
 		NetworkGetInfo |
 		NetworkMessages.IsWifiSupported |
 		NetworkMessages.IsWifiEnabled |
@@ -98,6 +104,14 @@ export default async function handleMessage(
 
 		case ScreenTurnOn:
 			await SystemAPI.turnScreenOn();
+			return {};
+
+		case AudioGetVolume:
+			const volume = await systemSettings.getVolume();
+			return { volume };
+
+		case AudioSetVolume:
+			await systemSettings.setVolume(message.volume);
 			return {};
 
 		case NetworkGetInfo:
