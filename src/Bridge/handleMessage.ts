@@ -11,14 +11,17 @@ import {
 	ScreenTurnOn,
 	NetworkGetInfo,
 } from './bridgeSystemMessages';
+import * as NetworkMessages from './bridgeNetworkMessages';
 import * as FSMessages from './bridgeFileSystemMessages';
 import * as OverlayMessages from './bridgeOverlayMessages';
 import * as SystemAPI from '../API/SystemAPI';
+import * as NetworkAPI from '../API/NetworkAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
 import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 
 export class InvalidMessageError extends Error {}
+
 export class ResourceNotFound extends Error {}
 
 export default async function handleMessage(
@@ -36,6 +39,16 @@ export default async function handleMessage(
 		ScreenTurnOff |
 		ScreenTurnOn |
 		NetworkGetInfo |
+		NetworkMessages.IsWifiSupported |
+		NetworkMessages.IsWifiEnabled |
+		NetworkMessages.EnableWifi |
+		NetworkMessages.DisableWifi |
+		NetworkMessages.ConnectToWifi |
+		NetworkMessages.DisconnectFromWifi |
+		NetworkMessages.GetConnectedToWifi |
+		NetworkMessages.GetWifiCountryCode |
+		NetworkMessages.SetWifiCountryCode |
+		NetworkMessages.ScanWifiDevices |
 		FSMessages.ListFiles |
 		FSMessages.FileExists |
 		FSMessages.DownloadFile |
@@ -90,6 +103,46 @@ export default async function handleMessage(
 		case NetworkGetInfo:
 			const networkInfo = await nativeDriver.getNetworkInfo();
 			return { networkInfo };
+
+		case NetworkMessages.IsWifiSupported:
+			const isWifiSupported = await NetworkAPI.isWifiSupported();
+			return { isWifiSupported };
+
+		case NetworkMessages.IsWifiEnabled:
+			const isWifiEnabled = await NetworkAPI.isWifiEnabled();
+			return { isWifiEnabled };
+
+		case NetworkMessages.EnableWifi:
+			await NetworkAPI.enableWifi();
+			return {};
+
+		case NetworkMessages.DisableWifi:
+			await NetworkAPI.disableWifi();
+			return {};
+
+		case NetworkMessages.ConnectToWifi:
+			await NetworkAPI.connectToWifi(message.ssid, message.password);
+			return {};
+
+		case NetworkMessages.DisconnectFromWifi:
+			await NetworkAPI.disconnectFromWifi();
+			return {};
+
+		case NetworkMessages.GetConnectedToWifi:
+			const ssid = await NetworkAPI.getConnectedToWifi();
+			return { ssid };
+
+		case NetworkMessages.GetWifiCountryCode:
+			const countryCode = await NetworkAPI.getWifiCountryCode();
+			return { countryCode };
+
+		case NetworkMessages.SetWifiCountryCode:
+			await NetworkAPI.setWifiCountryCode(message.countryCode);
+			return {};
+
+		case NetworkMessages.ScanWifiDevices:
+			const devices = await NetworkAPI.scanWifiDevices();
+			return { devices };
 
 		case FSMessages.ListFiles:
 			const files = await fileSystem.listFiles(message.directoryPath);
