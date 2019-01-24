@@ -84,7 +84,7 @@ export default class FileSystem implements IFileSystem {
 		const tmpDownloadAbsolutePath = this.getAbsolutePath(tmpDownloadFilePath);
 		const file = fs.createWriteStream(tmpDownloadAbsolutePath);
 		await downloadFile(file, sourceUri, headers);
-		await this.moveFile(tmpDownloadFilePath, filePath);
+		await this.moveFile(tmpDownloadFilePath, filePath, true);
 	}
 
 	public async uploadFile(filePath: IFilePath, formKey: string, uri: string, headers?: { [key: string]: string }) {
@@ -166,7 +166,7 @@ export default class FileSystem implements IFileSystem {
 		}
 	}
 
-	public async moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath) {
+	public async moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, overwrite: boolean = false) {
 		const sourceExists = await this.exists(sourceFilePath);
 		if (!sourceExists) {
 			throw new FileOrDirectoryNotFound();
@@ -175,7 +175,7 @@ export default class FileSystem implements IFileSystem {
 		if (this.isRootDirectory(sourceFilePath)) {
 			throw new Error('Can\'t move root directory');
 		}
-		if (await this.exists(destinationFilePath)) {
+		if (!overwrite && await this.exists(destinationFilePath)) {
 			throw new Error('Trying to move to an existing destination');
 		}
 
@@ -189,7 +189,7 @@ export default class FileSystem implements IFileSystem {
 
 		const sourceAbsolutePath = this.getAbsolutePath(sourceFilePath);
 		const destinationAbsolutePath = this.getAbsolutePath(destinationFilePath);
-		await fs.move(sourceAbsolutePath, destinationAbsolutePath);
+		await fs.move(sourceAbsolutePath, destinationAbsolutePath, { overwrite });
 	}
 
 	public async getFileChecksum(filePath: IFilePath, hashType: HashAlgorithm): Promise<string> {
