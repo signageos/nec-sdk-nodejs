@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Support WiFi
 - OSD
 - Support setting volume
-# Fixed
+### Fixed
 - Uploading screenshots
 - When there are multiple requests to download a file, allow only one at a time to prevent running out of RAM
 - Stop video doesn't throw error anymore if the video wasn't playing, only logs a warning
