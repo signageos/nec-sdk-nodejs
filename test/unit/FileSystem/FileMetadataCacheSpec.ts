@@ -40,7 +40,7 @@ describe('FileSystem.FileMetadataCache', function () {
 
 		it('should ensure metadata directory and save metadata to a file', async function () {
 			const fileSystem = {
-				saveToFile: sinon.stub().resolves(),
+				writeFile: sinon.stub().resolves(),
 				ensureDirectory: sinon.stub().resolves(),
 			};
 			const fileMetadataCache = new FileMetadataCache(fileSystem as any);
@@ -57,8 +57,8 @@ describe('FileSystem.FileMetadataCache', function () {
 			fileSystem.ensureDirectory.getCall(0).args.should.deepEqual([
 				getFilePath('test/subdir/.metadata'),
 			]);
-			fileSystem.saveToFile.callCount.should.equal(1);
-			fileSystem.saveToFile.getCall(0).args.should.deepEqual([
+			fileSystem.writeFile.callCount.should.equal(1);
+			fileSystem.writeFile.getCall(0).args.should.deepEqual([
 				metadataFilePath,
 				'vd:12345',
 			]);
@@ -66,14 +66,14 @@ describe('FileSystem.FileMetadataCache', function () {
 
 		it('should do nothing if the metadata object is empty', async function () {
 			const fileSystem = {
-				saveToFile: sinon.stub().resolves(),
+				writeFile: sinon.stub().resolves(),
 			};
 			const fileMetadataCache = new FileMetadataCache(fileSystem as any);
 			const filePath = 'test/subdir/file2';
 			const lastModifiedAt = 1546383600000;
 			const metadata = {};
 			await fileMetadataCache.saveFileMetadata(getFilePath(filePath), lastModifiedAt, metadata);
-			fileSystem.saveToFile.callCount.should.equal(0);
+			fileSystem.writeFile.callCount.should.equal(0);
 		});
 	});
 });

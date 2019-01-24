@@ -327,11 +327,11 @@ describe('FileSystem', function () {
 		});
 	});
 
-	describe('saveToFile', function () {
+	describe('writeFile', function () {
 
 		it('should write contents to a file', async function () {
 			const fileSystem = createFileSystem();
-			await fileSystem.saveToFile(
+			await fileSystem.writeFile(
 				getFilePathObject('file4'),
 				'test write content in file4',
 			);
@@ -342,7 +342,7 @@ describe('FileSystem', function () {
 
 		it('should fail writing contents to a file in subdirectory', async function () {
 			const fileSystem = createFileSystem();
-			await fileSystem.saveToFile(
+			await fileSystem.writeFile(
 				getFilePathObject('subdirectory2/file5'),
 				'test write content in file5',
 			).should.be.rejected();

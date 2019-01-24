@@ -145,7 +145,7 @@ export default class FileSystem implements IFileSystem {
 		return contents.toString();
 	}
 
-	public async saveToFile(filePath: IFilePath, contents: string | Buffer) {
+	public async writeFile(filePath: IFilePath, contents: string | Buffer) {
 		const fullPath = this.getAbsolutePath(filePath);
 		return await fs.writeFile(fullPath, contents);
 	}

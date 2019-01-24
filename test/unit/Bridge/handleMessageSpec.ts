@@ -11,6 +11,7 @@ import {
 	DownloadFile,
 	DeleteFile,
 	MoveFile,
+	WriteFile,
 	GetFileDetails,
 	GetFileChecksum,
 	ExtractFile,
@@ -112,6 +113,18 @@ describe('Bridge.handleMessage', function () {
 		});
 		result.should.deepEqual({});
 		moveFile.callCount.should.equal(1);
+	});
+
+	it('should process WriteFile message', async function () {
+		const writeFile = sinon.stub().resolves();
+		const fileSystem = { writeFile };
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
+			type: WriteFile,
+			filePath: getFilePath('source'),
+			contents: 'Some text content',
+		});
+		result.should.deepEqual({});
+		writeFile.callCount.should.equal(1);
 	});
 
 	it('should process GetFileDetails message', async function () {

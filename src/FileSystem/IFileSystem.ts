@@ -14,7 +14,7 @@ export default interface IFileSystem {
 	uploadFile(filePath: IFilePath, formKey: string, uri: string, headers?: { [key: string]: string }): Promise<any>;
 	getFileDetails(filePath: IFilePath): Promise<IFileDetails>;
 	readFile(filePath: IFilePath): Promise<string>;
-	saveToFile(filePath: IFilePath, contents: string | Buffer): Promise<void>;
+	writeFile(filePath: IFilePath, contents: string | Buffer): Promise<void>;
 	deleteFile(filePath: IFilePath, recursive?: boolean): Promise<void>;
 	moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void>;
 	getFileChecksum(filePath: IFilePath, hashType: HashAlgorithm): Promise<string>;

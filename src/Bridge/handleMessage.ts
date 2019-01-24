@@ -60,6 +60,7 @@ export default async function handleMessage(
 		FSMessages.DownloadFile |
 		FSMessages.DeleteFile |
 		FSMessages.MoveFile |
+		FSMessages.WriteFile |
 		FSMessages.GetFileDetails |
 		FSMessages.GetFileChecksum |
 		FSMessages.ExtractFile |
@@ -176,6 +177,10 @@ export default async function handleMessage(
 
 		case FSMessages.MoveFile:
 			await fileSystem.moveFile(message.sourceFilePath, message.destinationFilePath);
+			return {};
+
+		case FSMessages.WriteFile:
+			await fileSystem.writeFile(message.filePath, message.contents);
 			return {};
 
 		case FSMessages.GetFileDetails:

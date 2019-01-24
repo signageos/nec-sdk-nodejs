@@ -86,6 +86,14 @@ class FrontFileSystem implements IFileSystem {
 		});
 	}
 
+	public async writeFile(filePath: IFilePath, contents: string): Promise<void> {
+		await this.bridge.invoke<FSMessages.WriteFile, any>({
+			type: FSMessages.WriteFile,
+			filePath,
+			contents,
+		});
+	}
+
 	public async getFileChecksum(filePath: IFilePath, hashType: HashAlgorithm): Promise<string> {
 		const { checksum } = await this.bridge.invoke<FSMessages.GetFileChecksum, { checksum: string }>({
 			type: FSMessages.GetFileChecksum,

@@ -35,6 +35,13 @@ export interface MoveFile {
 	destinationFilePath: IFilePath;
 }
 
+export const WriteFile = 'FileSystem.WriteFile';
+export interface WriteFile {
+	type: typeof WriteFile;
+	filePath: IFilePath;
+	contents: string;
+}
+
 export const GetFileDetails = 'FileSystem.GetFileDetails';
 export interface GetFileDetails {
 	type: typeof GetFileDetails;
