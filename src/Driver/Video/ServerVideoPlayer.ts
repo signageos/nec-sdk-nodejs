@@ -18,12 +18,21 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 			this.videos.push(video);
 		}
 		this.eventEmitter = new EventEmitter();
+		// do nothing, just prevent throwing error, if there are no other listeners on "error" event
+		this.eventEmitter.on('error', () => { /* do nothing */ });
 		this.forwardVideoEventsToSingleOwnEventEmitter();
 	}
 
 	public async initialize() {
 		await Promise.all(
 			this.videos.map((video: IServerVideo) => video.initialize()),
+		);
+	}
+
+	public async close() {
+		console.log('closing video player');
+		await Promise.all(
+			this.videos.map((video: IServerVideo) => video.close()),
 		);
 	}
 

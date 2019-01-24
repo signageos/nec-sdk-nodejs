@@ -36,7 +36,7 @@ start() {
     sudo -H -u $USER \
         fs_root_path=$FS_ROOT \
         fs_system_path=$FS_SYSTEM \
-        $forever start --id $NAME --pidFile $pidfile -l $logfile -a --sourceDir $SOURCEC_DIR -c $COMMAND $SOURCE_NAME
+        $forever start --id $NAME --killSignal=SIGTERM --pidFile $pidfile -l $logfile -a --sourceDir $SOURCEC_DIR -c $COMMAND $SOURCE_NAME
 
     RETVAL=$?
 }

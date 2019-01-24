@@ -66,6 +66,18 @@ export default class BridgeServer {
 		await this.cecListener.listen();
 	}
 
+	public async stop() {
+		console.log('stopping bridge server');
+		await Promise.all([
+			this.cecListener.close(),
+			this.socketServer.close(),
+		]);
+		await new Promise<void>((resolve: () => void) => {
+			this.httpServer.close(resolve);
+		});
+		await this.videoPlayer.close();
+	}
+
 	private defineHttpRoutes() {
 		this.expressApp.use(cors());
 		this.expressApp.use(bodyParser.json());

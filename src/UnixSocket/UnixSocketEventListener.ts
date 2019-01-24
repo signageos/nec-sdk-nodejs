@@ -1,11 +1,15 @@
 import { EventEmitter } from "events";
-import { createServer, Socket } from "net";
+import { createServer, Server, Socket } from "net";
+import * as fs from 'fs-extra';
 import IUnixSocketEventListener from './IUnixSocketEventListener';
 
 class UnixSocketEventListener extends EventEmitter implements IUnixSocketEventListener {
 
+	private server: Server;
+
 	constructor(private socketPath: string) {
 		super();
+		this.server = this.createServer();
 	}
 
 	public getSocketPath() {
@@ -14,16 +18,30 @@ class UnixSocketEventListener extends EventEmitter implements IUnixSocketEventLi
 
 	public listen() {
 		return new Promise<void>((resolve: () => void) => {
-			const server = createServer((socket: Socket) => {
-				socket.on('data', (data: Buffer) => {
-					const event = data.toString().replace(/\0/g, '');
-					this.emit(event);
-				});
-				socket.on('error', (error: Error) => {
-					console.error('Video socket server error', error);
-				});
+			this.server.listen(this.socketPath, resolve);
+		});
+	}
+
+	public async close() {
+		await new Promise<void>((resolve: () => void) => {
+			this.server.close(resolve);
+		});
+		try {
+			await fs.remove(this.socketPath);
+		} catch (error) {
+			console.warn('Error while deleting socket file during closing unix socket event listener', error);
+		}
+	}
+
+	private createServer() {
+		return createServer((socket: Socket) => {
+			socket.on('data', (data: Buffer) => {
+				const event = data.toString().replace(/\0/g, '');
+				this.emit(event);
 			});
-			server.listen(this.socketPath, resolve);
+			socket.on('error', (error: Error) => {
+				console.error('Video socket server error', error);
+			});
 		});
 	}
 }

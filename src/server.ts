@@ -95,4 +95,14 @@ if (parameters.raven.enabled) {
 	);
 	await bridgeServer.start();
 	await applicationReady();
+
+	async function stopApplication() {
+		console.log('stopping application');
+		await bridgeServer.stop();
+		console.log('application will exit');
+		process.exit(0);
+	}
+
+	process.on('SIGINT', stopApplication);
+	process.on('SIGTERM', stopApplication);
 })().catch((error: any) => console.error(error));

@@ -42,6 +42,10 @@ class MockVideoEventListener extends EventEmitter implements IUnixSocketEventLis
 		// do nothing
 	}
 
+	public async close(): Promise<void> {
+		// do nothing
+	}
+
 }
 
 const testStorageUnit = {

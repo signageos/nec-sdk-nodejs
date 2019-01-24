@@ -3,6 +3,7 @@ import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 
 interface IVideoPlayer {
 	initialize(): Promise<void>;
+	close(): Promise<void>;
 	play(uri: string, x: number, y: number, width: number, height: number, orientation: Orientation, isStream: boolean): Promise<void>;
 	stop(uri: string, x: number, y: number, width: number, height: number): Promise<void>;
 	pause(uri: string, x: number, y: number, width: number, height: number): Promise<void>;
