@@ -71,7 +71,7 @@ export default class FileMetadataCache implements IFileMetadataCache {
 				filePath: path.dirname(metadataFilePath.filePath),
 			};
 			await this.fileSystem.ensureDirectory(metadataFileParentDirectoryPath);
-			await this.fileSystem.saveToFile(metadataFilePath, fileContents);
+			await this.fileSystem.writeFile(metadataFilePath, fileContents);
 		}
 	}
 

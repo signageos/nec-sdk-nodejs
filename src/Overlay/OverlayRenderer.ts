@@ -71,7 +71,7 @@ class OverlayRenderer {
 		const directoryPath = await this.getOverlayDirectoryFilePath(storageUnit);
 		await this.fileSystem.ensureDirectory(directoryPath);
 		const filePath = await this.getOverlayFilePath(id, storageUnit);
-		await this.fileSystem.saveToFile(filePath, fileBuffer);
+		await this.fileSystem.writeFile(filePath, fileBuffer);
 		return filePath;
 	}
 

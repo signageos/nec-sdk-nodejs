@@ -25,7 +25,7 @@
   },
   "author": "signageOS.io <dev@signageos.io>",
   "devDependencies": {
-    "@signageos/front-display": "^5.3.0",
+    "@signageos/front-display": "^5.4.0",
     "@signageos/front-osd": "^0.1.0",
     "@signageos/lib": "^1.4.6",
     "@types/async-lock": "0.0.19",

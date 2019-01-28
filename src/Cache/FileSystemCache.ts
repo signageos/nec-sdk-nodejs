@@ -26,7 +26,7 @@ export default class FileSystemCache implements ICache {
 		const cacheDir = await this.getCacheDirectory();
 		const filePath = this.getFilePath(uid, cacheDir);
 		await this.fileSystem.ensureDirectory(cacheDir);
-		await this.fileSystem.saveToFile(filePath, content);
+		await this.fileSystem.writeFile(filePath, content);
 	}
 
 	public async delete(uid: string): Promise<void> {
