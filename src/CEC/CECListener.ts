@@ -1,5 +1,6 @@
 import * as path from 'path';
 import { EventEmitter } from 'events';
+import { ChildProcess } from 'child_process';
 import UnixSocketEventListener from '../UnixSocket/UnixSocketEventListener';
 import Key from './Key';
 import ICECListener from './ICECListener';
@@ -11,6 +12,7 @@ export default class CECListener implements ICECListener {
 
 	private unixSocketPath: string;
 	private unixSocketEventListener: UnixSocketEventListener;
+	private cecListenerChildProcess: ChildProcess | null = null;
 	private eventEmitter: EventEmitter;
 	private lastEmittedKey: {
 		key: Key,
@@ -27,6 +29,12 @@ export default class CECListener implements ICECListener {
 	public async listen() {
 		await this.unixSocketEventListener.listen();
 		this.startCecListenerChildProcess();
+	}
+
+	public async close() {
+		console.log('closing CEC listener');
+		await this.closeCecListenerChildProcess();
+		await this.unixSocketEventListener.close();
 	}
 
 	public onKeypress(callback: (key: Key) => void) {
@@ -58,12 +66,35 @@ export default class CECListener implements ICECListener {
 	}
 
 	private startCecListenerChildProcess() {
-		const cecListenerProcess = listenToCECKeypresses(this.unixSocketPath);
-		cecListenerProcess.on('close', (code: number, signal: string | null) => {
+		this.cecListenerChildProcess = listenToCECKeypresses(this.unixSocketPath);
+		this.cecListenerChildProcess.on('close', (code: number, signal: string | null) => {
 			console.warn('CEC process closed unexpectedly with code ' + code + (signal ? '; signal: ' + signal : ''));
 		});
-		cecListenerProcess.on('error', (error: Error) => {
+		this.cecListenerChildProcess.on('error', (error: Error) => {
 			console.error('CEC listener error', error);
 		});
+	}
+
+	private async closeCecListenerChildProcess() {
+		if (this.cecListenerChildProcess) {
+			this.cecListenerChildProcess.removeAllListeners();
+			const closedPromise = new Promise<void>(async (resolve: () => void) => {
+				this.cecListenerChildProcess!.once('close', () => {
+					this.cecListenerChildProcess = null;
+					resolve();
+				});
+			});
+			this.cecListenerChildProcess.kill('SIGINT');
+			setTimeout(
+				() => {
+					if (this.cecListenerChildProcess) {
+						this.cecListenerChildProcess.kill('SIGKILL');
+					}
+
+				},
+				2000,
+			);
+			await closedPromise;
+		}
 	}
 }

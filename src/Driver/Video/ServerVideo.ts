@@ -48,6 +48,15 @@ export default class ServerVideo implements IServerVideo {
 		await this.videoEventListener.listen();
 	}
 
+	public async close() {
+		try {
+			await this.stop();
+		} catch (error) {
+			console.warn(error);
+		}
+		await this.videoEventListener.close();
+	}
+
 	public getVideoArguments(): IVideoArguments | null {
 		return this.videoArguments;
 	}
