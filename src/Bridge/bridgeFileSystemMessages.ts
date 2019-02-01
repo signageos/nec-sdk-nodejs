@@ -28,6 +28,13 @@ export interface DeleteFile {
 	recursive: boolean;
 }
 
+export const CopyFile = 'FileSystem.CopyFile';
+export interface CopyFile {
+	type: typeof CopyFile;
+	sourceFilePath: IFilePath;
+	destinationFilePath: IFilePath;
+}
+
 export const MoveFile = 'FileSystem.MoveFile';
 export interface MoveFile {
 	type: typeof MoveFile;

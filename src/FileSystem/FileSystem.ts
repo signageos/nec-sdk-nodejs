@@ -166,6 +166,32 @@ export default class FileSystem implements IFileSystem {
 		}
 	}
 
+	public async copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void> {
+		const sourceExists = await this.exists(sourceFilePath);
+		if (!sourceExists) {
+			throw new FileOrDirectoryNotFound();
+		}
+
+		if (this.isRootDirectory(sourceFilePath)) {
+			throw new Error('Can\'t move root directory');
+		}
+		if (await this.exists(destinationFilePath)) {
+			throw new Error('Trying to move to an existing destination');
+		}
+
+		const destinationParentDirectoryFilePath = this.getParentDirectoryFilePath(destinationFilePath);
+		if (!(await this.exists(destinationParentDirectoryFilePath))) {
+			throw new Error('Can\'t move file to a non-existent directory');
+		}
+		if (!(await this.isDirectory(destinationParentDirectoryFilePath))) {
+			throw new Error('Trying to move file but the destination is a file, not a directory');
+		}
+
+		const sourceAbsolutePath = this.getAbsolutePath(sourceFilePath);
+		const destinationAbsolutePath = this.getAbsolutePath(destinationFilePath);
+		await fs.copy(sourceAbsolutePath, destinationAbsolutePath);
+	}
+
 	public async moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, overwrite: boolean = false) {
 		const sourceExists = await this.exists(sourceFilePath);
 		if (!sourceExists) {
