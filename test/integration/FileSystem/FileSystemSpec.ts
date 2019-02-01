@@ -371,6 +371,62 @@ describe('FileSystem', function () {
 		});
 	});
 
+	describe('copyFile', function () {
+
+		it('should copy file to a new location', async function () {
+			const fileSystem = createFileSystem();
+			const sourceFilePath = getAbsolutePath('source');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fileSystem.copyFile(getFilePathObject('source'), getFilePathObject('destination'));
+			const destinationFilePath = getAbsolutePath('destination');
+			const destinationContents = await fs.readFile(destinationFilePath);
+			destinationContents.toString().should.equal('source file');
+			should(await fs.pathExists(sourceFilePath)).be.true();
+		});
+
+		it('should copy directory to a new location', async function () {
+			const fileSystem = createFileSystem();
+			const sourceDirectoryPath = getAbsolutePath('source_dir');
+			const sourceFilePath = getAbsolutePath('source_dir/file');
+			await fs.mkdir(sourceDirectoryPath);
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fileSystem.copyFile(getFilePathObject('source_dir'), getFilePathObject('destination_dir'));
+			const destinationFilePath = getAbsolutePath('destination_dir/file');
+			const destinationContents = await fs.readFile(destinationFilePath);
+			destinationContents.toString().should.equal('source file');
+			should(await fs.pathExists(sourceDirectoryPath)).be.true();
+		});
+
+		it('should throw error for non-existent source file', async function () {
+			const fileSystem = createFileSystem();
+			await fileSystem.copyFile(getFilePathObject('source'), getFilePathObject('destination'))
+				.should.be.rejected();
+		});
+
+		it('should throw error for already existing destination', async function () {
+			const fileSystem = createFileSystem();
+			const sourceFilePath = getAbsolutePath('source');
+			const destinationFilePath = getAbsolutePath('destination');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fs.writeFile(destinationFilePath, 'destination file');
+			await fileSystem.copyFile(getFilePathObject('source'), getFilePathObject('destination'))
+				.should.be.rejected();
+		});
+
+		it('should throw error for non-existent destination parent directory', async function () {
+			const fileSystem = createFileSystem();
+			const sourceFilePath = getAbsolutePath('source');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fileSystem.copyFile(getFilePathObject('source'), getFilePathObject('directory/destination'))
+				.should.be.rejected();
+		});
+
+		it('should throw error when trying to copy root', async function () {
+			const fileSystem = createFileSystem();
+			await fileSystem.copyFile(getFilePathObject(''), getFilePathObject('destination')).should.be.rejected();
+		});
+	});
+
 	describe('moveFile', function () {
 
 		it('should move file to a new location', async function () {

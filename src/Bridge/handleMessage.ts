@@ -59,6 +59,7 @@ export default async function handleMessage(
 		FSMessages.FileExists |
 		FSMessages.DownloadFile |
 		FSMessages.DeleteFile |
+		FSMessages.CopyFile |
 		FSMessages.MoveFile |
 		FSMessages.WriteFile |
 		FSMessages.GetFileDetails |
@@ -173,6 +174,10 @@ export default async function handleMessage(
 
 		case FSMessages.DeleteFile:
 			await fileSystem.deleteFile(message.filePath, message.recursive);
+			return {};
+
+		case FSMessages.CopyFile:
+			await fileSystem.copyFile(message.sourceFilePath, message.destinationFilePath);
 			return {};
 
 		case FSMessages.MoveFile:

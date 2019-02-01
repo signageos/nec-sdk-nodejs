@@ -10,6 +10,7 @@ import {
 	FileExists,
 	DownloadFile,
 	DeleteFile,
+	CopyFile,
 	MoveFile,
 	WriteFile,
 	GetFileDetails,
@@ -101,6 +102,18 @@ describe('Bridge.handleMessage', function () {
 		});
 		result.should.deepEqual({});
 		deleteFile.callCount.should.equal(1);
+	});
+
+	it('should process CopyFile message', async function () {
+		const copyFile = sinon.stub().resolves();
+		const fileSystem = { copyFile };
+		const result = await handleMessage(fileSystem as any, {} as any, {} as any, {} as any, {} as any, {
+			type: CopyFile,
+			sourceFilePath: getFilePath('source'),
+			destinationFilePath: getFilePath('destination'),
+		});
+		result.should.deepEqual({});
+		copyFile.callCount.should.equal(1);
 	});
 
 	it('should process MoveFile message', async function () {

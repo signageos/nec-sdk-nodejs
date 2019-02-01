@@ -16,6 +16,7 @@ export default interface IFileSystem {
 	readFile(filePath: IFilePath): Promise<string>;
 	writeFile(filePath: IFilePath, contents: string | Buffer): Promise<void>;
 	deleteFile(filePath: IFilePath, recursive?: boolean): Promise<void>;
+	copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void>;
 	moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, force?: boolean): Promise<void>;
 	getFileChecksum(filePath: IFilePath, hashType: HashAlgorithm): Promise<string>;
 	extractFile(archiveFilePath: IFilePath, destinationDirectoryPath: IFilePath, method: string): Promise<void>;

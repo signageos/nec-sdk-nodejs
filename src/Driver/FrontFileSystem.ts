@@ -78,6 +78,14 @@ class FrontFileSystem implements IFileSystem {
 		});
 	}
 
+	public async copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void> {
+		await this.bridge.invoke<FSMessages.CopyFile, any>({
+			type: FSMessages.CopyFile,
+			sourceFilePath,
+			destinationFilePath,
+		});
+	}
+
 	public async moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void> {
 		await this.bridge.invoke<FSMessages.MoveFile, any>({
 			type: FSMessages.MoveFile,
