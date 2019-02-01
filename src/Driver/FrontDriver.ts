@@ -259,9 +259,9 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		orientation: Orientation,
 		_resolution: Resolution,
 		_videoOrientation?: VideoOrientation,
-	): Promise<void> {
+	) {
 		await this.setScreenOrientation(orientation);
-		this.appRestart();
+		return () => this.appRestart();
 	}
 
 	public async getSessionId(sessionIdKey: string) {
