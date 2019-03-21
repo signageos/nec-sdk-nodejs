@@ -46,6 +46,7 @@ export default class BridgeServer {
 		await this.videoPlayer.initialize();
 		await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
 			const serverUrl = url.parse(this.serverUrl);
+			this.httpServer.setTimeout(60e3 * 60); // 1 hour
 			this.httpServer.listen(
 				{
 					host: serverUrl.hostname!,
