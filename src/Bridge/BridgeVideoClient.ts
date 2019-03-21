@@ -30,7 +30,7 @@ export default class BridgeVideoClient {
 
 	constructor(
 		private window: Window,
-		private getOrientation: () => Orientation,
+		private getOrientation: () => Promise<Orientation>,
 		private lock: AsyncLock,
 		private socketClient: ISocket,
 	) {
@@ -45,7 +45,7 @@ export default class BridgeVideoClient {
 		height: number,
 		isStream: boolean,
 	) {
-		const coordinates = this.convertCoordinatesForOrientation(x, y, width, height);
+		const coordinates = await this.convertCoordinatesForOrientation(x, y, width, height);
 
 		const resultPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
 			let successListener: (message: any) => void;
@@ -81,7 +81,7 @@ export default class BridgeVideoClient {
 			this.socketClient.on(VideoError, errorListener);
 		});
 
-		const orientation = this.getOrientation();
+		const orientation = await this.getOrientation();
 		this.socketClient.emit(PrepareVideo, { uri, ...coordinates, orientation, isStream });
 		await resultPromise;
 	}
@@ -94,7 +94,7 @@ export default class BridgeVideoClient {
 		height: number,
 		isStream: boolean,
 	): Promise<IVideo> {
-		const coordinates = this.convertCoordinatesForOrientation(x, y, width, height);
+		const coordinates = await this.convertCoordinatesForOrientation(x, y, width, height);
 
 		const resultPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
 			let successListener: (message: any) => void;
@@ -130,12 +130,12 @@ export default class BridgeVideoClient {
 			this.socketClient.on(VideoError, errorListener);
 		});
 
-		const orientation = this.getOrientation();
+		const orientation = await this.getOrientation();
 		this.socketClient.emit(PlayVideo, { uri, ...coordinates, orientation, isStream });
 		await resultPromise;
 
 		const videoEmitter = new EventEmitter();
-		const videoId = this.getVideoId(uri, x, y, width, height);
+		const videoId = await this.getVideoId(uri, x, y, width, height);
 		this.playingVideos[videoId] = videoEmitter;
 
 		if (orientation === Orientation.LANDSCAPE) {
@@ -146,7 +146,7 @@ export default class BridgeVideoClient {
 	}
 
 	public async stopVideo(uri: string, x: number, y: number, width: number, height: number) {
-		const coordinates = this.convertCoordinatesForOrientation(x, y, width, height);
+		const coordinates = await this.convertCoordinatesForOrientation(x, y, width, height);
 
 		const resultPromise = new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
 			let successListener: (message: any) => void;
@@ -185,7 +185,7 @@ export default class BridgeVideoClient {
 		this.socketClient.emit(StopVideo, { uri, ...coordinates });
 		await resultPromise;
 
-		const videoId = this.getVideoId(uri, x, y, width, height);
+		const videoId = await this.getVideoId(uri, x, y, width, height);
 		delete this.playingVideos[videoId];
 	}
 
@@ -202,8 +202,8 @@ export default class BridgeVideoClient {
 		});
 	}
 
-	private getVideoId(uri: string, x: number, y: number, width: number, height: number): string {
-		const coordinates = this.convertCoordinatesForOrientation(x, y, width, height);
+	private async getVideoId(uri: string, x: number, y: number, width: number, height: number): Promise<string> {
+		const coordinates = await this.convertCoordinatesForOrientation(x, y, width, height);
 		return getVideoIdentificator(uri, coordinates.x, coordinates.y, coordinates.width, coordinates.height);
 	}
 
@@ -240,13 +240,13 @@ export default class BridgeVideoClient {
 		}
 	}
 
-	private convertCoordinatesForOrientation(
+	private async convertCoordinatesForOrientation(
 		x: number,
 		y: number,
 		width: number,
 		height: number,
-	): Coordinates {
-		const orientation = this.getOrientation();
+	): Promise<Coordinates> {
+		const orientation = await this.getOrientation();
 		switch (orientation) {
 			case Orientation.PORTRAIT:
 				return convertToPortrait(this.window, x, y, width, height);

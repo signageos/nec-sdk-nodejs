@@ -1,3 +1,5 @@
+import Orientation from '../Driver/Orientation';
+
 export const NotifyApplicationAlive = 'Application.NotifyAlive';
 export interface NotifyApplicationAlive {
 	type: typeof NotifyApplicationAlive;
@@ -37,6 +39,17 @@ export interface SetNativeDebug {
 export const NetworkGetInfo = 'Network.GetInfo';
 export interface NetworkGetInfo {
 	type: typeof NetworkGetInfo;
+}
+
+export const ScreenGetOrientation = 'Screen.GetOrientation';
+export interface ScreenGetOrientation {
+	type: typeof ScreenGetOrientation;
+}
+
+export const ScreenSetOrientation = 'Screen.SetOrientation';
+export interface ScreenSetOrientation {
+	type: typeof ScreenSetOrientation;
+	orientation: Orientation;
 }
 
 export const ScreenTurnOff = 'Screen.TurnOff';

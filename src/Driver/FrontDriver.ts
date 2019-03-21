@@ -25,6 +25,8 @@ import {
 	GetDeviceUid,
 	GetModel,
 	GetSerialNumber,
+	ScreenGetOrientation,
+	ScreenSetOrientation,
 	ScreenTurnOff,
 	ScreenTurnOn,
 	NetworkGetInfo,
@@ -51,8 +53,6 @@ import FrontWifi from './Hardware/FrontWifi';
 
 export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
-	private static ORIENTATION_KEY: string = 'local-config-ORIENTATION_KEY';
-
 	public readonly hardware: Hardware;
 	public readonly video: BridgeVideoPlayer;
 	public readonly stream: IStreamPlayer;
@@ -65,6 +65,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	private overlay: OverlayHandler;
 
 	private isDisplayOn: boolean = true;
+	private orientation: Orientation | null = null;
 
 	constructor(
 		private window: Window,
@@ -121,7 +122,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	}
 
 	public async onLoad(callback: () => void) {
-		this.initialize();
+		await this.initialize();
 		callback();
 	}
 
@@ -356,12 +357,12 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		return "osd.html";
 	}
 
-	private initialize() {
-		this.screenUpdateOrientation();
+	private async initialize() {
+		await this.screenUpdateOrientation();
 	}
 
-	private screenUpdateOrientation() {
-		const orientation = this.getScreenOrientation();
+	private async screenUpdateOrientation() {
+		const orientation = await this.getScreenOrientation();
 		const rotation = convertScreenOrientationToAngle(orientation);
 
 		const body = this.window.document.getElementById('body')!;
@@ -388,45 +389,24 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		}
 	}
 
-	private getScreenOrientation() {
-		const orientation = this.window.localStorage.getItem(FrontDriver.ORIENTATION_KEY) as PrivateOrientation;
-		if (!orientation) {
-			return Orientation.LANDSCAPE;
+	private async getScreenOrientation() {
+		if (this.orientation === null) {
+			const { orientation } = await this.bridge.invoke<ScreenGetOrientation, { orientation: PrivateOrientation }>({
+				type: ScreenGetOrientation,
+			});
+			this.orientation = Orientation[orientation as keyof typeof Orientation];
 		}
 
-		switch (orientation) {
-			case PrivateOrientation.PORTRAIT:
-				return Orientation.PORTRAIT;
-			case PrivateOrientation.PORTRAIT_FLIPPED:
-				return Orientation.PORTRAIT_FLIPPED;
-			case PrivateOrientation.LANDSCAPE_FLIPPED:
-				return Orientation.LANDSCAPE_FLIPPED;
-			default:
-				return Orientation.LANDSCAPE;
-		}
+		return this.orientation;
 	}
 
-	private setScreenOrientation(orientation: Orientation) {
-		let privateOrientation: PrivateOrientation;
-
-		switch (orientation) {
-			case Orientation.LANDSCAPE:
-				privateOrientation = PrivateOrientation.LANDSCAPE;
-				break;
-			case Orientation.LANDSCAPE_FLIPPED:
-				privateOrientation = PrivateOrientation.LANDSCAPE_FLIPPED;
-				break;
-			case Orientation.PORTRAIT:
-				privateOrientation = PrivateOrientation.PORTRAIT;
-				break;
-			case Orientation.PORTRAIT_FLIPPED:
-				privateOrientation = PrivateOrientation.PORTRAIT_FLIPPED;
-				break;
-			default:
-				throw new Error('Invalid orientation');
-		}
-
-		this.window.localStorage.setItem(FrontDriver.ORIENTATION_KEY, privateOrientation as string);
+	private async setScreenOrientation(orientation: Orientation) {
+		const privateOrientation = Orientation[orientation] as PrivateOrientation;
+		await this.bridge.invoke<ScreenSetOrientation, {}>({
+			type: ScreenSetOrientation,
+			orientation: privateOrientation,
+		});
+		this.orientation = orientation;
 	}
 
 	private async isWifiSupported() {
