@@ -134,6 +134,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	}
 
 	public async appRestart() {
+		await this.restoreDisplayArea();
 		await this.bridge.invoke<ApplicationRestart, {}>({ type: ApplicationRestart });
 	}
 
@@ -273,10 +274,10 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	}
 
 	public async restoreDisplayArea() {
-		await this.video.clearAll();
-		await this.stream.clearAll();
-		await this.bridgeVideoClient.clearAll();
-		await this.overlay.clearAll();
+		await Promise.all([
+			this.bridgeVideoClient.clearAll(),
+			this.overlay.clearAll(),
+		]);
 	}
 
 	public areTimersSupported(powerTimerLevel: TimerLevel) {
