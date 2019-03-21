@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Fixed
 - Accidently not changing orientation on management request
+- Crashing when downloading large files
+- Videos and other content now stop on application restart
+- Set screen orientation sometimes didn't take effect
 
 ## [0.3.0] - 2019-01-23
 ### Added
