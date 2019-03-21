@@ -1,10 +1,10 @@
 import PublicOrientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 
 enum Orientation {
-	LANDSCAPE = 'landscape',
-	LANDSCAPE_FLIPPED = 'landscape_flipped',
-	PORTRAIT = 'portrait',
-	PORTRAIT_FLIPPED = 'portrait_flipped'
+	LANDSCAPE = 'LANDSCAPE',
+	LANDSCAPE_FLIPPED = 'LANDSCAPE_FLIPPED',
+	PORTRAIT = 'PORTRAIT',
+	PORTRAIT_FLIPPED = 'PORTRAIT_FLIPPED'
 }
 
 export default Orientation;

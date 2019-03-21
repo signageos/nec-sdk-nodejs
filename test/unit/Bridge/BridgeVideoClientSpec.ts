@@ -20,8 +20,8 @@ describe('Bridge.BridgeVideoClient', function () {
 		innerHeight: 1080,
 	};
 
-	const getLandscapeOrientationCallback = () => Orientation.LANDSCAPE;
-	const getPortraitOrientationCallback = () => Orientation.PORTRAIT;
+	const getLandscapeOrientationCallback = async () => Orientation.LANDSCAPE;
+	const getPortraitOrientationCallback = async () => Orientation.PORTRAIT;
 
 	describe('prepareVideo', function () {
 

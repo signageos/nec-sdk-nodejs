@@ -6,7 +6,6 @@ import * as checksum from 'checksum';
 import { IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
-import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 import {
 	IStorageUnit as ISystemStorageUnit,
 	getStorageStatus,
@@ -78,9 +77,7 @@ export default class FileSystem implements IFileSystem {
 			throw new Error('Download destination isn\'t a directory');
 		}
 
-		const tmpDownloadFilePath = this.getTmpDownloadFilePath();
-		const tmpDownloadDirPath = this.getParentDirectoryFilePath(tmpDownloadFilePath);
-		await this.ensureDirectory(tmpDownloadDirPath);
+		const tmpDownloadFilePath = this.getTmpDownloadFilePath(filePath);
 		const tmpDownloadAbsolutePath = this.getAbsolutePath(tmpDownloadFilePath);
 		const file = fs.createWriteStream(tmpDownloadAbsolutePath);
 		await downloadFile(file, sourceUri, headers);
@@ -373,13 +370,13 @@ export default class FileSystem implements IFileSystem {
 		throw new Error('Invalid path ' + relativePath);
 	}
 
-	private getTmpDownloadFilePath(): IFilePath {
-		const DOWNLOAD_DIR = 'downloads';
-		const fileName = generateUniqueHash(20);
-		const tmpStorageUnit = this.getTmpStorageUnit();
+	private getTmpDownloadFilePath(destinationFilePath: IFilePath): IFilePath {
+		const parentDirectoryFilePath = this.getParentDirectoryFilePath(destinationFilePath);
+		const fileName = path.basename(destinationFilePath.filePath);
+		const tmpFileName = '.' + fileName + '.part';
 		return {
-			storageUnit: tmpStorageUnit,
-			filePath: path.join(DOWNLOAD_DIR, fileName),
+			storageUnit: destinationFilePath.storageUnit,
+			filePath: path.join(parentDirectoryFilePath.filePath, tmpFileName),
 		};
 	}
 

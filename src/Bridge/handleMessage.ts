@@ -7,6 +7,8 @@ import {
 	GetModel,
 	GetSerialNumber,
 	SetNativeDebug,
+	ScreenGetOrientation,
+	ScreenSetOrientation,
 	ScreenTurnOff,
 	ScreenTurnOn,
 	NetworkGetInfo,
@@ -40,6 +42,8 @@ export default async function handleMessage(
 		GetModel |
 		GetSerialNumber |
 		SetNativeDebug |
+		ScreenGetOrientation |
+		ScreenSetOrientation |
 		ScreenTurnOff |
 		ScreenTurnOn |
 		AudioGetVolume |
@@ -98,6 +102,14 @@ export default async function handleMessage(
 			} else {
 				await SystemAPI.disableNativeDebug();
 			}
+			return {};
+
+		case ScreenGetOrientation:
+			const orientation = await systemSettings.getScreenOrientation();
+			return { orientation };
+
+		case ScreenSetOrientation:
+			await systemSettings.setScreenOrientation(message.orientation);
 			return {};
 
 		case ScreenTurnOff:

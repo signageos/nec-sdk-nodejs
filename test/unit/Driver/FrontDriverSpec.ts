@@ -7,6 +7,11 @@ import {
 	ApplicationRestart,
 	SystemReboot,
 } from '../../../src/Bridge/bridgeSystemMessages';
+import {
+	StopAllVideos,
+	AllVideosStopped,
+} from '../../../src/Bridge/bridgeVideoMessages';
+import { HideAll as OverlayHideAll } from '../../../src/Bridge/bridgeOverlayMessages';
 import ISocket from '@signageos/front-display/es6/Socket/ISocket';
 
 function createWindow(override: any = {}): Window {
@@ -57,14 +62,19 @@ describe('Driver.FrontDriver', function () {
 
 		it('should invoke restarting of the application', async function () {
 			const bridge = {
-				invoke: sinon.spy(),
+				invoke: sinon.stub().resolves(),
 				socketClient: new EventEmitter(),
 			};
 
-			const frontDriver = new FrontDriver(createWindow(), 'hug', '1.0.0', bridge as any, createMockSocket(), 'http://localhost:8081');
+			bridge.socketClient.on(StopAllVideos, () => {
+				bridge.socketClient.emit(AllVideosStopped, {});
+			});
+
+			const frontDriver = new FrontDriver(createWindow(), 'hug', '1.0.0', bridge as any, bridge.socketClient as any, 'http://localhost:8081');
 			await frontDriver.appRestart();
-			bridge.invoke.callCount.should.equal(1);
-			bridge.invoke.getCall(0).args[0].should.deepEqual({ type: ApplicationRestart });
+			bridge.invoke.callCount.should.equal(2);
+			bridge.invoke.getCall(0).args[0].should.deepEqual({ type: OverlayHideAll });
+			bridge.invoke.getCall(1).args[0].should.deepEqual({ type: ApplicationRestart });
 		});
 	});
 

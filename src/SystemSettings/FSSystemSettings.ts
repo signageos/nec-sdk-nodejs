@@ -1,13 +1,16 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
+import Orientation from '../Driver/Orientation';
 import ISystemSettings from './ISystemSettings';
 
 const DEFAULT_VOLUME = 100;
+const DEFAULT_SCREEN_ORIENTATION = Orientation.LANDSCAPE;
 
 export default class FSSystemSettings implements ISystemSettings {
 
 	private settings: {
 		volume?: number;
+		screenOrientation?: Orientation;
 	} = {};
 	private loadedFromFS: boolean = false;
 
@@ -23,6 +26,19 @@ export default class FSSystemSettings implements ISystemSettings {
 
 	public async setVolume(volume: number): Promise<void> {
 		this.settings.volume = volume;
+		await this.saveToFileSystem();
+	}
+
+	public async getScreenOrientation(): Promise<Orientation> {
+		await this.loadFromFileSystemIfNotLoaded();
+		if (typeof this.settings.screenOrientation === 'undefined') {
+			return DEFAULT_SCREEN_ORIENTATION;
+		}
+		return this.settings.screenOrientation;
+	}
+
+	public async setScreenOrientation(orientation: Orientation): Promise<void> {
+		this.settings.screenOrientation = orientation;
 		await this.saveToFileSystem();
 	}
 
