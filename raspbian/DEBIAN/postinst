@@ -4,3 +4,7 @@ chown -R signageos:signageos /usr/lib/signageos
 chown -R signageos:signageos /var/lib/signageos
 
 ln -sfT /media /var/lib/signageos/fs/external
+
+update-rc.d signageos remove
+systemctl daemon-reload
+update-rc.d signageos defaults
