@@ -5,6 +5,7 @@ import { checksumString } from '@signageos/lib/dist/Hash/checksum';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import ManagementCapability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
+import IServletRunner from '@signageos/front-display/es6/Servlet/IServletRunner';
 import INetworkInfo from '@signageos/front-display/es6/Management/Device/Network/INetworkInfo';
 import IBatteryStatus from '@signageos/front-display/es6/NativeDevice/Battery/IBatteryStatus';
 import Capability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
@@ -28,10 +29,12 @@ import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver
 import ICache from '@signageos/front-display/es6/Cache/ICache';
 import ICacheStorageInfo from '@signageos/front-display/es6/Cache/ICacheStorageInfo';
 import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
+import ServletRunner from '../Servlet/ServletRunner';
 
 export default class ManagementDriver implements IBasicDriver, IManagementDriver, ICacheDriver {
 
 	public fileSystem: IFileSystem;
+	public servletRunner: IServletRunner;
 	private deviceUid: string;
 	private isDisplayOn: boolean = true;
 
@@ -46,6 +49,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		fileDetailsProvider: IFileDetailsProvider,
 	) {
 		this.fileSystem = new ManagementFileSystem(fileSystemUrl, internalFileSystem, fileDetailsProvider);
+		this.servletRunner = new ServletRunner(internalFileSystem);
 	}
 
 	public async initialize(_staticBaseUrl: string): Promise<void> {
@@ -219,6 +223,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 			case Capability.SYSTEM_REBOOT:
 			case Capability.APP_RESTART:
 			case Capability.DISPLAY_POWER:
+			case Capability.SERVLET:
 				return true;
 
 			default:
