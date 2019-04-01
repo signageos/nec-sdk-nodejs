@@ -10,7 +10,7 @@ import ISignature from '@signageos/front-display/es6/NativeDevice/ISignature';
 import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver';
 import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheStorageInfo';
 import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
-import IFileSystem from '@signageos/front-display/es6/NativeDevice/Front/IFileSystem';
+import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
 import BridgeVideoClient from '../Bridge/BridgeVideoClient';
@@ -20,7 +20,6 @@ import {
 	GetSerialNumber,
 	ScreenGetOrientation,
 	NetworkGetInfo,
-	SetNativeDebug,
 } from '../Bridge/bridgeSystemMessages';
 import {
 	IsWifiSupported,
@@ -83,14 +82,9 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	public async frontSupports(capability: FrontCapability): Promise<boolean> {
 		switch (capability) {
-			case FrontCapability.SYSTEM_REBOOT_REMOTE:
-			case FrontCapability.APP_RESTART_REMOTE:
-			case FrontCapability.DISPLAY_POWER_REMOTE:
-			case FrontCapability.SYSTEM_REBOOT_LOCAL:
-			case FrontCapability.APP_RESTART_LOCAL:
-			case FrontCapability.DISPLAY_POWER_LOCAL:
 			case FrontCapability.FILE_SYSTEM_INTERNAL_STORAGE:
 			case FrontCapability.FILE_SYSTEM_EXTERNAL_STORAGE:
+			case FrontCapability.TIMERS_PROPRIETARY:
 				return true;
 			case FrontCapability.WIFI:
 			case FrontCapability.WIFI_SCAN:
@@ -222,13 +216,6 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	public async browserOpenLink(_uri: string): Promise<void> {
 		throw new Error('browserOpenLink not implemented');
-	}
-
-	public async setDebug(isEnabled: boolean): Promise<void> {
-		await this.bridge.invoke<SetNativeDebug, {}>({
-			type: SetNativeDebug,
-			isEnabled,
-		});
 	}
 
 	public async getCurrentSignature(): Promise<ISignature | null> {

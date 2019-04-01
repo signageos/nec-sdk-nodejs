@@ -4,7 +4,6 @@ import {
 	GetDeviceUid,
 	GetModel,
 	GetSerialNumber,
-	SetNativeDebug,
 	ScreenGetOrientation,
 	NetworkGetInfo,
 } from './bridgeSystemMessages';
@@ -32,7 +31,6 @@ export default async function handleMessage(
 		GetDeviceUid |
 		GetModel |
 		GetSerialNumber |
-		SetNativeDebug |
 		ScreenGetOrientation |
 		NetworkGetInfo |
 		NetworkMessages.IsWifiSupported |
@@ -51,6 +49,7 @@ export default async function handleMessage(
 		FSMessages.DeleteFile |
 		FSMessages.CopyFile |
 		FSMessages.MoveFile |
+		FSMessages.ReadFile |
 		FSMessages.WriteFile |
 		FSMessages.GetFileDetails |
 		FSMessages.GetFileChecksum |
@@ -73,14 +72,6 @@ export default async function handleMessage(
 		case GetSerialNumber:
 			const serialNumber = await nativeDriver.getSerialNumber();
 			return { serialNumber };
-
-		case SetNativeDebug:
-			if (message.isEnabled) {
-				await SystemAPI.enableNativeDebug();
-			} else {
-				await SystemAPI.disableNativeDebug();
-			}
-			return {};
 
 		case ScreenGetOrientation:
 			const orientation = await systemSettings.getScreenOrientation();
@@ -153,6 +144,10 @@ export default async function handleMessage(
 		case FSMessages.MoveFile:
 			await fileSystem.moveFile(message.sourceFilePath, message.destinationFilePath);
 			return {};
+
+		case FSMessages.ReadFile:
+			const contents = await fileSystem.readFile(message.filePath);
+			return { contents };
 
 		case FSMessages.WriteFile:
 			await fileSystem.writeFile(message.filePath, message.contents);

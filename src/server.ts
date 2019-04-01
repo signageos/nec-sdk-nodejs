@@ -7,6 +7,7 @@ require('util').promisify = require('util.promisify');
 
 import * as path from 'path';
 import * as AsyncLock from 'async-lock';
+import nodeFetch from 'node-fetch';
 import ManagementDriver from './Driver/ManagementDriver';
 import ServerVideo from './Driver/Video/ServerVideo';
 import ServerVideoPlayer from './Driver/Video/ServerVideoPlayer';
@@ -57,11 +58,13 @@ if (parameters.raven.enabled) {
 
 	const nativeDriver = new ManagementDriver(
 		parameters.url.socketUri,
+		parameters.server.file_system_url,
 		cache,
 		fileSystem,
 		systemSettings,
 		videoPlayer,
 		overlayRenderer,
+		fileDetailsProvider,
 	);
 
 	if (raven) {
@@ -82,6 +85,7 @@ if (parameters.raven.enabled) {
 	const webWorkerFactory = createSameThreadWebWorkerFactory(fetch);
 
 	await management(
+		nodeFetch as any,
 		parameters.url.baseUrl,
 		parameters.url.socketUri,
 		parameters.url.staticBaseUrl,

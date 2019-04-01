@@ -18,12 +18,6 @@ export interface GetSerialNumber {
 	type: typeof GetSerialNumber;
 }
 
-export const SetNativeDebug = 'System.SetNativeDebug';
-export interface SetNativeDebug {
-	type: typeof SetNativeDebug;
-	isEnabled: boolean;
-}
-
 export const NetworkGetInfo = 'Network.GetInfo';
 export interface NetworkGetInfo {
 	type: typeof NetworkGetInfo;

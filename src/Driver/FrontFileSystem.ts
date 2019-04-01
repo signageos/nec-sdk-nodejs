@@ -1,14 +1,12 @@
-import IFileSystem from '@signageos/front-display/es6/NativeDevice/Front/IFileSystem';
+import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { IFile, IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 import ISocket from '@signageos/front-display/es6/Socket/ISocket';
 import BridgeClient from '../Bridge/BridgeClient';
 import * as FSMessages from '../Bridge/bridgeFileSystemMessages';
-import {
-	EXTERNAL_STORAGE_UNITS_PATH,
-} from '../FileSystem/IFileSystem';
 import { IFileDetails } from '../FileSystem/IFileDetails';
+import { getFileUriPath } from './fileSystemHelpers';
 
 class FrontFileSystem implements IFileSystem {
 
@@ -28,14 +26,8 @@ class FrontFileSystem implements IFileSystem {
 
 	public async getFile(filePath: IFilePath): Promise<IFile | null> {
 		if (await this.exists(filePath)) {
-			let uriPath = `${filePath.storageUnit.type}/${filePath.filePath}`;
-			if (filePath.storageUnit.removable) {
-				uriPath = EXTERNAL_STORAGE_UNITS_PATH + '/' + uriPath;
-			}
-			const fileLocalUri = this.fileSystemUrl + '/' + uriPath;
-			const basicFile = {
-				localUri: fileLocalUri,
-			};
+			const localUri = this.fileSystemUrl + '/' + getFileUriPath(filePath);
+			const basicFile = { localUri };
 
 			try {
 				const fileDetails = await this.getFileDetails(filePath);
@@ -50,6 +42,14 @@ class FrontFileSystem implements IFileSystem {
 		}
 
 		return null;
+	}
+
+	public async readFile(filePath: IFilePath): Promise<string> {
+		const { contents } = await this.bridge.invoke<FSMessages.ReadFile, { contents: string }>({
+			type: FSMessages.ReadFile,
+			filePath,
+		});
+		return contents;
 	}
 
 	public async exists(filePath: IFilePath): Promise<boolean> {
