@@ -1,19 +1,12 @@
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import {
-	ApplicationRestart,
-	SystemReboot,
 	GetDeviceUid,
 	GetModel,
 	GetSerialNumber,
 	SetNativeDebug,
 	ScreenGetOrientation,
-	ScreenSetOrientation,
-	ScreenTurnOff,
-	ScreenTurnOn,
 	NetworkGetInfo,
-	AudioGetVolume,
-	AudioSetVolume,
 } from './bridgeSystemMessages';
 import * as NetworkMessages from './bridgeNetworkMessages';
 import * as FSMessages from './bridgeFileSystemMessages';
@@ -36,18 +29,11 @@ export default async function handleMessage(
 	systemSettings: ISystemSettings,
 	overlayRenderer: OverlayRenderer,
 	message:
-		ApplicationRestart |
-		SystemReboot |
 		GetDeviceUid |
 		GetModel |
 		GetSerialNumber |
 		SetNativeDebug |
 		ScreenGetOrientation |
-		ScreenSetOrientation |
-		ScreenTurnOff |
-		ScreenTurnOn |
-		AudioGetVolume |
-		AudioSetVolume |
 		NetworkGetInfo |
 		NetworkMessages.IsWifiSupported |
 		NetworkMessages.IsWifiEnabled |
@@ -76,14 +62,6 @@ export default async function handleMessage(
 		OverlayMessages.HideAll,
 ): Promise<object> {
 	switch (message.type) {
-		case ApplicationRestart:
-			await SystemAPI.restartApplication();
-			return {};
-
-		case SystemReboot:
-			await SystemAPI.reboot();
-			return {};
-
 		case GetDeviceUid:
 			const deviceUid = await nativeDriver.getDeviceUid();
 			return { deviceUid };
@@ -107,26 +85,6 @@ export default async function handleMessage(
 		case ScreenGetOrientation:
 			const orientation = await systemSettings.getScreenOrientation();
 			return { orientation };
-
-		case ScreenSetOrientation:
-			await systemSettings.setScreenOrientation(message.orientation);
-			return {};
-
-		case ScreenTurnOff:
-			await SystemAPI.turnScreenOff();
-			return {};
-
-		case ScreenTurnOn:
-			await SystemAPI.turnScreenOn();
-			return {};
-
-		case AudioGetVolume:
-			const volume = await systemSettings.getVolume();
-			return { volume };
-
-		case AudioSetVolume:
-			await systemSettings.setVolume(message.volume);
-			return {};
 
 		case NetworkGetInfo:
 			const networkInfo = await nativeDriver.getNetworkInfo();

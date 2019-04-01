@@ -1,18 +1,6 @@
-import Orientation from '../Driver/Orientation';
-
 export const NotifyApplicationAlive = 'Application.NotifyAlive';
 export interface NotifyApplicationAlive {
 	type: typeof NotifyApplicationAlive;
-}
-
-export const ApplicationRestart = 'Application.Restart';
-export interface ApplicationRestart {
-	type: typeof ApplicationRestart;
-}
-
-export const SystemReboot = 'System.Reboot';
-export interface SystemReboot {
-	type: typeof SystemReboot;
 }
 
 export const GetDeviceUid = 'System.GetDeviceUid';
@@ -44,31 +32,4 @@ export interface NetworkGetInfo {
 export const ScreenGetOrientation = 'Screen.GetOrientation';
 export interface ScreenGetOrientation {
 	type: typeof ScreenGetOrientation;
-}
-
-export const ScreenSetOrientation = 'Screen.SetOrientation';
-export interface ScreenSetOrientation {
-	type: typeof ScreenSetOrientation;
-	orientation: Orientation;
-}
-
-export const ScreenTurnOff = 'Screen.TurnOff';
-export interface ScreenTurnOff {
-	type: typeof ScreenTurnOff;
-}
-
-export const ScreenTurnOn = 'Screen.TurnOn';
-export interface ScreenTurnOn {
-	type: typeof ScreenTurnOn;
-}
-
-export const AudioGetVolume = 'Audio.GetVolume';
-export interface AudioGetVolume {
-	type: typeof AudioGetVolume;
-}
-
-export const AudioSetVolume = 'Audio.SetVolume';
-export interface AudioSetVolume {
-	type: typeof AudioSetVolume;
-	volume: number;
 }

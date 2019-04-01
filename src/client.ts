@@ -33,11 +33,12 @@ if (parameters.raven.enabled) {
 	const nativeDriver = new FrontDriver(
 		window,
 		frontAppletPrefix,
-		parameters.app.version,
 		bridge,
 		socketClient,
 		parameters.server.file_system_url,
 	);
+	await nativeDriver.initialize(parameters.url.staticBaseUrl);
+
 	const synchronizer = createSocketSynchronizer(
 		parameters.url.synchronizerServerUrl,
 		() => nativeDriver,
