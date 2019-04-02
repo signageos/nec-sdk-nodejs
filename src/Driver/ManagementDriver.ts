@@ -200,7 +200,11 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async getSessionId(sessionIdKey: string): Promise<string | null> {
-		return await this.cache.fetchOne(sessionIdKey);
+		try {
+			return await this.cache.fetchOne(sessionIdKey);
+		} catch (error) {
+			return null;
+		}
 	}
 
 	public async setSessionId(sessionIdKey: string, sessionId: string): Promise<void> {
