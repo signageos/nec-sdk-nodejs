@@ -27,7 +27,7 @@ prepare:
   stage: prepare
   before_script: []
   script:
-    - VERSION=$([ "$CI_COMMIT_TAG" == "" ] && echo `git describe --abbrev=0 --tags`-$CI_COMMIT_REF_NAME.$CI_PIPELINE_ID || echo $CI_COMMIT_TAG)
+    - VERSION=$([ "$CI_COMMIT_TAG" == "" ] && echo `git describe --abbrev=0 --tags`-$CI_COMMIT_REF_NAME.$CI_PIPELINE_IID || echo $CI_COMMIT_TAG)
     - VERSION=${VERSION:1}
     - echo -n $VERSION > ./VERSION
   artifacts:
