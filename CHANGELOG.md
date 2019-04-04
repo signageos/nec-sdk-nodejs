@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- File System API supports copyFile, writeFile
+- Applet DISABLE/ENABLE power actions
+- Node.js servlets - scripts or services that can be pushed to the device from the server and run in the background, extending device's capabilities with custom logic, as long as the device supports it
+
 ## [0.3.2] - 2019-03-22
 ### Fixed
 - Accidently not changing orientation on management request
