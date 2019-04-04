@@ -42,6 +42,12 @@ export interface MoveFile {
 	destinationFilePath: IFilePath;
 }
 
+export const ReadFile = 'FileSystem.ReadFile';
+export interface ReadFile {
+	type: typeof ReadFile;
+	filePath: IFilePath;
+}
+
 export const WriteFile = 'FileSystem.WriteFile';
 export interface WriteFile {
 	type: typeof WriteFile;

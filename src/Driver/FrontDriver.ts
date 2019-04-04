@@ -1,23 +1,16 @@
-import * as moment from 'moment-timezone';
 import * as AsyncLock from 'async-lock';
 import IFrontDriver, { Hardware } from '@signageos/front-display/es6/NativeDevice/Front/IFrontDriver';
 import FrontCapability from '@signageos/front-display/es6/NativeDevice/Front/FrontCapability';
-import INetworkInfo from '@signageos/front-display/es6/Front/Device/Network/INetworkInfo';
+import INetworkInfo from '@signageos/front-display/es6/Management/Device/Network/INetworkInfo';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
-import Resolution from '@signageos/front-display/es6/NativeDevice/Resolution';
 import IKeyUpEvent from '@signageos/front-display/es6/NativeDevice/Input/IKeyUpEvent';
-import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
-import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
-import TimerLevel from '@signageos/front-display/es6/NativeDevice/Timer/TimerLevel';
-import IBrightness from '@signageos/front-display/es6/NativeDevice/IBrightness';
 import ProprietaryCache from '@signageos/front-display/es6/Cache/ProprietaryCache';
 import ICache from '@signageos/front-display/es6/Cache/ICache';
 import ISignature from '@signageos/front-display/es6/NativeDevice/ISignature';
-import VideoOrientation from "@signageos/front-display/es6/Video/Orientation";
 import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver';
 import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheStorageInfo';
 import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
-import IFileSystem from '@signageos/front-display/es6/NativeDevice/Front/IFileSystem';
+import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
 import BridgeVideoClient from '../Bridge/BridgeVideoClient';
@@ -26,15 +19,7 @@ import {
 	GetModel,
 	GetSerialNumber,
 	ScreenGetOrientation,
-	ScreenSetOrientation,
-	ScreenTurnOff,
-	ScreenTurnOn,
 	NetworkGetInfo,
-	ApplicationRestart,
-	SystemReboot,
-	SetNativeDebug,
-	AudioGetVolume,
-	AudioSetVolume,
 } from '../Bridge/bridgeSystemMessages';
 import {
 	IsWifiSupported,
@@ -64,13 +49,11 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	private bridgeVideoClient: BridgeVideoClient;
 	private overlay: OverlayHandler;
 
-	private isDisplayOn: boolean = true;
 	private orientation: Orientation | null = null;
 
 	constructor(
 		private window: Window,
 		private frontAppletPrefix: string,
-		private applicationVersion: string,
 		private bridge: BridgeClient,
 		private socketClient: ISocket,
 		private fileSystemUrl: string,
@@ -99,14 +82,9 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	public async frontSupports(capability: FrontCapability): Promise<boolean> {
 		switch (capability) {
-			case FrontCapability.SYSTEM_REBOOT_REMOTE:
-			case FrontCapability.APP_RESTART_REMOTE:
-			case FrontCapability.DISPLAY_POWER_REMOTE:
-			case FrontCapability.SYSTEM_REBOOT_LOCAL:
-			case FrontCapability.APP_RESTART_LOCAL:
-			case FrontCapability.DISPLAY_POWER_LOCAL:
 			case FrontCapability.FILE_SYSTEM_INTERNAL_STORAGE:
 			case FrontCapability.FILE_SYSTEM_EXTERNAL_STORAGE:
+			case FrontCapability.TIMERS_PROPRIETARY:
 				return true;
 			case FrontCapability.WIFI:
 			case FrontCapability.WIFI_SCAN:
@@ -121,30 +99,12 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		return response.model;
 	}
 
-	public async onLoad(callback: () => void) {
-		await this.initialize();
-		callback();
+	public async initialize(_staticBaseUrl: string) {
+		await this.screenUpdateOrientation();
 	}
 
 	public isDetected() {
 		return true;
-	}
-
-	public async appReboot(): Promise<void> {
-		await this.bridge.invoke<SystemReboot, {}>({ type: SystemReboot });
-	}
-
-	public async appRestart() {
-		await this.restoreDisplayArea();
-		await this.bridge.invoke<ApplicationRestart, {}>({ type: ApplicationRestart });
-	}
-
-	public async packageInstall(_baseUrl: string, _packageName: string, _version: string, _build: string | null): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
-	}
-
-	public async getApplicationVersion(): Promise<string> {
-		return this.applicationVersion;
 	}
 
 	public start() {
@@ -167,35 +127,6 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 			type: GetSerialNumber,
 		});
 		return serialNumber;
-	}
-
-	public async getCurrentTimeWithTimezone(): Promise<{
-		currentDate: Date;
-		timezone?: string;
-	}> {
-		throw new Error("Not implemented"); // TODO : implement
-	}
-
-	public async setCurrentTime(_currentMoment: moment.Moment): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
-	}
-
-	public async setCurrentTimeWithTimezone(_currentDate: moment.Moment, _timezone: string): Promise<boolean> {
-		throw new Error("Not implemented"); // TODO : implement
-	}
-
-	public async displayIsPowerOn(): Promise<boolean> {
-		return this.isDisplayOn;
-	}
-
-	public async displayPowerOn(): Promise<void> {
-		await this.bridge.invoke<ScreenTurnOn, {}>({ type: ScreenTurnOn });
-		this.isDisplayOn = true;
-	}
-
-	public async displayPowerOff(): Promise<void> {
-		await this.bridge.invoke<ScreenTurnOff, {}>({ type: ScreenTurnOff });
-		this.isDisplayOn = false;
 	}
 
 	public bindKeyUp(keyUpListener: (keyUpEvent: IKeyUpEvent) => void) {
@@ -256,16 +187,6 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		return navigator.onLine;
 	}
 
-	public async screenResize(
-		_baseUrl: string,
-		orientation: Orientation,
-		_resolution: Resolution,
-		_videoOrientation?: VideoOrientation,
-	) {
-		await this.setScreenOrientation(orientation);
-		return () => this.appRestart();
-	}
-
 	public async getSessionId(sessionIdKey: string) {
 		return this.window.localStorage.getItem(sessionIdKey);
 	}
@@ -281,40 +202,12 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		]);
 	}
 
-	public areTimersSupported(powerTimerLevel: TimerLevel) {
-		switch (powerTimerLevel) {
-			case TimerLevel.NATIVE: return false;
-			case TimerLevel.PROPRIETARY: return true;
-			default: return false;
-		}
+	public async remoteControlSetEnabled(_enabled: boolean): Promise<void> {
+		throw new Error("Not implemented");
 	}
 
-	public async setTimer(_type: TimerType, _timeOn: string | null, _timeOff: string | null, _weekdays: TimerWeekday[], _volume: number) {
-		throw new Error('setTimer not implemented');
-	}
-
-	public async timerSetOnOffTimeHoliday(_type: TimerType, _onAtHoliday: boolean, _offAtHoliday: boolean) {
-		throw new Error('timerSetOnOffTimeHoliday not implemented');
-	}
-
-	public async screenSetBrightness(_timeFrom1: string, _brightness1: number, _timeFrom2: string, _brightness2: number): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
-	}
-
-	public async screenGetBrightness(): Promise<IBrightness> {
-		throw new Error("Not implemented"); // TODO : implement
-	}
-
-	public screenSupportsBrightnessSchedule() {
-		return false; // TODO : implement
-	}
-
-	public async remoteControleSetEnabled(_enabled: boolean): Promise<void> {
-		throw new Error("Not implemented"); // TODO : implement
-	}
-
-	public async remoteControleIsEnabled(): Promise<boolean> {
-		throw new Error("Not implemented"); // TODO : implement
+	public async remoteControlIsEnabled(): Promise<boolean> {
+		throw new Error("Not implemented");
 	}
 
 	public async controlSetPin(_pin: string): Promise<void> {
@@ -325,40 +218,12 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		throw new Error('browserOpenLink not implemented');
 	}
 
-	public async setDebug(isEnabled: boolean): Promise<void> {
-		await this.bridge.invoke<SetNativeDebug, {}>({
-			type: SetNativeDebug,
-			isEnabled,
-		});
-	}
-
 	public async getCurrentSignature(): Promise<ISignature | null> {
 		return null;
 	}
 
-	public async getVolume(): Promise<number> {
-		const { volume } = await this.bridge.invoke<AudioGetVolume, { volume: number }>({
-			type: AudioGetVolume,
-		});
-		return volume;
-	}
-
-	public async setVolume(volume: number): Promise<void> {
-		if (volume < 0 || volume > 100) {
-			throw new Error('Invalid volume, must be an integer between 0-100');
-		}
-		await this.bridge.invoke<AudioSetVolume, {}>({
-			type: AudioSetVolume,
-			volume: Math.trunc(volume),
-		});
-	}
-
 	public getOSDUri(): string {
 		return "osd.html";
-	}
-
-	private async initialize() {
-		await this.screenUpdateOrientation();
 	}
 
 	private async screenUpdateOrientation() {
@@ -398,15 +263,6 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		}
 
 		return this.orientation;
-	}
-
-	private async setScreenOrientation(orientation: Orientation) {
-		const privateOrientation = Orientation[orientation] as PrivateOrientation;
-		await this.bridge.invoke<ScreenSetOrientation, {}>({
-			type: ScreenSetOrientation,
-			orientation: privateOrientation,
-		});
-		this.orientation = orientation;
 	}
 
 	private async isWifiSupported() {

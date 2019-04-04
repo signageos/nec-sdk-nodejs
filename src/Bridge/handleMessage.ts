@@ -1,19 +1,11 @@
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import {
-	ApplicationRestart,
-	SystemReboot,
 	GetDeviceUid,
 	GetModel,
 	GetSerialNumber,
-	SetNativeDebug,
 	ScreenGetOrientation,
-	ScreenSetOrientation,
-	ScreenTurnOff,
-	ScreenTurnOn,
 	NetworkGetInfo,
-	AudioGetVolume,
-	AudioSetVolume,
 } from './bridgeSystemMessages';
 import * as NetworkMessages from './bridgeNetworkMessages';
 import * as FSMessages from './bridgeFileSystemMessages';
@@ -36,18 +28,10 @@ export default async function handleMessage(
 	systemSettings: ISystemSettings,
 	overlayRenderer: OverlayRenderer,
 	message:
-		ApplicationRestart |
-		SystemReboot |
 		GetDeviceUid |
 		GetModel |
 		GetSerialNumber |
-		SetNativeDebug |
 		ScreenGetOrientation |
-		ScreenSetOrientation |
-		ScreenTurnOff |
-		ScreenTurnOn |
-		AudioGetVolume |
-		AudioSetVolume |
 		NetworkGetInfo |
 		NetworkMessages.IsWifiSupported |
 		NetworkMessages.IsWifiEnabled |
@@ -65,6 +49,7 @@ export default async function handleMessage(
 		FSMessages.DeleteFile |
 		FSMessages.CopyFile |
 		FSMessages.MoveFile |
+		FSMessages.ReadFile |
 		FSMessages.WriteFile |
 		FSMessages.GetFileDetails |
 		FSMessages.GetFileChecksum |
@@ -76,14 +61,6 @@ export default async function handleMessage(
 		OverlayMessages.HideAll,
 ): Promise<object> {
 	switch (message.type) {
-		case ApplicationRestart:
-			await SystemAPI.restartApplication();
-			return {};
-
-		case SystemReboot:
-			await SystemAPI.reboot();
-			return {};
-
 		case GetDeviceUid:
 			const deviceUid = await nativeDriver.getDeviceUid();
 			return { deviceUid };
@@ -96,37 +73,9 @@ export default async function handleMessage(
 			const serialNumber = await nativeDriver.getSerialNumber();
 			return { serialNumber };
 
-		case SetNativeDebug:
-			if (message.isEnabled) {
-				await SystemAPI.enableNativeDebug();
-			} else {
-				await SystemAPI.disableNativeDebug();
-			}
-			return {};
-
 		case ScreenGetOrientation:
 			const orientation = await systemSettings.getScreenOrientation();
 			return { orientation };
-
-		case ScreenSetOrientation:
-			await systemSettings.setScreenOrientation(message.orientation);
-			return {};
-
-		case ScreenTurnOff:
-			await SystemAPI.turnScreenOff();
-			return {};
-
-		case ScreenTurnOn:
-			await SystemAPI.turnScreenOn();
-			return {};
-
-		case AudioGetVolume:
-			const volume = await systemSettings.getVolume();
-			return { volume };
-
-		case AudioSetVolume:
-			await systemSettings.setVolume(message.volume);
-			return {};
 
 		case NetworkGetInfo:
 			const networkInfo = await nativeDriver.getNetworkInfo();
@@ -195,6 +144,10 @@ export default async function handleMessage(
 		case FSMessages.MoveFile:
 			await fileSystem.moveFile(message.sourceFilePath, message.destinationFilePath);
 			return {};
+
+		case FSMessages.ReadFile:
+			const contents = await fileSystem.readFile(message.filePath);
+			return { contents };
 
 		case FSMessages.WriteFile:
 			await fileSystem.writeFile(message.filePath, message.contents);

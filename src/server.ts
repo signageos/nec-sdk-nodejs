@@ -7,6 +7,7 @@ require('util').promisify = require('util.promisify');
 
 import * as path from 'path';
 import * as AsyncLock from 'async-lock';
+import nodeFetch from 'node-fetch';
 import ManagementDriver from './Driver/ManagementDriver';
 import ServerVideo from './Driver/Video/ServerVideo';
 import ServerVideoPlayer from './Driver/Video/ServerVideoPlayer';
@@ -44,11 +45,26 @@ if (parameters.raven.enabled) {
 	const fileMetadataCache = new FileMetadataCache(fileSystem);
 	const fileDetailsProvider = new FileDetailsProvider(fileSystem, videoAPI, fileMetadataCache);
 	const cache = new FileSystemCache(fileSystem);
+	await cache.initialize();
+	const systemSettings = new FSSystemSettings(parameters.fileSystem.system);
+	const overlayRenderer = new OverlayRenderer(fileSystem);
+
+	const createVideo = (key: string) => {
+		const unixSocketPath = path.join(parameters.video.socket_root, key + '.sock');
+		const videoEventListener = new UnixSocketEventListener(unixSocketPath);
+		return new ServerVideo(fileSystem, systemSettings, key, videoAPI, videoEventListener);
+	};
+	const videoPlayer = new ServerVideoPlayer(4, createVideo);
 
 	const nativeDriver = new ManagementDriver(
 		parameters.url.socketUri,
+		parameters.server.file_system_url,
 		cache,
 		fileSystem,
+		systemSettings,
+		videoPlayer,
+		overlayRenderer,
+		fileDetailsProvider,
 	);
 
 	if (raven) {
@@ -69,26 +85,19 @@ if (parameters.raven.enabled) {
 	const webWorkerFactory = createSameThreadWebWorkerFactory(fetch);
 
 	await management(
+		nodeFetch as any,
 		parameters.url.baseUrl,
 		parameters.url.socketUri,
 		parameters.url.staticBaseUrl,
 		parameters.url.uploadBaseUrl,
 		parameters.frontDisplay.sessionIdKey,
 		nativeDriver,
+		parameters.frontDisplay.version,
 		offlineStorageLock,
 		webWorkerFactory,
+		parameters.app.version,
 	);
 
-	const systemSettings = new FSSystemSettings(parameters.fileSystem.system);
-
-	const createVideo = (key: string) => {
-		const unixSocketPath = path.join(parameters.video.socket_root, key + '.sock');
-		const videoEventListener = new UnixSocketEventListener(unixSocketPath);
-		return new ServerVideo(fileSystem, systemSettings, key, videoAPI, videoEventListener);
-	};
-	const videoPlayer = new ServerVideoPlayer(4, createVideo);
-
-	const overlayRenderer = new OverlayRenderer(fileSystem);
 	const cecListener = new CECListener(parameters.video.socket_root);
 	const bridgeServer = new BridgeServer(
 		parameters.server.bridge_url, fileSystem, fileDetailsProvider, nativeDriver, systemSettings, videoPlayer, overlayRenderer, cecListener,
