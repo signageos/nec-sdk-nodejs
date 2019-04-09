@@ -29,6 +29,7 @@ import FileDetailsProvider from './FileSystem/FileDetailsProvider';
 import FileMetadataCache from './FileSystem/FileMetadataCache';
 import { applicationReady } from './API/SystemAPI';
 import FSSystemSettings from './SystemSettings/FSSystemSettings';
+import { createDisplay } from './Driver/Display/displayFactory';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -48,6 +49,7 @@ if (parameters.raven.enabled) {
 	await cache.initialize();
 	const systemSettings = new FSSystemSettings(parameters.fileSystem.system);
 	const overlayRenderer = new OverlayRenderer(fileSystem);
+	const display = await createDisplay(systemSettings);
 
 	const createVideo = (key: string) => {
 		const unixSocketPath = path.join(parameters.video.socket_root, key + '.sock');
@@ -65,6 +67,7 @@ if (parameters.raven.enabled) {
 		videoPlayer,
 		overlayRenderer,
 		fileDetailsProvider,
+		display,
 	);
 
 	if (raven) {

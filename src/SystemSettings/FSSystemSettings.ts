@@ -25,7 +25,10 @@ export default class FSSystemSettings implements ISystemSettings {
 	}
 
 	public async setVolume(volume: number): Promise<void> {
-		this.settings.volume = volume;
+		if (volume < 0 || volume > 100) {
+			throw new Error('Invalid volume, must be an integer between 0-100');
+		}
+		this.settings.volume = Math.trunc(volume);
 		await this.saveToFileSystem();
 	}
 

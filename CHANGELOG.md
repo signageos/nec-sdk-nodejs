@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - File System API supports copyFile, writeFile
 - Applet DISABLE/ENABLE power actions
 - Node.js servlets - scripts or services that can be pushed to the device from the server and run in the background, extending device's capabilities with custom logic, as long as the device supports it
+- Support for controlling NEC display settings (brightness, volume, schedule, etc.) through internal RS232 communication when Raspberry Pi is a built-in compute module
 
 ## [0.3.2] - 2019-03-22
 ### Fixed

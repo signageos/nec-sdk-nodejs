@@ -4,11 +4,11 @@ import * as moment from 'moment-timezone';
 import { checksumString } from '@signageos/lib/dist/Hash/checksum';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import ManagementCapability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
+import Capability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import IServletRunner from '@signageos/front-display/es6/Servlet/IServletRunner';
 import INetworkInfo from '@signageos/front-display/es6/Management/Device/Network/INetworkInfo';
 import IBatteryStatus from '@signageos/front-display/es6/NativeDevice/Battery/IBatteryStatus';
-import Capability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
 import { APPLICATION_TYPE } from './constants';
 import IBasicDriver from '../../node_modules/@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import { IFilePath } from '@signageos/front-display/es6/NativeDevice/fileSystem';
@@ -30,13 +30,16 @@ import ICache from '@signageos/front-display/es6/Cache/ICache';
 import ICacheStorageInfo from '@signageos/front-display/es6/Cache/ICacheStorageInfo';
 import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
 import ServletRunner from '../Servlet/ServletRunner';
+import IDisplay from './Display/IDisplay';
+import DisplayCapability from './Display/DisplayCapability';
+import { resolveCurrentBrightness } from '@signageos/front-display/es6/NativeDevice/Screen/screenHelper';
+import { now } from '@signageos/lib/dist/DateTime/dateTimeFactory';
 
 export default class ManagementDriver implements IBasicDriver, IManagementDriver, ICacheDriver {
 
 	public fileSystem: IFileSystem;
 	public servletRunner: IServletRunner;
 	private deviceUid: string;
-	private isDisplayOn: boolean = true;
 
 	constructor(
 		private remoteServerUrl: string,
@@ -47,6 +50,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		private videoPlayer: IServerVideoPlayer,
 		private overlayRenderer: OverlayRenderer,
 		fileDetailsProvider: IFileDetailsProvider,
+		private display: IDisplay,
 	) {
 		this.fileSystem = new ManagementFileSystem(fileSystemUrl, internalFileSystem, fileDetailsProvider);
 		this.servletRunner = new ServletRunner(internalFileSystem);
@@ -230,6 +234,12 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 			case Capability.SERVLET:
 				return true;
 
+			case Capability.SET_BRIGHTNESS:
+				return this.display.supports(DisplayCapability.BRIGHTNESS);
+
+			case Capability.TIMERS_NATIVE:
+				return this.display.supports(DisplayCapability.SCHEDULE);
+
 			default:
 				return false;
 		}
@@ -240,23 +250,28 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async getVolume(): Promise<number> {
-		return await this.systemSettings.getVolume();
+		return await this.display.getVolume();
 	}
 
 	public async setVolume(volume: number): Promise<void> {
-		if (volume < 0 || volume > 100) {
-			throw new Error('Invalid volume, must be an integer between 0-100');
-		}
-		const volumeInt = Math.trunc(volume);
-		await this.systemSettings.setVolume(volumeInt);
+		await this.display.setVolume(volume);
 	}
 
 	public async screenGetBrightness(): Promise<IBrightness> {
-		throw new Error('Not implemented');
+		const brightness = await this.display.getBrightness();
+		return {
+			brightness1: brightness,
+			brightness2: brightness,
+			timeFrom1: '00:00:00',
+			timeFrom2: '00:00:00',
+		};
 	}
 
-	public async screenSetBrightness(_timeFrom1: string, _brightness1: number, _timeFrom2: string, _brightness2: number): Promise<void> {
-		throw new Error('Not implemented');
+	public async screenSetBrightness(timeFrom1: string, brightness1: number, timeFrom2: string, brightness2: number): Promise<void> {
+		let brightness = brightness1 === brightness2 ?
+			brightness1 :
+			resolveCurrentBrightness(timeFrom1, brightness1, timeFrom2, brightness2, now().toDate());
+		await this.display.setBrightness(brightness);
 	}
 
 	public async packageInstall(_baseUrl: string, _packageName: string, _version: string, _build: string | null): Promise<void> {
@@ -276,17 +291,15 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async displayIsPowerOn(): Promise<boolean> {
-		return this.isDisplayOn;
+		return await this.display.isPowerOn();
 	}
 
 	public async displayPowerOn(): Promise<void> {
-		await SystemAPI.turnScreenOn();
-		this.isDisplayOn = true;
+		await this.display.powerOn();
 	}
 
 	public async displayPowerOff(): Promise<void> {
-		await SystemAPI.turnScreenOff();
-		this.isDisplayOn = false;
+		await this.display.powerOff();
 	}
 
 	public async screenResize(
@@ -302,13 +315,23 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async setTimer(
-		_type: TimerType,
-		_timeOn: string | null,
-		_timeOff: string | null,
-		_weekdays: TimerWeekday[],
+		type: TimerType,
+		timeOn: string | null,
+		timeOff: string | null,
+		weekdays: TimerWeekday[],
 		_volume: number,
 	): Promise<void> {
-		throw new Error('Not implemented');
+		const TYPE_TO_INDEX = {
+			[TimerType.TIMER_1]: 0,
+			[TimerType.TIMER_2]: 1,
+			[TimerType.TIMER_3]: 2,
+			[TimerType.TIMER_4]: 3,
+			[TimerType.TIMER_5]: 4,
+			[TimerType.TIMER_6]: 5,
+			[TimerType.TIMER_7]: 6,
+		};
+		const index = TYPE_TO_INDEX[type];
+		await this.display.setShedule(index, timeOn, timeOff, weekdays);
 	}
 
 	public async remoteControlIsEnabled(): Promise<boolean> {
