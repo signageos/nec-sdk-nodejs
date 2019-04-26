@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Node.js servlets - scripts or services that can be pushed to the device from the server and run in the background, extending device's capabilities with custom logic, as long as the device supports it
 - Support for controlling NEC display settings (brightness, volume, schedule, etc.) through internal RS232 communication when Raspberry Pi is a built-in compute module
 
+### Fixed
+- If device took many screenshots that failed to upload, they wouldn't cleanup but stay in RAM until device ran of out RAM and crashed 
+
 ## [0.3.2] - 2019-03-22
 ### Fixed
 - Accidently not changing orientation on management request

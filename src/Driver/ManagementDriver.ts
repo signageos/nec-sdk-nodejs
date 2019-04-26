@@ -186,16 +186,18 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		const destinationAbsolutePath = this.internalFileSystem.getAbsolutePath(destinationFile);
 		await SystemAPI.takeScreenshot(destinationAbsolutePath);
 		const uploadUri = uploadBaseUrl + '/upload/file?prefix=screenshot/';
-		const response = await this.internalFileSystem.uploadFile(destinationFile, 'file', uploadUri);
-		const data = JSON.parse(response);
 
 		try {
-			await this.internalFileSystem.deleteFile(destinationFile);
-		} catch (error) {
-			console.error('failed to cleanup screenshot after upload');
+			const response = await this.internalFileSystem.uploadFile(destinationFile, 'file', uploadUri);
+			const data = JSON.parse(response);
+			return data.uri;
+		} finally {
+			try {
+				await this.internalFileSystem.deleteFile(destinationFile);
+			} catch (error) {
+				console.error('failed to cleanup screenshot after upload');
+			}
 		}
-
-		return data.uri;
 	}
 
 	public async isConnected(): Promise<boolean> {
