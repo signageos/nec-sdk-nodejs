@@ -99,6 +99,7 @@ if (parameters.raven.enabled) {
 		offlineStorageLock,
 		webWorkerFactory,
 		parameters.app.version,
+		false,
 	);
 
 	const cecListener = new CECListener(parameters.video.socket_root);

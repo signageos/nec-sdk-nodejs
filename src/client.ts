@@ -73,6 +73,7 @@ if (parameters.raven.enabled) {
 		synchronizer,
 		offlineStorageLock,
 		webWorkerFactory,
+		null,
 	);
 
 	notifyApplicationAlive(socketClient);
