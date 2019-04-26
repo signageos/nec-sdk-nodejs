@@ -30,15 +30,15 @@ function listenToVideoEventsFromClient(socket: ISocket, videoPlayer: IServerVide
 }
 
 function listenToPrepareVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
-	socket.on(PrepareVideo, async (message: PrepareVideo) => {
+	socket.bindMessage(PrepareVideo, async (message: PrepareVideo) => {
 		const { uri, x, y, width, height, orientation, isStream } = message;
 		try {
 			await videoPlayer.prepare(uri, x, y, width, height, orientation, isStream);
-			await socket.send(VideoPrepared, {
+			await socket.sendMessage(VideoPrepared, {
 				uri, x, y, width, height,
 			});
 		} catch (error) {
-			await socket.send(VideoError, {
+			await socket.sendMessage(VideoError, {
 				uri, x, y, width, height,
 				data: { message: 'Failed to prepare video' },
 			});
@@ -47,15 +47,15 @@ function listenToPrepareVideoEventFromClient(socket: ISocket, videoPlayer: IServ
 }
 
 function listenToPlayVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
-	socket.on(PlayVideo, async (message: PlayVideo) => {
+	socket.bindMessage(PlayVideo, async (message: PlayVideo) => {
 		const { uri, x, y, width, height } = message;
 		try {
 			await videoPlayer.play(uri, x, y, width, height, message.orientation, message.isStream);
-			await socket.send(VideoStarted, {
+			await socket.sendMessage(VideoStarted, {
 				uri, x, y, width, height,
 			});
 		} catch (error) {
-			await socket.send(VideoError, {
+			await socket.sendMessage(VideoError, {
 				uri, x, y, width, height,
 				data: { message: 'Failed to start video playback' },
 			});
@@ -64,15 +64,15 @@ function listenToPlayVideoEventFromClient(socket: ISocket, videoPlayer: IServerV
 }
 
 function listenToStopVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
-	socket.on(StopVideo, async (message: StopVideo) => {
+	socket.bindMessage(StopVideo, async (message: StopVideo) => {
 		const { uri, x, y, width, height } = message;
 		try {
 			await videoPlayer.stop(uri, x, y, width, height);
-			await socket.send(VideoStopped, {
+			await socket.sendMessage(VideoStopped, {
 				uri, x, y, width, height,
 			});
 		} catch (error) {
-			await socket.send(VideoError, {
+			await socket.sendMessage(VideoError, {
 				uri, x, y, width, height,
 				data: { message: 'Failed to stop video playback' },
 			});
@@ -81,21 +81,21 @@ function listenToStopVideoEventFromClient(socket: ISocket, videoPlayer: IServerV
 }
 
 function listenToStopAllVideosEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
-	socket.on(StopAllVideos, async () => {
+	socket.bindMessage(StopAllVideos, async () => {
 		await videoPlayer.clearAll();
-		await socket.send(AllVideosStopped, {});
+		await socket.sendMessage(AllVideosStopped, {});
 	});
 }
 
 function forwardVideoEventsToClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	const onEnded = async (event: IVideoEvent) => {
-		await socket.send(VideoEnded, { ...event.srcArguments });
+		await socket.sendMessage(VideoEnded, { ...event.srcArguments });
 	};
 	const onStopped = async (event: IVideoEvent) => {
-		await socket.send(VideoStopped, { ...event.srcArguments });
+		await socket.sendMessage(VideoStopped, { ...event.srcArguments });
 	};
 	const onError = async (event: IVideoEvent) => {
-		await socket.send(VideoError, {
+		await socket.sendMessage(VideoError, {
 			...event.srcArguments,
 			data: event.data,
 		});
@@ -105,7 +105,7 @@ function forwardVideoEventsToClient(socket: ISocket, videoPlayer: IServerVideoPl
 	videoPlayer.addEventListener('stopped', onStopped);
 	videoPlayer.addEventListener('error', onError);
 
-	socket.on('disconnect', () => {
+	socket.getDisconnectedPromise().then(() => {
 		videoPlayer.removeEventListener('ended', onEnded);
 		videoPlayer.removeEventListener('stopped', onStopped);
 		videoPlayer.removeEventListener('error', onError);

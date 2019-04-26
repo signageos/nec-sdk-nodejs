@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import * as AsyncLock from 'async-lock';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
-import ISocket from '@signageos/front-display/es6/Socket/ISocket';
+import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import IVideo from '@signageos/front-display/es6/Video/IVideo';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import {

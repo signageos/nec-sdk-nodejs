@@ -12,7 +12,7 @@ import "whatwg-fetch";
 import { useRavenLogging } from '@signageos/front-display/es6/Logging/logger';
 import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
-import createSocket from '@signageos/front-display/es6/Socket/WS/createWSSocket';
+import createSocket from '@signageos/lib/dist/WebSocket/Client/WS/createWSSocket';
 import notifyApplicationAlive from './Application/notifyApplicationAlive';
 const parameters = require('../config/parameters');
 const frontAppletPrefix = parameters.frontApplet.prefix;

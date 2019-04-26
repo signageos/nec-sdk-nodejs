@@ -3,11 +3,11 @@ import IFileSystem from '../FileSystem/IFileSystem';
 
 export default function socketHandleStorageUnitsChanged(socket: ISocket, fileSystem: IFileSystem) {
 	const eventListener = async () => {
-		await socket.send('storage_units_changed', {});
+		await socket.sendMessage('storage_units_changed', {});
 	};
 
 	fileSystem.onStorageUnitsChanged(eventListener);
-	socket.on('disconnect', () => {
+	socket.getDisconnectedPromise().then(() => {
 		fileSystem.removeStorageUnitsChangedListener(eventListener);
 	});
 }

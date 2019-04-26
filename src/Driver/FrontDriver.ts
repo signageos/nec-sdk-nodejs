@@ -29,7 +29,7 @@ import BridgeStreamPlayer from './Video/BridgeStreamPlayer';
 import PrivateOrientation, { convertScreenOrientationToAngle } from './Orientation';
 import FrontFileSystem from './FrontFileSystem';
 import OverlayHandler from '../Overlay/OverlayHandler';
-import ISocket from '@signageos/front-display/es6/Socket/ISocket';
+import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import cecKeyMap from './Input/cecKeyMap';
 import keyboardKeyMap from './Input/keyboardKeyMap';
 import Key from '../CEC/Key';
