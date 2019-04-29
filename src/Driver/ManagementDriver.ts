@@ -222,6 +222,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 			case Capability.MODEL:
 			case Capability.SERIAL_NUMBER:
 			case Capability.NETWORK_INFO:
+			case Capability.STORAGE_UNITS:
 			case Capability.TEMPERATURE:
 			case Capability.SCREENSHOT_UPLOAD:
 			case Capability.TIMERS_PROPRIETARY:
