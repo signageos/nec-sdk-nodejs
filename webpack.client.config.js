@@ -2,7 +2,10 @@ const webpack = require('webpack');
 const path = require('path');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const parameters = require('./config/parameters');
-const { bundledAppletProcessEnvVariables } = require('./webpack.common.config');
+const {
+	bundledAppletProcessEnvVariables,
+	autoVerificationProcessEnvVariables,
+} = require('./webpack.common.config');
 
 module.exports = {
 	name: 'client',
@@ -27,6 +30,7 @@ module.exports = {
 			'process.env.weinre_server_url': '"' + parameters.url.weinreServerUrl + '"',
 			'process.env.synchronizer_server_url': '"' + parameters.url.synchronizerServerUrl + '"',
 			...bundledAppletProcessEnvVariables,
+			...autoVerificationProcessEnvVariables,
 		}),
 		new ExtractTextPlugin({ filename: "styles.css" }),
 	],

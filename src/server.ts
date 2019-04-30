@@ -30,6 +30,7 @@ import FileMetadataCache from './FileSystem/FileMetadataCache';
 import { applicationReady } from './API/SystemAPI';
 import FSSystemSettings from './SystemSettings/FSSystemSettings';
 import { createDisplay } from './Driver/Display/displayFactory';
+import { getAutoVerification } from './helper';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -87,6 +88,7 @@ if (parameters.raven.enabled) {
 
 	const webWorkerFactory = createSameThreadWebWorkerFactory(fetch);
 	const isOpen = parameters.bundledApplet !== null;
+	const autoVerification = getAutoVerification();
 
 	await management(
 		nodeFetch as any,
@@ -101,6 +103,7 @@ if (parameters.raven.enabled) {
 		webWorkerFactory,
 		parameters.app.version,
 		isOpen,
+		autoVerification,
 	);
 
 	const cecListener = new CECListener(parameters.video.socket_root);

@@ -16,6 +16,16 @@ if (parameters.bundledApplet) {
 	};
 }
 
+let autoVerificationProcessEnvVariables;
+if (parameters.autoVerification) {
+	autoVerificationProcessEnvVariables = {
+		'process.env.auto_verification_organization_uid': '"' + parameters.autoVerification.organizationUid + '"',
+	};
+} else {
+	autoVerificationProcessEnvVariables = {};
+}
+
 module.exports = {
 	bundledAppletProcessEnvVariables,
+	autoVerificationProcessEnvVariables,
 };

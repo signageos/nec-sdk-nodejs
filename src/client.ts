@@ -14,6 +14,7 @@ import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants'
 import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
 import createSocket from '@signageos/lib/dist/WebSocket/Client/WS/createWSSocket';
 import notifyApplicationAlive from './Application/notifyApplicationAlive';
+import { getAutoVerification } from './helper';
 const parameters = require('../config/parameters');
 const frontAppletPrefix = parameters.frontApplet.prefix;
 
@@ -58,6 +59,7 @@ if (parameters.raven.enabled) {
 	});
 
 	const webWorkerFactory = createWebWorkerFactory();
+	const autoVerification = getAutoVerification();
 
 	await front(
 		window,
@@ -80,6 +82,7 @@ if (parameters.raven.enabled) {
 			binaryFile: parameters.bundledApplet.binaryFile,
 			frontAppletBinaryFile: parameters.bundledApplet.frontAppletBinaryFile,
 		},
+		autoVerification,
 	);
 
 	notifyApplicationAlive(socketClient);
