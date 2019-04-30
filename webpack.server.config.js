@@ -1,6 +1,7 @@
 const webpack = require('webpack');
 const parameters = require('./config/parameters');
 const packageFile = require('./package');
+const { bundledAppletProcessEnvVariables } = require('./webpack.common.config');
 
 module.exports = {
 	name: 'server',
@@ -25,6 +26,7 @@ module.exports = {
 			'process.env.socket_uri': '"' + parameters.url.socketUri + '"',
 			'process.env.static_base_url': '"' + parameters.url.staticBaseUrl + '"',
 			'process.env.upload_base_url': '"' + parameters.url.uploadBaseUrl + '"',
+			...bundledAppletProcessEnvVariables,
 		}),
 	],
 	resolve: {

@@ -73,7 +73,13 @@ if (parameters.raven.enabled) {
 		synchronizer,
 		offlineStorageLock,
 		webWorkerFactory,
-		null,
+		parameters.bundledApplet === null ? null : {
+			version: parameters.bundledApplet.version,
+			frontAppletVersion: parameters.bundledApplet.frontAppletVersion,
+			checksum: parameters.bundledApplet.checksum,
+			binaryFile: parameters.bundledApplet.binaryFile,
+			frontAppletBinaryFile: parameters.bundledApplet.frontAppletBinaryFile,
+		},
 	);
 
 	notifyApplicationAlive(socketClient);

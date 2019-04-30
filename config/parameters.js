@@ -69,4 +69,13 @@ exports = module.exports = Object.assign({}, basicParameters, {
 	video: {
 		socket_root: '/tmp'
 	},
+	bundledApplet: process.env.bundled_applet === '1'
+		? {
+			version: process.env.bundled_applet_version,
+			frontAppletVersion: process.env.bundled_applet_front_applet_version,
+			checksum: process.env.bundled_applet_checksum,
+			binaryFile: process.env.bundled_applet_binary_file,
+			frontAppletBinaryFile: process.env.bundled_applet_front_applet_binary_file,
+		}
+		: null,
 });

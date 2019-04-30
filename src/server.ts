@@ -86,6 +86,7 @@ if (parameters.raven.enabled) {
 	});
 
 	const webWorkerFactory = createSameThreadWebWorkerFactory(fetch);
+	const isOpen = parameters.bundledApplet !== null;
 
 	await management(
 		nodeFetch as any,
@@ -99,7 +100,7 @@ if (parameters.raven.enabled) {
 		offlineStorageLock,
 		webWorkerFactory,
 		parameters.app.version,
-		false,
+		isOpen,
 	);
 
 	const cecListener = new CECListener(parameters.video.socket_root);
