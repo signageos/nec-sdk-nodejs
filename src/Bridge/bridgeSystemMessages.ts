@@ -1,3 +1,5 @@
+import ManagementCapability from "@signageos/front-display/es6/NativeDevice/Management/ManagementCapability";
+
 export const NotifyApplicationAlive = 'Application.NotifyAlive';
 export interface NotifyApplicationAlive {
 	type: typeof NotifyApplicationAlive;
@@ -23,7 +25,81 @@ export interface NetworkGetInfo {
 	type: typeof NetworkGetInfo;
 }
 
-export const ScreenGetOrientation = 'Screen.GetOrientation';
-export interface ScreenGetOrientation {
-	type: typeof ScreenGetOrientation;
+export const Supports = 'System.Supports';
+export interface Supports {
+	type: typeof Supports;
+	capability: ManagementCapability;
+}
+
+export const AppUpgrade = 'System.AppUpgrade';
+export interface AppUpgrade {
+	type: typeof AppUpgrade;
+	baseUrl: string;
+	version: string;
+}
+
+export const GetTemperature = 'System.GetTemperature';
+export interface GetTemperature {
+	type: typeof GetTemperature;
+}
+
+export const GetBatteryStatus = 'System.GetBatteryStatus';
+export interface GetBatteryStatus {
+	type: typeof GetBatteryStatus;
+}
+
+export const InstallPackage = 'System.InstallPackage';
+export interface InstallPackage {
+	type: typeof InstallPackage;
+	baseUrl: string;
+	packageName: string;
+	version: string;
+	build: string | null;
+}
+
+export const GetCurrentTimeWithTimezone = 'System.GetCurrentTimeWithTimezone';
+export interface GetCurrentTimeWithTimezone {
+	type: typeof GetCurrentTimeWithTimezone;
+}
+
+export const SetCurrentTime = 'System.SetCurrentTime';
+export interface SetCurrentTime {
+	type: typeof SetCurrentTime;
+	currentDate: Date;
+}
+
+export const SetCurrentTimeWithTimezone = 'System.SetCurrentTimeWithTimezone';
+export interface SetCurrentTimeWithTimezone {
+	type: typeof SetCurrentTimeWithTimezone;
+	currentDate: Date;
+	timezone: string;
+}
+
+export const SetDebug = 'System.SetDebug';
+export interface SetDebug {
+	type: typeof SetDebug;
+	enabled: boolean;
+}
+
+export const RemoteControlSetEnabled = 'RemoteControl.SetEnabled';
+export interface RemoteControlSetEnabled {
+	type: typeof RemoteControlSetEnabled;
+	enabled: boolean;
+}
+
+export const RemoteControlIsEnabled = 'RemoteControl.IsEnabled';
+export interface RemoteControlIsEnabled {
+	type: typeof RemoteControlIsEnabled;
+}
+
+export const ControlSetPin = 'System.ControlSetPin';
+export interface ControlSetPin {
+	type: typeof ControlSetPin;
+	pin: string;
+}
+
+export const BrowserOpenLink = 'Browser.OpenLink';
+export interface BrowserOpenLink {
+	type: typeof BrowserOpenLink;
+	uri: string;
 }

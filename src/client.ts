@@ -15,6 +15,7 @@ import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/m
 import createSocket from '@signageos/lib/dist/WebSocket/Client/WS/createWSSocket';
 import notifyApplicationAlive from './Application/notifyApplicationAlive';
 import { getAutoVerification } from './helper';
+import FrontManagementDriver from './Driver/FrontManagementDriver';
 const parameters = require('../config/parameters');
 const frontAppletPrefix = parameters.frontApplet.prefix;
 
@@ -39,6 +40,12 @@ if (parameters.raven.enabled) {
 		parameters.server.file_system_url,
 	);
 	await nativeDriver.initialize(parameters.url.staticBaseUrl);
+	const managementNativeDriver = new FrontManagementDriver(
+		bridge,
+		socketClient,
+		parameters.server.file_system_url,
+	);
+	await managementNativeDriver.initialize(parameters.url.staticBaseUrl);
 
 	const synchronizer = createSocketSynchronizer(
 		parameters.url.synchronizerServerUrl,
@@ -72,6 +79,7 @@ if (parameters.raven.enabled) {
 		parameters.frontDisplay.version,
 		parameters.url.weinreServerUrl,
 		nativeDriver,
+		managementNativeDriver,
 		synchronizer,
 		offlineStorageLock,
 		webWorkerFactory,
