@@ -57,7 +57,7 @@ export default class CECListener implements ICECListener {
 	}
 
 	private emitKeypressWithDebounce(key: Key) {
-		const DEBOUCE_MS = 200;
+		const DEBOUCE_MS = 400;
 		const now = new Date().valueOf();
 		if (!this.lastEmittedKey || key !== this.lastEmittedKey.key || now - this.lastEmittedKey.timestamp >= DEBOUCE_MS) {
 			this.eventEmitter.emit('keypress', key);
