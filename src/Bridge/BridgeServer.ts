@@ -99,7 +99,7 @@ export default class BridgeServer {
 				} else if (error instanceof ResourceNotFound) {
 					response.sendStatus(404);
 				} else {
-					response.sendStatus(500);
+					response.status(500).send(error.message);
 					throw error;
 				}
 			}
