@@ -65,7 +65,7 @@ if (parameters.raven.enabled) {
 		timeout: 2 * MINUTE_IN_MS,
 	});
 
-	const webWorkerFactory = createWebWorkerFactory();
+	const webWorkerFactory = createWebWorkerFactory(parameters.app.version);
 	const autoVerification = getAutoVerification();
 
 	await front(
