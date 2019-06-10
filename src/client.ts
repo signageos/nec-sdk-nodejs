@@ -12,8 +12,10 @@ import "whatwg-fetch";
 import { useRavenLogging } from '@signageos/front-display/es6/Logging/logger';
 import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
-import createSocket from '@signageos/front-display/es6/Socket/WS/createWSSocket';
+import createSocket from '@signageos/lib/dist/WebSocket/Client/WS/createWSSocket';
 import notifyApplicationAlive from './Application/notifyApplicationAlive';
+import { getAutoVerification } from './helper';
+import FrontManagementDriver from './Driver/FrontManagementDriver';
 const parameters = require('../config/parameters');
 const frontAppletPrefix = parameters.frontApplet.prefix;
 
@@ -38,6 +40,12 @@ if (parameters.raven.enabled) {
 		parameters.server.file_system_url,
 	);
 	await nativeDriver.initialize(parameters.url.staticBaseUrl);
+	const managementNativeDriver = new FrontManagementDriver(
+		bridge,
+		socketClient,
+		parameters.server.file_system_url,
+	);
+	await managementNativeDriver.initialize(parameters.url.staticBaseUrl);
 
 	const synchronizer = createSocketSynchronizer(
 		parameters.url.synchronizerServerUrl,
@@ -57,7 +65,8 @@ if (parameters.raven.enabled) {
 		timeout: 2 * MINUTE_IN_MS,
 	});
 
-	const webWorkerFactory = createWebWorkerFactory();
+	const webWorkerFactory = createWebWorkerFactory(parameters.app.version);
+	const autoVerification = getAutoVerification();
 
 	await front(
 		window,
@@ -70,9 +79,18 @@ if (parameters.raven.enabled) {
 		parameters.frontDisplay.version,
 		parameters.url.weinreServerUrl,
 		nativeDriver,
+		managementNativeDriver,
 		synchronizer,
 		offlineStorageLock,
 		webWorkerFactory,
+		parameters.bundledApplet === null ? null : {
+			version: parameters.bundledApplet.version,
+			frontAppletVersion: parameters.bundledApplet.frontAppletVersion,
+			checksum: parameters.bundledApplet.checksum,
+			binaryFile: parameters.bundledApplet.binaryFile,
+			frontAppletBinaryFile: parameters.bundledApplet.frontAppletBinaryFile,
+		},
+		autoVerification,
 	);
 
 	notifyApplicationAlive(socketClient);

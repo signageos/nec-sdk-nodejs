@@ -9,7 +9,7 @@ let restartAppTimeout: NodeJS.Timer | null = null;
 
 export default function socketHandleApplication(socket: ISocket) {
 	resetRestartTimeout();
-	socket.on(NotifyApplicationAlive, () => {
+	socket.bindMessage(NotifyApplicationAlive, () => {
 		resetRestartTimeout();
 	});
 }

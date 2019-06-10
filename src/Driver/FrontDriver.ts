@@ -18,18 +18,22 @@ import {
 	GetDeviceUid,
 	GetModel,
 	GetSerialNumber,
-	ScreenGetOrientation,
 	NetworkGetInfo,
+	RemoteControlSetEnabled,
+	RemoteControlIsEnabled,
+	ControlSetPin,
+	BrowserOpenLink,
 } from '../Bridge/bridgeSystemMessages';
 import {
 	IsWifiSupported,
 } from '../Bridge/bridgeNetworkMessages';
+import * as ScreenMessages from '../Bridge/bridgeScreenMessages';
 import BridgeVideoPlayer from './Video/BridgeVideoPlayer';
 import BridgeStreamPlayer from './Video/BridgeStreamPlayer';
 import PrivateOrientation, { convertScreenOrientationToAngle } from './Orientation';
 import FrontFileSystem from './FrontFileSystem';
 import OverlayHandler from '../Overlay/OverlayHandler';
-import ISocket from '@signageos/front-display/es6/Socket/ISocket';
+import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import cecKeyMap from './Input/cecKeyMap';
 import keyboardKeyMap from './Input/keyboardKeyMap';
 import Key from '../CEC/Key';
@@ -202,20 +206,32 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		]);
 	}
 
-	public async remoteControlSetEnabled(_enabled: boolean): Promise<void> {
-		throw new Error("Not implemented");
+	public async remoteControlSetEnabled(enabled: boolean): Promise<void> {
+		await this.bridge.invoke<RemoteControlSetEnabled, void>({
+			type: RemoteControlSetEnabled,
+			enabled,
+		});
 	}
 
 	public async remoteControlIsEnabled(): Promise<boolean> {
-		throw new Error("Not implemented");
+		const { enabled } = await this.bridge.invoke<RemoteControlIsEnabled, { enabled: boolean }>({
+			type: RemoteControlIsEnabled,
+		});
+		return enabled;
 	}
 
-	public async controlSetPin(_pin: string): Promise<void> {
-		throw new Error('controlSetPin not implemented');
+	public async controlSetPin(pin: string): Promise<void> {
+		await this.bridge.invoke<ControlSetPin, void>({
+			type: ControlSetPin,
+			pin,
+		});
 	}
 
-	public async browserOpenLink(_uri: string): Promise<void> {
-		throw new Error('browserOpenLink not implemented');
+	public async browserOpenLink(uri: string): Promise<void> {
+		await this.bridge.invoke<BrowserOpenLink, void>({
+			type: BrowserOpenLink,
+			uri,
+		});
 	}
 
 	public async getCurrentSignature(): Promise<ISignature | null> {
@@ -256,8 +272,8 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	private async getScreenOrientation() {
 		if (this.orientation === null) {
-			const { orientation } = await this.bridge.invoke<ScreenGetOrientation, { orientation: PrivateOrientation }>({
-				type: ScreenGetOrientation,
+			const { orientation } = await this.bridge.invoke<ScreenMessages.GetOrientation, { orientation: PrivateOrientation }>({
+				type: ScreenMessages.GetOrientation,
 			});
 			this.orientation = Orientation[orientation as keyof typeof Orientation];
 		}

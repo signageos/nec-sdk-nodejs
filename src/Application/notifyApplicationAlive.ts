@@ -1,4 +1,4 @@
-import ISocket from '@signageos/front-display/es6/Socket/ISocket';
+import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { NotifyApplicationAlive } from '../Bridge/bridgeSystemMessages';
 

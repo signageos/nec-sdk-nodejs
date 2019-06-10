@@ -4,11 +4,11 @@ import Key from '../CEC/Key';
 
 export default function socketHandleCEC(socket: ISocket, cecListener: ICECListener) {
 	const eventListener = async (key: Key) => {
-		await socket.send('keypress', key);
+		await socket.sendMessage('keypress', key);
 	};
 
 	cecListener.onKeypress(eventListener);
-	socket.on('disconnect', () => {
+	socket.getDisconnectedPromise().then(() => {
 		cecListener.removeListener(eventListener);
 	});
 }

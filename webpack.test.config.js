@@ -6,8 +6,8 @@ module.exports = {
 	...config,
 	target: 'node',
 	node: {
-		__filename: true,
-		__dirname: true
+		__filename: false,
+		__dirname: false,
 	},
 	externals: getNodeModulesExternals(parameters.paths.rootPath),
 };

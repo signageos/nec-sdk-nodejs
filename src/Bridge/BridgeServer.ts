@@ -99,7 +99,7 @@ export default class BridgeServer {
 				} else if (error instanceof ResourceNotFound) {
 					response.sendStatus(404);
 				} else {
-					response.sendStatus(500);
+					response.status(500).send(error.message);
 					throw error;
 				}
 			}
@@ -162,7 +162,7 @@ export default class BridgeServer {
 	}
 
 	private handleSocketMessage() {
-		this.socketServer.server.on('connection', (socket: ISocket) => {
+		this.socketServer.server.bindConnection((socket: ISocket) => {
 			socketHandleVideo(socket, this.videoPlayer);
 			socketHandleCEC(socket, this.cecListener);
 			socketHandleApplication(socket);

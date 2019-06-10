@@ -217,11 +217,12 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		await this.cache.saveOne(sessionIdKey, sessionId);
 	}
 
-	public managementSupports(capability: ManagementCapability): boolean {
+	public async managementSupports(capability: ManagementCapability) {
 		switch (capability) {
 			case Capability.MODEL:
 			case Capability.SERIAL_NUMBER:
 			case Capability.NETWORK_INFO:
+			case Capability.STORAGE_UNITS:
 			case Capability.TEMPERATURE:
 			case Capability.SCREENSHOT_UPLOAD:
 			case Capability.TIMERS_PROPRIETARY:

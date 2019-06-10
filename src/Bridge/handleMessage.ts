@@ -4,18 +4,22 @@ import {
 	GetDeviceUid,
 	GetModel,
 	GetSerialNumber,
-	ScreenGetOrientation,
 	NetworkGetInfo,
+	Supports,
 } from './bridgeSystemMessages';
 import * as NetworkMessages from './bridgeNetworkMessages';
 import * as FSMessages from './bridgeFileSystemMessages';
 import * as OverlayMessages from './bridgeOverlayMessages';
+import * as ScreenMessages from './bridgeScreenMessages';
+import * as PowerMessages from './bridgePowerMessages';
+import * as AudioMessages from './bridgeAudioMessages';
 import * as SystemAPI from '../API/SystemAPI';
 import * as NetworkAPI from '../API/NetworkAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
 import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 import ISystemSettings from '../SystemSettings/ISystemSettings';
+import Resolution from '@signageos/front-display/es6/NativeDevice/Resolution';
 
 export class InvalidMessageError extends Error {}
 
@@ -28,11 +32,22 @@ export default async function handleMessage(
 	systemSettings: ISystemSettings,
 	overlayRenderer: OverlayRenderer,
 	message:
+		Supports |
 		GetDeviceUid |
 		GetModel |
 		GetSerialNumber |
-		ScreenGetOrientation |
+		ScreenMessages.GetOrientation |
 		NetworkGetInfo |
+		ScreenMessages.SetOrientation |
+		PowerMessages.AppRestart |
+		PowerMessages.SystemReboot |
+		PowerMessages.SetTimer |
+		ScreenMessages.PowerOff |
+		ScreenMessages.PowerOn |
+		ScreenMessages.SetBrightness |
+		ScreenMessages.GetBrightness |
+		AudioMessages.SetVolume |
+		AudioMessages.GetVolume |
 		NetworkMessages.IsWifiSupported |
 		NetworkMessages.IsWifiEnabled |
 		NetworkMessages.EnableWifi |
@@ -69,13 +84,43 @@ export default async function handleMessage(
 			const model = await SystemAPI.getModel();
 			return { model };
 
+		case Supports:
+			const supports = await nativeDriver.managementSupports(message.capability);
+			return { supports };
+
 		case GetSerialNumber:
 			const serialNumber = await nativeDriver.getSerialNumber();
 			return { serialNumber };
 
-		case ScreenGetOrientation:
+		case ScreenMessages.GetOrientation:
 			const orientation = await systemSettings.getScreenOrientation();
 			return { orientation };
+
+		case ScreenMessages.SetOrientation:
+			// TODO front display should not accept unused parameters when are not necessary
+			await nativeDriver.screenResize('unused', message.orientation, Resolution.FULL_HD, 'unused');
+			return {};
+
+		case ScreenMessages.PowerOff:
+			await nativeDriver.displayPowerOff();
+			return {};
+
+		case ScreenMessages.PowerOn:
+			await nativeDriver.displayPowerOn();
+			return {};
+
+		case ScreenMessages.SetBrightness:
+			await nativeDriver.screenSetBrightness(
+				message.brightness.timeFrom1,
+				message.brightness.brightness1,
+				message.brightness.timeFrom2,
+				message.brightness.brightness2,
+			);
+			return {};
+
+		case ScreenMessages.GetBrightness:
+			const brightness = await nativeDriver.screenGetBrightness();
+			return { brightness };
 
 		case NetworkGetInfo:
 			const networkInfo = await nativeDriver.getNetworkInfo();
@@ -85,9 +130,31 @@ export default async function handleMessage(
 			const isWifiSupported = await NetworkAPI.isWifiSupported();
 			return { isWifiSupported };
 
-		case NetworkMessages.IsWifiEnabled:
-			const isWifiEnabled = await NetworkAPI.isWifiEnabled();
-			return { isWifiEnabled };
+		case PowerMessages.AppRestart:
+			await nativeDriver.appRestart();
+			return {};
+
+		case PowerMessages.SystemReboot:
+			await nativeDriver.systemReboot();
+			return {};
+
+		case PowerMessages.SetTimer:
+			await nativeDriver.setTimer(
+				message.timerType,
+				message.timeOn,
+				message.timeOn,
+				message.weekdays,
+				message.volume,
+			);
+			return {};
+
+		case AudioMessages.SetVolume:
+			await nativeDriver.setVolume(message.volume);
+			return {};
+
+		case AudioMessages.GetVolume:
+			const volume = await nativeDriver.getVolume();
+			return { volume };
 
 		case NetworkMessages.EnableWifi:
 			await NetworkAPI.enableWifi();

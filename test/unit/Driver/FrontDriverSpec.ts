@@ -5,7 +5,7 @@ import FrontDriver from '../../../src/Driver/FrontDriver';
 import {
 	GetModel,
 } from '../../../src/Bridge/bridgeSystemMessages';
-import ISocket from '@signageos/front-display/es6/Socket/ISocket';
+import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 
 function createWindow(override: any = {}): Window {
 	return {

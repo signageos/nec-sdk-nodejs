@@ -2,7 +2,7 @@ import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { IFile, IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
-import ISocket from '@signageos/front-display/es6/Socket/ISocket';
+import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import BridgeClient from '../Bridge/BridgeClient';
 import * as FSMessages from '../Bridge/bridgeFileSystemMessages';
 import { IFileDetails } from '../FileSystem/IFileDetails';
