@@ -10,9 +10,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Applet DISABLE/ENABLE power actions
 - Node.js servlets - scripts or services that can be pushed to the device from the server and run in the background, extending device's capabilities with custom logic, as long as the device supports it
 - Support for controlling NEC display settings (brightness, volume, schedule, etc.) through internal RS232 communication when Raspberry Pi is a built-in compute module
+- It's possible now to configure the application build to use a local applet file instead of getting applet timings from the cloud
+- signageOS Open - build with an applet bundled inside the package and make the device automatically verify against the owner's organization on the server
+- Always save applet and front applet binaries to internal memory to improve performance and stability
 
 ### Fixed
-- If device took many screenshots that failed to upload, they wouldn't cleanup but stay in RAM until device ran of out RAM and crashed 
+- If device took many screenshots that failed to upload, they wouldn't cleanup but stay in RAM until device ran of out RAM and crashed
+- Invocations from front-applet has much better & descriptive error messages with links to docs
+- Switching between multiple applet timings would freeze the second applet 
 
 ## [0.3.2] - 2019-03-22
 ### Fixed
