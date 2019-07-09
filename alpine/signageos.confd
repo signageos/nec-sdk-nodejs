@@ -1,0 +1,2 @@
+fs_root_path=/var/lib/signageos/fs
+fs_system_path=/var/lib/signageos/system

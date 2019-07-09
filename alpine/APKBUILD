@@ -1,0 +1,31 @@
+# Maintainer: signageOS <dev@signageos.io>
+pkgname="signageos-display-linux"
+pkgver="x"
+pkgrel=0
+pkgdesc="SignageOS client"
+url="https://signageos.io"
+pkgusers="signageos"
+pkggroups="signageos"
+arch="all"
+license="MIT"
+depends="nodejs ffmpeg"
+makedepends="npm"
+options="!check"
+subpackages="$pkgname-openrc"
+source="display-linux.tar.gz
+        signageos.confd
+        signageos.initd
+       "
+
+package() {
+	mkdir -p $pkgdir/usr/share/signageos
+	mkdir -p $pkgdir/var/lib/signageos/fs/internal
+	mkdir -p $pkgdir/var/lib/signageos/system
+	cp -r client $pkgdir/usr/share/signageos/client
+	cp -r server $pkgdir/usr/share/signageos/server
+	chown -R root:root $pkgdir/usr/share/signageos
+	chown -R $pkgusers:$pkggroups $pkgdir/var/lib/signageos
+	ln -sfT /media $pkgdir/var/lib/signageos/fs/external
+	install -m755 -D signageos.initd "$pkgdir"/etc/init.d/$pkgname
+	install -m644 -D signageos.confd "$pkgdir"/etc/conf.d/$pkgname
+}

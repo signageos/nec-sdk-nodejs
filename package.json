@@ -18,7 +18,6 @@
     "prebuild": "make dist && npm rebuild node-sass",
     "clean": "rm -rf dist",
     "develop": "npm rebuild node-sass && webpack --watch --config=webpack.config.js",
-    "prepare": "npm run clean && npm run build && make raspbian",
     "pack": "node tools/npm-pack.js",
     "lint": "tslint --config node_modules/hugport-codestyle/tslint.json --project tsconfig.json {src,test}/**/*.{ts,tsx}",
     "test": "NODE_ENV=test mocha-webpack --opts mocha.opts"
