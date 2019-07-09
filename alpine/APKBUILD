@@ -20,14 +20,14 @@ source="display-linux.tar.gz
        "
 
 package() {
-	mkdir -p $pkgdir/usr/share/signageos
-	mkdir -p $pkgdir/var/lib/signageos/fs/internal
-	mkdir -p $pkgdir/var/lib/signageos/system
-	cp -r client $pkgdir/usr/share/signageos/client
-	cp -r server $pkgdir/usr/share/signageos/server
-	chown -R root:root $pkgdir/usr/share/signageos
-	chown -R $pkgusers:$pkggroups $pkgdir/var/lib/signageos
-	ln -sfT /media $pkgdir/var/lib/signageos/fs/external
+	mkdir -p $pkgdir/usr/share/$pkgname
+	mkdir -p $pkgdir/var/lib/$pkgname/fs/internal
+	mkdir -p $pkgdir/var/lib/$pkgname/system
+	cp -r client $pkgdir/usr/share/$pkgname/client
+	cp -r server $pkgdir/usr/share/$pkgname/server
+	chown -R root:root $pkgdir/usr/share/$pkgname
+	chown -R $pkgusers:$pkggroups $pkgdir/var/lib/$pkgname
+	ln -sfT /media $pkgdir/var/lib/$pkgname/fs/external
 	install -m644 -D nginx.conf "$pkgdir"/etc/nginx/conf.d/$pkgname.conf
 	install -m644 -D udev.rules "$pkgdir"/etc/udev/rules.d/99-$pkgname.rules
 	install -m755 -D signageos.initd "$pkgdir"/etc/init.d/$pkgname

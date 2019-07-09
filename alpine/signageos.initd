@@ -4,7 +4,7 @@ name=$RC_SVCNAME
 description="signageOS client"
 pidfile="/run/$name.pid"
 command="node"
-command_args="/usr/lib/signageos/server/server.js"
+command_args="/usr/lib/signageos-display-linux/server/server.js"
 command_user="signageos"
 stopsig=SIGTERM
 
