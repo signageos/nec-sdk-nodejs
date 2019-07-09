@@ -13,6 +13,7 @@ makedepends="npm"
 options="!check"
 subpackages="$pkgname-openrc"
 source="display-linux.tar.gz
+        nginx.conf
         signageos.confd
         signageos.initd
        "
@@ -26,6 +27,7 @@ package() {
 	chown -R root:root $pkgdir/usr/share/signageos
 	chown -R $pkgusers:$pkggroups $pkgdir/var/lib/signageos
 	ln -sfT /media $pkgdir/var/lib/signageos/fs/external
+	install -m644 -D nginx.conf "$pkgdir"/etc/nginx/conf.d/$pkgname.conf
 	install -m755 -D signageos.initd "$pkgdir"/etc/init.d/$pkgname
 	install -m644 -D signageos.confd "$pkgdir"/etc/conf.d/$pkgname
 }
