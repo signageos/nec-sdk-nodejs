@@ -1,0 +1,24 @@
+xset s noblank
+xset s off
+xset -dpms
+
+EXTRA_FLAGS=""
+
+DEBUG=`sudo signageos debug is_enabled`
+if [ "$DEBUG" = "1" ]; then
+    EXTRA_FLAGS="$EXTRA_FLAGS --remote-debugging-port=9221"
+fi
+
+APP_VERSION=`dpkg -s signageos-display-linux | grep Version: | sed -e 's/^Version: \(.*\)/\1/'`
+
+WINDOW_DIMENSIONS=`xrandr 2> /dev/null | grep '*' | sed -E 's/^[[:space:]]*([0-9]+)x([0-9]+).*/\1,\2/'`
+
+chromium-browser \
+    --window-position=0,0 \
+    --window-size=$WINDOW_DIMENSIONS \
+    $EXTRA_FLAGS \
+    --disable-extensions \
+    --kiosk \
+    --bwsi \
+    --disable-infobars \
+    --app="http://localhost:8082/index.html?v=$APP_VERSION"

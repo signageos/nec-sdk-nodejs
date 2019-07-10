@@ -1,0 +1,11 @@
+#!/sbin/openrc-run
+
+name=$RC_SVCNAME
+description="X11 server with chromium"
+pidfile="/run/$name.pid"
+command="/usr/bin/xinit"
+command_args="/usr/lib/signageos-display-linux/xinitrc -- -nocursor"
+
+depend() {
+    need net localmount loopback nginx
+}
