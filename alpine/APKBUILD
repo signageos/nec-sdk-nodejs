@@ -26,15 +26,22 @@ package() {
 	mkdir -p $pkgdir/usr/share/$pkgname
 	mkdir -p $pkgdir/var/lib/$pkgname/fs/internal
 	mkdir -p $pkgdir/var/lib/$pkgname/system
+
 	cp -r client $pkgdir/usr/share/$pkgname/client
 	cp -r server $pkgdir/usr/share/$pkgname/server
 	chown -R root:root $pkgdir/usr/share/$pkgname
 	chown -R $pkgusers:$pkggroups $pkgdir/var/lib/$pkgname
+
 	ln -sfT /media $pkgdir/var/lib/$pkgname/fs/external
+
 	install -m755 -D xinitrc $pkgdir/usr/lib/$pkgname/xinitrc
+
 	install -m755 -D restart_x11.sh "$pkgdir"/usr/lib/signageos/bin/application/restart
+
 	install -m644 -D nginx.conf "$pkgdir"/etc/nginx/conf.d/$pkgname.conf
+
 	install -m644 -D udev.rules "$pkgdir"/etc/udev/rules.d/99-$pkgname.rules
+
 	install -m755 -D server.initd "$pkgdir"/etc/init.d/$pkgname-server
 	install -m644 -D server.confd "$pkgdir"/etc/conf.d/$pkgname-server
 	install -m755 -D x11.initd "$pkgdir"/etc/init.d/$pkgname-x11
