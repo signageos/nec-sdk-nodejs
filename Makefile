@@ -26,9 +26,8 @@ alpine: dist
 	mkdir -p $(ALPINE_DIST)/
 	cp -r $(DIST)/client $(ALPINE_DIST)/client
 	cp -r $(DIST)/server $(ALPINE_DIST)/server
-	sed "s/pkgver=\"x\"/pkgver=\"${VERSION}\"/" alpine/APKBUILD > $(ALPINE_DIST)/APKBUILD
-	cp alpine/signageos.confd $(ALPINE_DIST)/
-	cp alpine/signageos.initd $(ALPINE_DIST)/
+	cp alpine/* $(ALPINE_DIST)
+	sed -i "s/pkgver=\"x\"/pkgver=\"${VERSION}\"/" $(ALPINE_DIST)/APKBUILD
 	tools/make-package-json-public.js $(ALPINE_DIST)/server/package.json
 	cd $(ALPINE_DIST)/server; npm install
 	cd $(ALPINE_DIST); tar -czf display-linux.tar.gz client server
