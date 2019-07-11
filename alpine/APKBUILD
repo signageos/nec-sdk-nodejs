@@ -19,6 +19,7 @@ source="display-linux.tar.gz
         server.initd
         x11.initd
         xinitrc
+        restart_x11.sh
        "
 
 package() {
@@ -31,6 +32,7 @@ package() {
 	chown -R $pkgusers:$pkggroups $pkgdir/var/lib/$pkgname
 	ln -sfT /media $pkgdir/var/lib/$pkgname/fs/external
 	install -m755 -D xinitrc $pkgdir/usr/lib/$pkgname/xinitrc
+	install -m755 -D restart_x11.sh "$pkgdir"/usr/lib/signageos/bin/application/restart
 	install -m644 -D nginx.conf "$pkgdir"/etc/nginx/conf.d/$pkgname.conf
 	install -m644 -D udev.rules "$pkgdir"/etc/udev/rules.d/99-$pkgname.rules
 	install -m755 -D server.initd "$pkgdir"/etc/init.d/$pkgname-server
