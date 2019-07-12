@@ -3,13 +3,41 @@
 name=$RC_SVCNAME
 description="signageOS client"
 pidfile="/run/$name.pid"
-command="node"
+command="/usr/bin/node"
 command_args="/usr/share/signageos-display-linux/server/server.js"
 command_user="signageos"
+command_group="signageos"
 stopsig=SIGTERM
+logfile="/var/log/signageos/server.log"
+
+env_fs_root_path=/var/lib/signageos-display-linux/fs
+env_fs_system_path=/var/lib/signageos-display-linux/system
 
 depend() {
     need net localmount loopback
     use udev
-    after nginx
+}
+
+start() {
+    ebegin "starting signageOS server"
+    start-stop-daemon --start \
+        --pidfile $pidfile \
+        --make-pidfile \
+        --user $command_user \
+        --group $command_group \
+        --env fs_root_path=$env_fs_root_path \
+        --env fs_system_path=$env_fs_system_path \
+        --stdout $logfile \
+        --stderr $logfile \
+        --background \
+        $command -- $command_args
+    eend $? "failed to start signageOS server"
+}
+
+stop() {
+    ebegin "stopping signageOS server"
+    start-stop-daemon --stop \
+        --pidfile $pidfile \
+        --signal $stopsig
+    eend $? "failed to stop signageOS server"
 }
