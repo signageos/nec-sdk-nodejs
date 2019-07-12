@@ -38,6 +38,7 @@ if (parameters.raven.enabled) {
 		bridge,
 		socketClient,
 		parameters.server.file_system_url,
+		parameters.video.max_count,
 	);
 	await nativeDriver.initialize(parameters.url.staticBaseUrl);
 	const managementNativeDriver = new FrontManagementDriver(
@@ -83,6 +84,7 @@ if (parameters.raven.enabled) {
 		synchronizer,
 		offlineStorageLock,
 		webWorkerFactory,
+		parameters.app.version,
 		parameters.bundledApplet === null ? null : {
 			version: parameters.bundledApplet.version,
 			frontAppletVersion: parameters.bundledApplet.frontAppletVersion,

@@ -57,7 +57,7 @@ if (parameters.raven.enabled) {
 		const videoEventListener = new UnixSocketEventListener(unixSocketPath);
 		return new ServerVideo(fileSystem, systemSettings, key, videoAPI, videoEventListener);
 	};
-	const videoPlayer = new ServerVideoPlayer(4, createVideo);
+	const videoPlayer = new ServerVideoPlayer(parameters.video.max_count, createVideo);
 
 	const nativeDriver = new ManagementDriver(
 		parameters.url.socketUri,

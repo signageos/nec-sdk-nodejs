@@ -353,7 +353,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		throw new Error('Not implemented');
 	}
 
-	public async setCurrentTimeWithTimezone(_currentDate: moment.Moment, _timezone: string): Promise<boolean> {
+	public async setCurrentTimeWithTimezone(_currentDate: moment.Moment, _timezone: string): Promise<void> {
 		throw new Error('Not implemented');
 	}
 

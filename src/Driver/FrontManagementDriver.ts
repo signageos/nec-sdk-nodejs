@@ -225,13 +225,12 @@ export default class FrontManagementDriver implements IManagementDriver {
 		});
 	}
 
-	public async setCurrentTimeWithTimezone(currentDate: moment.Moment, timezone: string): Promise<boolean> {
-		const { wasSet } = await this.bridge.invoke<SetCurrentTimeWithTimezone, { wasSet: boolean }>({
+	public async setCurrentTimeWithTimezone(currentDate: moment.Moment, timezone: string): Promise<void> {
+		await this.bridge.invoke<SetCurrentTimeWithTimezone, {}>({
 			type: SetCurrentTimeWithTimezone,
 			currentDate: currentDate.toDate(),
 			timezone,
 		});
-		return wasSet;
 	}
 
 	public async setDebug(enabled: boolean): Promise<void> {
