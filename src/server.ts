@@ -115,7 +115,10 @@ if (parameters.raven.enabled) {
 
 	async function stopApplication() {
 		console.log('stopping application');
-		await bridgeServer.stop();
+		await Promise.all([
+			bridgeServer.stop(),
+			nativeDriver.servletRunner.closeAll(),
+		]);
 		console.log('application will exit');
 		process.exit(0);
 	}
