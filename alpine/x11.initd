@@ -9,7 +9,7 @@ command_user="signageos"
 logfile="/var/log/signageos/x11.log"
 
 depend() {
-    need net localmount loopback nginx dbus
+    need net localmount loopback nginx dbus signageos-display-linux-server
 }
 
 start() {
