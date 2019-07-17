@@ -22,11 +22,11 @@ start() {
         --stderr $logfile \
         --background \
         $command -- $command_args
-    eend $? "failed to start signageOS server"
+    eend $? "failed to start signageOS X11 server"
 }
 
 stop() {
-    ebegin "stopping signageOS server"
+    ebegin "stopping signageOS X11 server"
     start-stop-daemon --stop --pidfile $pidfile
-    eend $? "failed to stop signageOS server"
+    eend $? "failed to stop signageOS X11 server"
 }
