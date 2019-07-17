@@ -64,23 +64,6 @@ prebuild:
     paths:
       - dist/
 
-build:raspbian:
-  stage: build
-  image: $CI_REGISTRY/signageos/docker-node:8.9.0-debian-build
-  dependencies:
-    - prepare
-    - prebuild
-  before_script: []
-  script:
-    - export VERSION=`cat ./VERSION`
-    - npx @signageos/lib@just-tools version-upgrade $VERSION
-    - ls -l raspbian
-    - make raspbian
-  artifacts:
-    when: on_success
-    paths:
-      - dist/
-
 build:alpine:
   stage: build
   tags:
@@ -100,8 +83,6 @@ build:alpine:
 
 publish:npm:
   stage: publish
-  dependencies:
-    - build:raspbian
   script:
     - npm publish --ignore-scripts --tag $TAG
 
