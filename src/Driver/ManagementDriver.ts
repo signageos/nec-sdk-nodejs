@@ -82,34 +82,8 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		return this.deviceUid;
 	}
 
-	public async appUpgrade(baseUrl: string, version: string) {
-		const internalStorageUnit = await this.internalFileSystem.getInternalStorageUnit();
-		const APP_SUBDIR = '__apps';
-		const destinationDirectory = {
-			storageUnit: internalStorageUnit,
-			filePath: APP_SUBDIR,
-		};
-		const destinationFile = {
-			storageUnit: internalStorageUnit,
-			filePath: APP_SUBDIR + '/' + version + '.deb',
-		};
-		const sourcePath = `/app/linux/${version}/signageos-display-linux.deb`;
-		const sourceUrl = baseUrl + sourcePath;
-
-		console.log('downloading new app ' + version);
-		await this.internalFileSystem.ensureDirectory(destinationDirectory);
-		await this.internalFileSystem.downloadFile(destinationFile, sourceUrl);
-		console.log(`app ${version} downloaded`);
-
-		try {
-			const absoluteFilePath = this.internalFileSystem.getAbsolutePath(destinationFile);
-			await SystemAPI.upgradeApp(absoluteFilePath);
-			console.log('upgraded to version ' + version);
-		} finally {
-			await this.internalFileSystem.deleteFile(destinationFile);
-		}
-
-		return () => SystemAPI.reboot();
+	public async appUpgrade(_baseUrl: string, version: string) {
+		await SystemAPI.upgradeApp(version);
 	}
 
 	public async firmwareGetVersion(): Promise<string> {

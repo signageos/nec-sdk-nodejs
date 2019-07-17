@@ -46,8 +46,8 @@ export async function restartApplication() {
 	await execApiCommand('application', 'restart');
 }
 
-export async function upgradeApp(debFile: string) {
-	await execApiCommand('application', 'upgrade', [debFile], true, true);
+export async function upgradeApp(version: string) {
+	await execApiCommand('application', 'upgrade', [version], true, true);
 }
 
 export async function getFirmwareVersion() {
