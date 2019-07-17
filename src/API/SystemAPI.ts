@@ -42,6 +42,10 @@ export async function applicationReady() {
 	await execApiCommand('application', 'ready');
 }
 
+export async function applicationNotReady() {
+	await execApiCommand('application', 'not_ready');
+}
+
 export async function restartApplication() {
 	await execApiCommand('application', 'restart');
 }

@@ -27,7 +27,7 @@ import OverlayRenderer from './Overlay/OverlayRenderer';
 import CECListener from './CEC/CECListener';
 import FileDetailsProvider from './FileSystem/FileDetailsProvider';
 import FileMetadataCache from './FileSystem/FileMetadataCache';
-import { applicationReady } from './API/SystemAPI';
+import { applicationReady, applicationNotReady } from './API/SystemAPI';
 import FSSystemSettings from './SystemSettings/FSSystemSettings';
 import { createDisplay } from './Driver/Display/displayFactory';
 import { getAutoVerification } from './helper';
@@ -119,6 +119,7 @@ if (parameters.raven.enabled) {
 			bridgeServer.stop(),
 			nativeDriver.servletRunner.closeAll(),
 		]);
+		await applicationNotReady();
 		console.log('application will exit');
 		process.exit(0);
 	}
