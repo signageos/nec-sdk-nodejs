@@ -12,6 +12,10 @@ export default function socketHandleApplication(socket: ISocket) {
 	socket.bindMessage(NotifyApplicationAlive, () => {
 		resetRestartTimeout();
 	});
+	socket.getDisconnectedPromise().then(async () => {
+		console.log('client application disconnected which means that it probably crashed. Restarting...');
+		await restartApplication();
+	});
 }
 
 function resetRestartTimeout() {
