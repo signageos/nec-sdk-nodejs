@@ -7,7 +7,7 @@ command="/usr/bin/node"
 command_args="/usr/share/signageos-display-linux/server/server.js"
 command_user="signageos"
 command_group="signageos"
-stopsig=SIGTERM
+stopsig=TERM
 
 env_fs_root_path=/var/lib/signageos-display-linux/fs
 env_fs_system_path=/var/lib/signageos-display-linux/system
