@@ -6,10 +6,9 @@ pidfile="/run/$name.pid"
 command="/usr/bin/xinit"
 command_args="/usr/lib/signageos-display-linux/xinitrc -- -nocursor"
 command_user="signageos"
-logfile="/var/log/signageos/x11.log"
 
 depend() {
-    need net localmount loopback nginx dbus signageos-display-linux-server
+    need net localmount loopback logger nginx dbus signageos-display-linux-server
 }
 
 start() {
@@ -18,8 +17,8 @@ start() {
         --pidfile $pidfile \
         --make-pidfile \
         --user $command_user \
-        --stdout $logfile \
-        --stderr $logfile \
+        --stdout-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.info'" \
+        --stderr-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.err'" \
         --background \
         $command -- $command_args
     eend $? "failed to start signageOS X11 server"

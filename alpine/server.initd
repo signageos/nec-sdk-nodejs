@@ -8,13 +8,12 @@ command_args="/usr/share/signageos-display-linux/server/server.js"
 command_user="signageos"
 command_group="signageos"
 stopsig=SIGTERM
-logfile="/var/log/signageos/server.log"
 
 env_fs_root_path=/var/lib/signageos-display-linux/fs
 env_fs_system_path=/var/lib/signageos-display-linux/system
 
 depend() {
-    need net localmount loopback
+    need net localmount loopback logger
     use udev
 }
 
@@ -27,8 +26,8 @@ start() {
         --group $command_group \
         --env fs_root_path=$env_fs_root_path \
         --env fs_system_path=$env_fs_system_path \
-        --stdout $logfile \
-        --stderr $logfile \
+        --stdout-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.info'" \
+        --stderr-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.err'" \
         --background \
         $command -- $command_args
     eend $? "failed to start signageOS server"
