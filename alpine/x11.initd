@@ -13,6 +13,11 @@ depend() {
 
 start() {
     ebegin "starting signageOS X11 server"
+    einfo "waiting for server to start accepting connections"
+    while ! /usr/bin/signageos application is_ready; do
+        sleep 1
+    done
+    einfo "server is ready, starting now"
     start-stop-daemon --start \
         --pidfile $pidfile \
         --make-pidfile \
