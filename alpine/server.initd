@@ -9,12 +9,24 @@ command_user="signageos"
 command_group="signageos"
 stopsig=TERM
 
+extra_started_commands="reload_storage_units"
+
 env_fs_root_path=/var/lib/signageos-display-linux/fs
 env_fs_system_path=/var/lib/signageos-display-linux/system
 
 depend() {
     need net localmount loopback logger
     use udev
+}
+
+reload_storage_units() {
+    pid=`cat $pidfile`
+    if [ -n "$pid" ]; then
+        kill -USR2 $pid
+        eend $? "failed to reload storage units"
+    else
+        eend 1 "pidfile not found"
+    fi
 }
 
 start() {
