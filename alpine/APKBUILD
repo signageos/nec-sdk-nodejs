@@ -14,7 +14,6 @@ options="!check"
 subpackages="$pkgname-openrc"
 source="display-linux.tar.gz
         nginx.conf
-        udev.rules
         server.initd
         x11.initd
         xinitrc
@@ -38,8 +37,6 @@ package() {
 	install -m755 -D restart_x11.sh "$pkgdir"/usr/lib/signageos/bin/application/restart
 
 	install -m644 -D nginx.conf "$pkgdir"/etc/nginx/conf.d/$pkgname.conf
-
-	install -m644 -D udev.rules "$pkgdir"/etc/udev/rules.d/99-$pkgname.rules
 
 	install -m755 -D server.initd "$pkgdir"/etc/init.d/$pkgname-server
 	install -m755 -D x11.initd "$pkgdir"/etc/init.d/$pkgname-x11
