@@ -7,17 +7,18 @@ url="https://www.signageos.io"
 pkgusers="signageos"
 pkggroups="signageos"
 arch="all"
-license="MIT"
+license="custom"
 depends="sudo nodejs ffmpeg nginx"
 makedepends="npm"
 options="!check"
-subpackages="$pkgname-openrc"
+subpackages="$pkgname-openrc $pkgname-doc"
 source="display-linux.tar.gz
         nginx.conf
         server.initd
         x11.initd
         xinitrc
         restart_x11.sh
+        LICENSE
        "
 
 package() {
@@ -40,4 +41,6 @@ package() {
 
 	install -m755 -D server.initd "$pkgdir"/etc/init.d/$pkgname-server
 	install -m755 -D x11.initd "$pkgdir"/etc/init.d/$pkgname-x11
+
+	install -m644 -D LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }

@@ -21,7 +21,6 @@ before_script:
   - VERSION=`cat ./VERSION`
   - tools/npm-login.sh
   - npx @signageos/lib@just-tools version-upgrade $VERSION
-  - mkdir -p dist
   - npm install --tag $TAG
 
 prepare:

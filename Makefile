@@ -5,6 +5,7 @@ all: dist
 
 alpine: dist
 	mkdir -p $(ALPINE_DIST)/
+	cp $(DIST)/LICENSE $(ALPINE_DIST)
 	cp -r $(DIST)/client $(ALPINE_DIST)/client
 	cp -r $(DIST)/server $(ALPINE_DIST)/server
 	cp alpine/* $(ALPINE_DIST)
@@ -19,6 +20,7 @@ dist:
 	mkdir -p $(DIST)/server
 	mkdir -p $(DIST)/client
 	cp README.md $(DIST)
+	cp LICENSE $(DIST)
 	envsubst < index.html > $(DIST)/client/index.html
 	cp node_modules/@signageos/front-display/dist/webWorker.js $(DIST)/client/webWorker.js
 	cp node_modules/@signageos/front-osd/dist/index.html $(DIST)/client/osd.html
