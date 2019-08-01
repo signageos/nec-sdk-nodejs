@@ -291,24 +291,18 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		return () => this.appRestart();
 	}
 
-	public async setTimer(
+	public getTimers() {
+		return this.display.getTimers();
+	}
+
+	public setTimer(
 		type: TimerType,
 		timeOn: string | null,
 		timeOff: string | null,
 		weekdays: TimerWeekday[],
 		_volume: number,
 	): Promise<void> {
-		const TYPE_TO_INDEX = {
-			[TimerType.TIMER_1]: 0,
-			[TimerType.TIMER_2]: 1,
-			[TimerType.TIMER_3]: 2,
-			[TimerType.TIMER_4]: 3,
-			[TimerType.TIMER_5]: 4,
-			[TimerType.TIMER_6]: 5,
-			[TimerType.TIMER_7]: 6,
-		};
-		const index = TYPE_TO_INDEX[type];
-		await this.display.setShedule(index, timeOn, timeOff, weekdays);
+		return this.display.setTimer(type, timeOn, timeOff, weekdays);
 	}
 
 	public async remoteControlIsEnabled(): Promise<boolean> {

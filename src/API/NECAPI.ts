@@ -5,6 +5,14 @@ export enum ScheduleEvent {
 	OFF = 2,
 }
 
+export interface ISchedule {
+	index: number;
+	event: ScheduleEvent;
+	hour: number;
+	minute: number;
+	days: number;
+}
+
 export interface INECAPI {
 	isNEC(): Promise<boolean>;
 	isDisplayOn(): Promise<boolean>;
@@ -14,6 +22,7 @@ export interface INECAPI {
 	setBrightness(brightness: number): Promise<void>;
 	getVolume(): Promise<number>;
 	setVolume(volume: number): Promise<void>;
+	getSchedules(): Promise<ISchedule[]>;
 	setSchedule(index: number, event: ScheduleEvent, hour: number, minute: number, days: number): Promise<void>;
 	disableSchedule(index: number): Promise<void>;
 	setDisplayTimeFromSystemTime(): Promise<void>;
@@ -59,6 +68,11 @@ export function createNECAPI(): INECAPI {
 			await execApiCommand('nec', 'set_volume', [volume.toString()]);
 		},
 
+		async getSchedules() {
+			const result = await execApiCommand('nec', 'get_schedules');
+			return parseGetSchedulesOutput(result.trim());
+		},
+
 		async setSchedule(index: number, event: ScheduleEvent, hour: number, minute: number, days: number) {
 			await execApiCommand('nec', 'set_schedule', [
 				index.toString(),
@@ -77,4 +91,25 @@ export function createNECAPI(): INECAPI {
 			await execApiCommand('nec', 'refresh_display_time');
 		},
 	};
+}
+
+export function parseGetSchedulesOutput(rawOutput: string): ISchedule[] {
+	const schedules: ISchedule[] = [];
+	if (rawOutput) {
+		for (let line of rawOutput.split("\n")) {
+			const [index, event, hour, minute, days] = line.split(',');
+			if (!index || !event || !hour || !minute || !days) {
+				throw new Error(`Invalid output of getSchedules: index=${index}, event=${event}, hour=${hour}, minute=${minute}, days=${days}`);
+			}
+			const schedule: ISchedule = {
+				index: parseInt(index),
+				event: parseInt(event),
+				hour: parseInt(hour),
+				minute: parseInt(minute),
+				days: parseInt(days),
+			};
+			schedules.push(schedule);
+		}
+	}
+	return schedules;
 }

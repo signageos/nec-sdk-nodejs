@@ -41,6 +41,7 @@ export default async function handleMessage(
 		ScreenMessages.SetOrientation |
 		PowerMessages.AppRestart |
 		PowerMessages.SystemReboot |
+		PowerMessages.GetTimers |
 		PowerMessages.SetTimer |
 		ScreenMessages.PowerOff |
 		ScreenMessages.PowerOn |
@@ -137,6 +138,10 @@ export default async function handleMessage(
 		case PowerMessages.SystemReboot:
 			await nativeDriver.systemReboot();
 			return {};
+
+		case PowerMessages.GetTimers:
+			const timers = await nativeDriver.getTimers();
+			return { timers };
 
 		case PowerMessages.SetTimer:
 			await nativeDriver.setTimer(

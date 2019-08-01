@@ -32,6 +32,7 @@ import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Managem
 import IBatteryStatus from '@signageos/front-display/es6/NativeDevice/Battery/IBatteryStatus';
 import ManagementCapability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
 import IServletRunner from '@signageos/front-display/es6/Servlet/IServletRunner';
+import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
 
@@ -192,6 +193,13 @@ export default class FrontManagementDriver implements IManagementDriver {
 			type: ScreenMessages.IsPoweredOn,
 		});
 		return isPoweredOn;
+	}
+
+	public async getTimers(): Promise<ITimer[]> {
+		const { timers } = await this.bridge.invoke<PowerMessages.GetTimers, { timers: ITimer[] }>({
+			type: PowerMessages.GetTimers,
+		});
+		return timers;
 	}
 
 	public async setTimer(

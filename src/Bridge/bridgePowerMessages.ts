@@ -11,6 +11,11 @@ export interface SystemReboot {
 	type: typeof SystemReboot;
 }
 
+export const GetTimers = 'Power.GetTimers';
+export interface GetTimers {
+	type: typeof GetTimers;
+}
+
 export const SetTimer = 'Power.SetTimer';
 export interface SetTimer {
 	type: typeof SetTimer;
