@@ -1,0 +1,46 @@
+# Maintainer: signageOS <dev@signageos.io>
+pkgname="signageos-display-linux"
+pkgver="x"
+pkgrel=0
+pkgdesc="SignageOS client"
+url="https://www.signageos.io"
+pkgusers="signageos"
+pkggroups="signageos"
+arch="all"
+license="custom"
+depends="sudo nodejs ffmpeg nginx"
+makedepends="npm"
+options="!check"
+subpackages="$pkgname-openrc $pkgname-doc"
+source="display-linux.tar.gz
+        nginx.conf
+        server.initd
+        x11.initd
+        xinitrc
+        restart_x11.sh
+        LICENSE
+       "
+
+package() {
+	mkdir -p $pkgdir/usr/share/$pkgname
+	mkdir -p $pkgdir/var/lib/$pkgname/fs/internal
+	mkdir -p $pkgdir/var/lib/$pkgname/system
+
+	cp -r client $pkgdir/usr/share/$pkgname/client
+	cp -r server $pkgdir/usr/share/$pkgname/server
+	chown -R root:root $pkgdir/usr/share/$pkgname
+	chown -R $pkgusers:$pkggroups $pkgdir/var/lib/$pkgname
+
+	ln -sfT /media $pkgdir/var/lib/$pkgname/fs/external
+
+	install -m755 -D xinitrc $pkgdir/usr/lib/$pkgname/xinitrc
+
+	install -m755 -D restart_x11.sh "$pkgdir"/usr/lib/signageos/bin/application/restart
+
+	install -m644 -D nginx.conf "$pkgdir"/etc/nginx/conf.d/$pkgname.conf
+
+	install -m755 -D server.initd "$pkgdir"/etc/init.d/$pkgname-server
+	install -m755 -D x11.initd "$pkgdir"/etc/init.d/$pkgname-x11
+
+	install -m644 -D LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

@@ -2,6 +2,7 @@ import IDisplay from './IDisplay';
 import DisplayCapability from './DisplayCapability';
 import * as SystemAPI from '../../API/SystemAPI';
 import ISystemSettings from '../../SystemSettings/ISystemSettings';
+import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
 
 export default class EmulatedDisplay implements IDisplay {
@@ -44,7 +45,11 @@ export default class EmulatedDisplay implements IDisplay {
 		await this.systemSettings.setVolume(volume);
 	}
 
-	public setShedule(_index: number, _timeOn: string | null, _timeOff: string | null, _days: TimerWeekday[]): Promise<void> {
+	public getTimers(): Promise<ITimer[]> {
+		throw new Error('Not implemented');
+	}
+
+	public setTimer(_index: number, _timeOn: string | null, _timeOff: string | null, _days: TimerWeekday[]): Promise<void> {
 		throw new Error('Not implemented');
 	}
 }

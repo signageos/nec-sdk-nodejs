@@ -67,7 +67,8 @@ exports = module.exports = Object.assign({}, basicParameters, {
 		system: process.env.fs_system_path,
 	},
 	video: {
-		socket_root: '/tmp'
+		socket_root: '/tmp',
+		max_count: 4,
 	},
 	bundledApplet: process.env.bundled_applet === '1'
 		? {

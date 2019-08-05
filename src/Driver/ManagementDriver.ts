@@ -82,34 +82,8 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		return this.deviceUid;
 	}
 
-	public async appUpgrade(baseUrl: string, version: string) {
-		const internalStorageUnit = await this.internalFileSystem.getInternalStorageUnit();
-		const APP_SUBDIR = '__apps';
-		const destinationDirectory = {
-			storageUnit: internalStorageUnit,
-			filePath: APP_SUBDIR,
-		};
-		const destinationFile = {
-			storageUnit: internalStorageUnit,
-			filePath: APP_SUBDIR + '/' + version + '.deb',
-		};
-		const sourcePath = `/app/linux/${version}/signageos-display-linux.deb`;
-		const sourceUrl = baseUrl + sourcePath;
-
-		console.log('downloading new app ' + version);
-		await this.internalFileSystem.ensureDirectory(destinationDirectory);
-		await this.internalFileSystem.downloadFile(destinationFile, sourceUrl);
-		console.log(`app ${version} downloaded`);
-
-		try {
-			const absoluteFilePath = this.internalFileSystem.getAbsolutePath(destinationFile);
-			await SystemAPI.upgradeApp(absoluteFilePath);
-			console.log('upgraded to version ' + version);
-		} finally {
-			await this.internalFileSystem.deleteFile(destinationFile);
-		}
-
-		return () => SystemAPI.reboot();
+	public async appUpgrade(_baseUrl: string, version: string) {
+		await SystemAPI.upgradeApp(version);
 	}
 
 	public async firmwareGetVersion(): Promise<string> {
@@ -317,24 +291,18 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		return () => this.appRestart();
 	}
 
-	public async setTimer(
+	public getTimers() {
+		return this.display.getTimers();
+	}
+
+	public setTimer(
 		type: TimerType,
 		timeOn: string | null,
 		timeOff: string | null,
 		weekdays: TimerWeekday[],
 		_volume: number,
 	): Promise<void> {
-		const TYPE_TO_INDEX = {
-			[TimerType.TIMER_1]: 0,
-			[TimerType.TIMER_2]: 1,
-			[TimerType.TIMER_3]: 2,
-			[TimerType.TIMER_4]: 3,
-			[TimerType.TIMER_5]: 4,
-			[TimerType.TIMER_6]: 5,
-			[TimerType.TIMER_7]: 6,
-		};
-		const index = TYPE_TO_INDEX[type];
-		await this.display.setShedule(index, timeOn, timeOff, weekdays);
+		return this.display.setTimer(type, timeOn, timeOff, weekdays);
 	}
 
 	public async remoteControlIsEnabled(): Promise<boolean> {
@@ -353,7 +321,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		throw new Error('Not implemented');
 	}
 
-	public async setCurrentTimeWithTimezone(_currentDate: moment.Moment, _timezone: string): Promise<boolean> {
+	public async setCurrentTimeWithTimezone(_currentDate: moment.Moment, _timezone: string): Promise<void> {
 		throw new Error('Not implemented');
 	}
 

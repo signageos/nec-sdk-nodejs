@@ -5,6 +5,7 @@ services:
 stages:
   - prepare
   - test
+  - prebuild
   - build
   - publish
   - release
@@ -20,7 +21,6 @@ before_script:
   - VERSION=`cat ./VERSION`
   - tools/npm-login.sh
   - npx @signageos/lib@just-tools version-upgrade $VERSION
-  - mkdir -p dist
   - npm install --tag $TAG
 
 prepare:
@@ -52,24 +52,36 @@ test:lint:
   script:
     - npm run lint
 
-build:
-  stage: build
-  image: $CI_REGISTRY/signageos/docker-node:8.9.0-debian-build
+prebuild:
+  stage: prebuild
   dependencies:
     - prepare
   script:
-    - export VERSION
-    - npm run prepare --production
+    - npm run build --production
   artifacts:
     when: on_success
     paths:
       - dist/
 
-publish:npm:
-  stage: publish
+build:alpine:
+  stage: build
+  tags:
+    - armhf
+    - alpine
   dependencies:
     - prepare
-    - build
+    - prebuild
+  before_script: []
+  script:
+    - rm -rf ~/packages
+    - VERSION=`cat ./VERSION`
+    - npx @signageos/lib@just-tools version-upgrade $VERSION
+    - export VERSION=`echo $VERSION | sed -r 's/-[^.]+//g'` # omit branch version
+    - make alpine
+    - aws s3 cp ~/packages/dist/armhf "$AWS_ALPINE_REPO_S3_PATH/armhf" --recursive --exclude "*" --include "signageos-display-linux*-$VERSION-r0.apk"
+
+publish:npm:
+  stage: publish
   script:
     - npm publish --ignore-scripts --tag $TAG
 

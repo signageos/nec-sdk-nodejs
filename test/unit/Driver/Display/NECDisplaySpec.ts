@@ -2,7 +2,9 @@ import * as should from 'should';
 import * as sinon from 'sinon';
 import NECDisplay from '../../../../src/Driver/Display/NECDisplay';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
-import { ScheduleEvent } from '../../../../src/API/NECAPI';
+import { ScheduleEvent, ISchedule } from '../../../../src/API/NECAPI';
+import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
+import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
 
 function createMockNECAPI() {
 	return {
@@ -13,6 +15,7 @@ function createMockNECAPI() {
 		setBrightness: sinon.stub().resolves(),
 		getVolume: sinon.stub(),
 		setVolume: sinon.stub().resolves(),
+		getSchedules: sinon.stub().resolves(),
 		setSchedule: sinon.stub().resolves(),
 		disableSchedule: sinon.stub().resolves(),
 		setDisplayTimeFromSystemTime: sinon.stub().resolves(),
@@ -116,7 +119,72 @@ describe('Driver.Display.NECDisplay', function () {
 		}
 	});
 
-	describe('setSchedule', function () {
+	describe('getTimers', function () {
+
+		it('should convert schedules to timers and return them', async function () {
+			const schedules: ISchedule[] = [
+				{
+					index: 0,
+					event: ScheduleEvent.ON,
+					hour: 8,
+					minute: 0,
+					days: 14,
+				},
+				{
+					index: 1,
+					event: ScheduleEvent.OFF,
+					hour: 20,
+					minute: 30,
+					days: 14,
+				},
+				{
+					index: 4,
+					event: ScheduleEvent.ON,
+					hour: 16,
+					minute: 45,
+					days: 96,
+				},
+				{
+					index: 7,
+					event: ScheduleEvent.OFF,
+					hour: 18,
+					minute: 1,
+					days: 96,
+				},
+			];
+			const expectedTimers: ITimer[] = [
+				{
+					type: TimerType.TIMER_1,
+					timeOn: '08:00:00',
+					timeOff: '20:30:00',
+					weekdays: [TimerWeekday.tue, TimerWeekday.wed, TimerWeekday.thu],
+					volume: 100,
+				},
+				{
+					type: TimerType.TIMER_3,
+					timeOn: '16:45:00',
+					timeOff: null,
+					weekdays: [TimerWeekday.sat, TimerWeekday.sun],
+					volume: 100,
+				},
+				{
+					type: TimerType.TIMER_4,
+					timeOn: null,
+					timeOff: '18:01:00',
+					weekdays: [TimerWeekday.sat, TimerWeekday.sun],
+					volume: 100,
+				},
+			];
+
+			const necAPI = createMockNECAPI();
+			necAPI.getSchedules.resolves(schedules);
+			const display = new NECDisplay(necAPI as any);
+			const actualTimers = await display.getTimers();
+			actualTimers.should.deepEqual(expectedTimers);
+		});
+	});
+
+	describe('setTimer', function () {
 
 		const indexes = [
 			{
@@ -162,7 +230,7 @@ describe('Driver.Display.NECDisplay', function () {
 				async function () {
 					const necAPI = createMockNECAPI();
 					const display = new NECDisplay(necAPI as any);
-					await display.setShedule(index.timerIndex, '08:10:00', '21:30:00', [TimerWeekday.mon]);
+					await display.setTimer(index.timerIndex, '08:10:00', '21:30:00', [TimerWeekday.mon]);
 					necAPI.setSchedule.callCount.should.equal(2);
 					necAPI.setSchedule.getCall(0).args.should.deepEqual([index.onIndex, ScheduleEvent.ON, 8, 10, 1]);
 					necAPI.setSchedule.getCall(1).args.should.deepEqual([index.offIndex, ScheduleEvent.OFF, 21, 30, 1]);
@@ -174,7 +242,7 @@ describe('Driver.Display.NECDisplay', function () {
 				async function () {
 					const necAPI = createMockNECAPI();
 					const display = new NECDisplay(necAPI as any);
-					await display.setShedule(index.timerIndex, '08:10:00', null, [TimerWeekday.tue]);
+					await display.setTimer(index.timerIndex, '08:10:00', null, [TimerWeekday.tue]);
 					necAPI.setSchedule.callCount.should.equal(1);
 					necAPI.setSchedule.getCall(0).args.should.deepEqual([index.onIndex, ScheduleEvent.ON, 8, 10, 2]);
 					necAPI.disableSchedule.callCount.should.equal(1);
@@ -187,7 +255,7 @@ describe('Driver.Display.NECDisplay', function () {
 				async function () {
 					const necAPI = createMockNECAPI();
 					const display = new NECDisplay(necAPI as any);
-					await display.setShedule(index.timerIndex, null, '20:00:00', [TimerWeekday.wed]);
+					await display.setTimer(index.timerIndex, null, '20:00:00', [TimerWeekday.wed]);
 					necAPI.setSchedule.callCount.should.equal(1);
 					necAPI.setSchedule.getCall(0).args.should.deepEqual([index.offIndex, ScheduleEvent.OFF, 20, 0, 4]);
 					necAPI.disableSchedule.callCount.should.equal(1);
@@ -200,7 +268,7 @@ describe('Driver.Display.NECDisplay', function () {
 				async function () {
 					const necAPI = createMockNECAPI();
 					const display = new NECDisplay(necAPI as any);
-					await display.setShedule(index.timerIndex, null, null, [TimerWeekday.thu]);
+					await display.setTimer(index.timerIndex, null, null, [TimerWeekday.thu]);
 					necAPI.disableSchedule.callCount.should.equal(2);
 					necAPI.disableSchedule.getCall(0).args[0].should.equal(index.onIndex);
 					necAPI.disableSchedule.getCall(1).args[0].should.equal(index.offIndex);
@@ -271,7 +339,7 @@ describe('Driver.Display.NECDisplay', function () {
 				async function () {
 					const necAPI = createMockNECAPI();
 					const display = new NECDisplay(necAPI as any);
-					await display.setShedule(0, '08:00:00', '21:30:00', daysList.days);
+					await display.setTimer(0, '08:00:00', '21:30:00', daysList.days);
 					necAPI.setSchedule.callCount.should.equal(2);
 					necAPI.setSchedule.getCall(0).args.should.deepEqual([0, ScheduleEvent.ON, 8, 0, daysList.expectedBytesValue]);
 					necAPI.setSchedule.getCall(1).args.should.deepEqual([1, ScheduleEvent.OFF, 21, 30, daysList.expectedBytesValue]);

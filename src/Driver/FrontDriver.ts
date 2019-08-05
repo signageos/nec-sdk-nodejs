@@ -61,12 +61,13 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		private bridge: BridgeClient,
 		private socketClient: ISocket,
 		private fileSystemUrl: string,
+		maxVideoCount: number,
 	) {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
 		this.lock = new AsyncLock();
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
 		this.bridgeVideoClient = new BridgeVideoClient(this.window, () => this.getScreenOrientation(), this.lock, socketClient);
-		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridgeVideoClient);
+		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridgeVideoClient, maxVideoCount);
 		this.stream = new BridgeStreamPlayer(this.bridgeVideoClient);
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);
 		this.overlay = new OverlayHandler(this.window, this.frontAppletPrefix, this.bridge);

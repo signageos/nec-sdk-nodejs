@@ -1,0 +1,36 @@
+#!/sbin/openrc-run
+
+name=$RC_SVCNAME
+description="X11 server with chromium"
+pidfile="/run/$name.pid"
+command="/usr/bin/xinit"
+command_args="/usr/lib/signageos-display-linux/xinitrc -- -nocursor"
+command_user="signageos"
+
+depend() {
+    need net localmount loopback logger nginx dbus signageos-display-linux-server
+}
+
+start() {
+    ebegin "starting signageOS X11 server"
+    einfo "waiting for server to start accepting connections"
+    while ! /usr/bin/signageos application is_ready; do
+        sleep 1
+    done
+    einfo "server is ready, starting now"
+    start-stop-daemon --start \
+        --pidfile $pidfile \
+        --make-pidfile \
+        --user $command_user \
+        --stdout-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.info'" \
+        --stderr-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.err'" \
+        --background \
+        $command -- $command_args
+    eend $? "failed to start signageOS X11 server"
+}
+
+stop() {
+    ebegin "stopping signageOS X11 server"
+    start-stop-daemon --stop --pidfile $pidfile
+    eend $? "failed to stop signageOS X11 server"
+}

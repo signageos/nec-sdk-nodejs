@@ -1,4 +1,6 @@
 import * as childProcess from "child_process";
+import * as Debug from 'debug';
+const debug = Debug('@signageos/display-linux:API:apiCommand');
 
 export function execApiCommand(
 	namespace: string,
@@ -37,7 +39,13 @@ export function spawnApiCommandChildProcess(
 	const spawnedChildProcess = childProcess.spawn(commandName, commandArgs as ReadonlyArray<string>);
 	if (verbose) {
 		spawnedChildProcess.stdout.on('data', (chunk: any) => console.log(fullCommand.join(' '), chunk.toString()));
-		spawnedChildProcess.stderr.on('data', (chunk: any) => console.error(fullCommand.join(' '), chunk.toString()));
+		spawnedChildProcess.stderr.on('data', (chunk: any) => {
+			if (verbose) {
+				console.error(fullCommand.join(' '), chunk.toString());
+			} else {
+				debug(`spawnApiCommandChildProcess`, command, args, chunk.toString());
+			}
+		});
 	}
 	return spawnedChildProcess;
 }

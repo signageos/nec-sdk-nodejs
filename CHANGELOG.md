@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Video API acceptance tests
+- When acceptance tests are running, mute applet so it doesn't conflict with the tests
+- getTimers method in management API
+
+### Fixed
+- Casually not loading of applet after restart app
+- Better user information durring register, verify process (including offline page)
+- Couldn't stop server because several child processes wouldn't close properly
+
 ## [0.4.0] - 2019-06-10
 ### Added
 - File System API supports copyFile, writeFile

@@ -30,7 +30,7 @@ describe('Driver.FrontDriver', function () {
 				socketClient: new EventEmitter(),
 			};
 
-			const frontDriver = new FrontDriver(createWindow(), 'hug', bridge as any, createMockSocket(), 'http://localhost:8081');
+			const frontDriver = new FrontDriver(createWindow(), 'hug', bridge as any, createMockSocket(), 'http://localhost:8081', 1);
 			const model = await frontDriver.getModel();
 			model.should.equal('model1');
 		});

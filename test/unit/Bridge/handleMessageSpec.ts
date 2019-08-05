@@ -20,6 +20,9 @@ import {
 	IsDirectory,
 	ListStorageUnits,
 } from '../../../src/Bridge/bridgeFileSystemMessages';
+import * as PowerMessages from '../../../src/Bridge/bridgePowerMessages';
+import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
+import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
 
 const testStorageUnit = {
 	type: 'test',
@@ -236,5 +239,57 @@ describe('Bridge.handleMessage', function () {
 			type: ListStorageUnits,
 		});
 		result.should.deepEqual({ storageUnits });
+	});
+
+	it('should set timer', async function() {
+		const nativeDriver = {
+			setTimer: sinon.stub().resolves(),
+		};
+		await handleMessage({} as any, {} as any, nativeDriver as any, {} as any, {} as any, {
+			type: PowerMessages.SetTimer,
+			timerType: TimerType.TIMER_3,
+			timeOn: '08:00:00',
+			timeOff: '20:00:00',
+			weekdays: [TimerWeekday.wed, TimerWeekday.thu],
+			volume: 50,
+		});
+		await handleMessage({} as any, {} as any, nativeDriver as any, {} as any, {} as any, {
+			type: PowerMessages.SetTimer,
+			timerType: TimerType.TIMER_4,
+			timeOn: '10:30:00',
+			timeOff: null,
+			weekdays: [TimerWeekday.mon],
+			volume: 70,
+		});
+		await handleMessage({} as any, {} as any, nativeDriver as any, {} as any, {} as any, {
+			type: PowerMessages.SetTimer,
+			timerType: TimerType.TIMER_5,
+			timeOn: null,
+			timeOff: '22:00:00',
+			weekdays: [TimerWeekday.tue, TimerWeekday.wed, TimerWeekday.thu, TimerWeekday.fri],
+			volume: 100,
+		});
+		nativeDriver.setTimer.callCount.should.equal(3);
+		nativeDriver.setTimer.getCall(0).args.should.deepEqual([
+			TimerType.TIMER_3,
+			'08:00:00',
+			'20:00:00',
+			[TimerWeekday.wed, TimerWeekday.thu],
+			50,
+		]);
+		nativeDriver.setTimer.getCall(1).args.should.deepEqual([
+			TimerType.TIMER_4,
+			'10:30:00',
+			null,
+			[TimerWeekday.mon],
+			70,
+		]);
+		nativeDriver.setTimer.getCall(2).args.should.deepEqual([
+			TimerType.TIMER_5,
+			null,
+			'22:00:00',
+			[TimerWeekday.tue, TimerWeekday.wed, TimerWeekday.thu, TimerWeekday.fri],
+			100,
+		]);
 	});
 });

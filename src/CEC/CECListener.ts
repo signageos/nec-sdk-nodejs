@@ -67,11 +67,13 @@ export default class CECListener implements ICECListener {
 
 	private startCecListenerChildProcess() {
 		this.cecListenerChildProcess = listenToCECKeypresses(this.unixSocketPath);
-		this.cecListenerChildProcess.on('close', (code: number, signal: string | null) => {
+		this.cecListenerChildProcess.once('close', (code: number, signal: string | null) => {
 			console.warn('CEC process closed unexpectedly with code ' + code + (signal ? '; signal: ' + signal : ''));
+			this.cecListenerChildProcess = null;
 		});
-		this.cecListenerChildProcess.on('error', (error: Error) => {
+		this.cecListenerChildProcess.once('error', (error: Error) => {
 			console.error('CEC listener error', error);
+			this.cecListenerChildProcess = null;
 		});
 	}
 
@@ -95,6 +97,7 @@ export default class CECListener implements ICECListener {
 				2000,
 			);
 			await closedPromise;
+			this.cecListenerChildProcess = null;
 		}
 	}
 }

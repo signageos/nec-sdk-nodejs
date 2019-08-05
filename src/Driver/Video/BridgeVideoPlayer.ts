@@ -10,7 +10,12 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 	constructor(
 		private fileSystemUrl: string,
 		private bridgeVideoClient: BridgeVideoClient,
+		private maxVideoCount: number,
 	) {}
+
+	public getMaxVideoCount(): number {
+		return this.maxVideoCount;
+	}
 
 	@locked('video')
 	public async prepare(uri: string, x: number, y: number, width: number, height: number): Promise<void> {

@@ -27,7 +27,7 @@ import OverlayRenderer from './Overlay/OverlayRenderer';
 import CECListener from './CEC/CECListener';
 import FileDetailsProvider from './FileSystem/FileDetailsProvider';
 import FileMetadataCache from './FileSystem/FileMetadataCache';
-import { applicationReady } from './API/SystemAPI';
+import { applicationReady, applicationNotReady } from './API/SystemAPI';
 import FSSystemSettings from './SystemSettings/FSSystemSettings';
 import { createDisplay } from './Driver/Display/displayFactory';
 import { getAutoVerification } from './helper';
@@ -57,7 +57,7 @@ if (parameters.raven.enabled) {
 		const videoEventListener = new UnixSocketEventListener(unixSocketPath);
 		return new ServerVideo(fileSystem, systemSettings, key, videoAPI, videoEventListener);
 	};
-	const videoPlayer = new ServerVideoPlayer(4, createVideo);
+	const videoPlayer = new ServerVideoPlayer(parameters.video.max_count, createVideo);
 
 	const nativeDriver = new ManagementDriver(
 		parameters.url.socketUri,
@@ -115,7 +115,11 @@ if (parameters.raven.enabled) {
 
 	async function stopApplication() {
 		console.log('stopping application');
-		await bridgeServer.stop();
+		await Promise.all([
+			bridgeServer.stop(),
+			nativeDriver.servletRunner.closeAll(),
+		]);
+		await applicationNotReady();
 		console.log('application will exit');
 		process.exit(0);
 	}
