@@ -2,10 +2,10 @@ import IDisplay from './IDisplay';
 import ISystemSettings from '../../SystemSettings/ISystemSettings';
 import NECDisplay from './NECDisplay';
 import EmulatedDisplay from './EmulatedDisplay';
-import { createNECAPI } from '../../API/NECAPI';
+import { NECAPI } from '../../API/NECAPI';
 
 export async function createDisplay(systemSettings: ISystemSettings): Promise<IDisplay> {
-	const necAPI = createNECAPI();
+	const necAPI = new NECAPI();
 	try {
 		const isNECDisplay = await necAPI.isNEC();
 		if (isNECDisplay) {

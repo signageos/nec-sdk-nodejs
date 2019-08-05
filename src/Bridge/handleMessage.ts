@@ -147,7 +147,7 @@ export default async function handleMessage(
 			await nativeDriver.setTimer(
 				message.timerType,
 				message.timeOn,
-				message.timeOn,
+				message.timeOff,
 				message.weekdays,
 				message.volume,
 			);
