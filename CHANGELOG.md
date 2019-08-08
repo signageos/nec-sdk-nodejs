@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Casually not loading of applet after restart app
 - Better user information durring register, verify process (including offline page)
 - Couldn't stop server because several child processes wouldn't close properly
+- Proper processing of remote key presses; no more weird delays, ignored key presses in fast succession, etc.
 
 ## [0.4.0] - 2019-06-10
 ### Added
