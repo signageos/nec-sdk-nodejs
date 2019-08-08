@@ -62,16 +62,17 @@ export interface GetCurrentTimeWithTimezone {
 	type: typeof GetCurrentTimeWithTimezone;
 }
 
-export const SetCurrentTime = 'System.SetCurrentTime';
-export interface SetCurrentTime {
-	type: typeof SetCurrentTime;
-	currentDate: Date;
+export const SetManualTimeWithTimezone = 'System.SetManualTimeWithTimezone';
+export interface SetManualTimeWithTimezone {
+	type: typeof SetManualTimeWithTimezone;
+	timestampMs: number;
+	timezone: string;
 }
 
-export const SetCurrentTimeWithTimezone = 'System.SetCurrentTimeWithTimezone';
-export interface SetCurrentTimeWithTimezone {
-	type: typeof SetCurrentTimeWithTimezone;
-	currentDate: Date;
+export const SetNTPTimeWithTimezone = 'System.SetNTPTimeWithTimezone';
+export interface SetNTPTimeWithTimezone {
+	type: typeof SetNTPTimeWithTimezone;
+	ntpServer: string;
 	timezone: string;
 }
 

@@ -78,6 +78,32 @@ export async function turnScreenOn() {
 	await execApiCommand('screen', 'on');
 }
 
+export async function getDatetime() {
+	const result = await execApiCommand('time', 'get_datetime');
+	return result.trim();
+}
+
+export async function setDatetime(datetime: string) {
+	await execApiCommand('time', 'set_datetime', [datetime]);
+}
+
+export async function getTimezone() {
+	const result = await execApiCommand('time', 'get_timezone');
+	return result.trim();
+}
+
+export async function setTimezone(timezone: string) {
+	await execApiCommand('time', 'set_timezone', [timezone]);
+}
+
+export async function getNTPServer() {
+	return await execApiCommand('time', 'get_ntp_server');
+}
+
+export async function setNTPServer(ntpServer: string) {
+	await execApiCommand('time', 'set_ntp_server', [ntpServer]);
+}
+
 export async function takeScreenshot(destination: string) {
 	await execApiCommand('screen', 'screenshot', [destination]);
 }

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Video API acceptance tests
 - When acceptance tests are running, mute applet so it doesn't conflict with the tests
 - getTimers method in management API
+- Support get/set system time, both manual and via NTP server
 
 ### Fixed
 - Casually not loading of applet after restart app

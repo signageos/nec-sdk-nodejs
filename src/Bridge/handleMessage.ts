@@ -1,3 +1,4 @@
+import * as moment from 'moment';
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import {
@@ -6,6 +7,9 @@ import {
 	GetSerialNumber,
 	NetworkGetInfo,
 	Supports,
+	GetCurrentTimeWithTimezone,
+	SetManualTimeWithTimezone,
+	SetNTPTimeWithTimezone,
 } from './bridgeSystemMessages';
 import * as NetworkMessages from './bridgeNetworkMessages';
 import * as FSMessages from './bridgeFileSystemMessages';
@@ -38,6 +42,9 @@ export default async function handleMessage(
 		GetSerialNumber |
 		ScreenMessages.GetOrientation |
 		NetworkGetInfo |
+		GetCurrentTimeWithTimezone |
+		SetManualTimeWithTimezone |
+		SetNTPTimeWithTimezone |
 		ScreenMessages.SetOrientation |
 		PowerMessages.AppRestart |
 		PowerMessages.SystemReboot |
@@ -92,6 +99,23 @@ export default async function handleMessage(
 		case GetSerialNumber:
 			const serialNumber = await nativeDriver.getSerialNumber();
 			return { serialNumber };
+
+		case GetCurrentTimeWithTimezone:
+			const currentTime = await nativeDriver.getCurrentTimeWithTimezone();
+			return {
+				currentTimestampMs: currentTime.currentDate.valueOf(),
+				timezone: currentTime.timezone,
+				ntpServer: currentTime.ntpServer,
+			};
+
+		case SetManualTimeWithTimezone:
+			const datetime = moment(message.timestampMs);
+			await nativeDriver.setManualTimeWithTimezone(datetime, message.timezone);
+			return {};
+
+		case SetNTPTimeWithTimezone:
+			await nativeDriver.setNTPTimeWithTimezone(message.ntpServer, message.timezone);
+			return {};
 
 		case ScreenMessages.GetOrientation:
 			const orientation = await systemSettings.getScreenOrientation();

@@ -201,6 +201,10 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 			case Capability.SCREENSHOT_UPLOAD:
 			case Capability.TIMERS_PROPRIETARY:
 			case Capability.SCREEN_RESIZE:
+			case Capability.SET_TIME:
+			case Capability.SET_TIMEZONE:
+			case Capability.GET_TIMEZONE:
+			case Capability.NTP_TIME:
 			case Capability.APP_UPGRADE:
 			case Capability.FIRMWARE_UPGRADE:
 			case Capability.SET_VOLUME:
@@ -313,16 +317,33 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		throw new Error('Not implemented');
 	}
 
-	public async getCurrentTimeWithTimezone(): Promise<{ currentDate: Date; timezone?: string }> {
+	public async getCurrentTimeWithTimezone(): Promise<{ currentDate: Date; timezone?: string, ntpServer?: string }> {
+		const [currentDateString, timezone] = await Promise.all([
+			SystemAPI.getDatetime(),
+			SystemAPI.getTimezone(),
+		]);
+		const currentDate = moment.tz(currentDateString, timezone).toDate();
+		try {
+			const ntpServer = await SystemAPI.getNTPServer();
+			return { currentDate, timezone, ntpServer };
+		} catch (error) {
+			return { currentDate, timezone };
+		}
+	}
+
+	public async setManualTime(_currentDate: moment.Moment): Promise<void> {
 		throw new Error('Not implemented');
 	}
 
-	public async setCurrentTime(_currentDate: moment.Moment): Promise<void> {
-		throw new Error('Not implemented');
+	public async setManualTimeWithTimezone(currentDate: moment.Moment, timezone: string): Promise<void> {
+		const datetimeString = currentDate.clone().utc().format('YYYY-MM-DD HH:mm:ss');
+		await SystemAPI.setDatetime(datetimeString);
+		await SystemAPI.setTimezone(timezone);
 	}
 
-	public async setCurrentTimeWithTimezone(_currentDate: moment.Moment, _timezone: string): Promise<void> {
-		throw new Error('Not implemented');
+	public async setNTPTimeWithTimezone(ntpServer: string, timezone: string): Promise<void> {
+		await SystemAPI.setNTPServer(ntpServer);
+		await SystemAPI.setTimezone(timezone);
 	}
 
 	public async setDebug(enabled: boolean): Promise<void> {

@@ -1,45 +1,18 @@
 import * as sinon from 'sinon';
-import BridgeServer from '../../../src/Bridge/BridgeServer';
-import BridgeClient from '../../../src/Bridge/BridgeClient';
 import * as PowerMessages from '../../../src/Bridge/bridgePowerMessages';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
-
-const params = require('../../../config/parameters');
+import { createBridgeAndItsDependencies } from './bridgeManagement';
 
 describe('Bridge', function () {
 
 	beforeEach('start bridge server', async function () {
-		this.fileSystem = {};
-		this.fileDetailsProvider = {};
-		this.nativeDriver = {};
-		this.systemSettings = {};
-		this.videoPlayer = {
-			initialize: sinon.stub().resolves(),
-			close: sinon.stub().resolves(),
-			addEventListener: sinon.spy(),
-		};
-		this.overlayRenderer = {};
-		this.cecListener = {
-			listen: sinon.stub().resolves(),
-			close: sinon.stub().resolves(),
-		};
-		this.bridgeServer = new BridgeServer(
-			params.server.bridge_url,
-			this.fileSystem,
-			this.fileDetailsProvider,
-			this.nativeDriver,
-			this.systemSettings,
-			this.videoPlayer,
-			this.overlayRenderer,
-			this.cecListener,
-		);
-		this.bridgeClient = new BridgeClient(params.server.bridge_url);
-		await this.bridgeServer.start();
+		this.bridge = createBridgeAndItsDependencies();
+		await this.bridge.bridgeServer.start();
 	});
 
 	afterEach('stop bridge server', async function () {
-		await this.bridgeServer.stop();
+		await this.bridge.bridgeServer.stop();
 	});
 
 	describe('message', function () {
@@ -70,8 +43,8 @@ describe('Bridge', function () {
 						volume: 100,
 					},
 				];
-				this.nativeDriver.getTimers = async () => timers;
-				const result = await this.bridgeClient.invoke({ type: PowerMessages.GetTimers });
+				this.bridge.nativeDriver.getTimers = async () => timers;
+				const result = await this.bridge.bridgeClient.invoke({ type: PowerMessages.GetTimers });
 				result.should.deepEqual({ timers });
 			});
 		});
@@ -81,7 +54,7 @@ describe('Bridge', function () {
 			it('should set timer', async function () {
 				this.nativeDriver.setTimer = sinon.stub().resolves();
 
-				await this.bridgeClient.invoke({
+				await this.bridge.bridgeClient.invoke({
 					type: PowerMessages.SetTimer,
 					timerType: TimerType.TIMER_1,
 					timeOn: '08:00:00',
@@ -89,7 +62,7 @@ describe('Bridge', function () {
 					weekdays: [TimerWeekday.wed, TimerWeekday.thu, TimerWeekday.fri],
 					volume: 20,
 				} as PowerMessages.SetTimer);
-				await this.bridgeClient.invoke({
+				await this.bridge.bridgeClient.invoke({
 					type: PowerMessages.SetTimer,
 					timerType: TimerType.TIMER_2,
 					timeOn: '10:30:00',
@@ -97,7 +70,7 @@ describe('Bridge', function () {
 					weekdays: [TimerWeekday.mon, TimerWeekday.tue],
 					volume: 50,
 				} as PowerMessages.SetTimer);
-				await this.bridgeClient.invoke({
+				await this.bridge.bridgeClient.invoke({
 					type: PowerMessages.SetTimer,
 					timerType: TimerType.TIMER_3,
 					timeOn: null,
@@ -106,22 +79,22 @@ describe('Bridge', function () {
 					volume: 100,
 				} as PowerMessages.SetTimer);
 
-				this.nativeDriver.setTimer.callCount.should.equal(3);
-				this.nativeDriver.setTimer.getCall(0).args.should.deepEqual([
+				this.bridge.nativeDriver.setTimer.callCount.should.equal(3);
+				this.bridge.nativeDriver.setTimer.getCall(0).args.should.deepEqual([
 					TimerType.TIMER_1,
 					'08:00:00',
 					'20:00:00',
 					[TimerWeekday.wed, TimerWeekday.thu, TimerWeekday.fri],
 					20,
 				]);
-				this.nativeDriver.setTimer.getCall(1).args.should.deepEqual([
+				this.bridge.nativeDriver.setTimer.getCall(1).args.should.deepEqual([
 					TimerType.TIMER_2,
 					'10:30:00',
 					null,
 					[TimerWeekday.mon, TimerWeekday.tue],
 					50,
 				]);
-				this.nativeDriver.setTimer.getCall(2).args.should.deepEqual([
+				this.bridge.nativeDriver.setTimer.getCall(2).args.should.deepEqual([
 					TimerType.TIMER_3,
 					null,
 					'22:00:00',
