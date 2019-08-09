@@ -99,6 +99,7 @@ build:alpine:
 publish:npm:
   stage: publish
   dependencies:
+    - prepare
     - prebuild
     - build:raspbian
   script:
