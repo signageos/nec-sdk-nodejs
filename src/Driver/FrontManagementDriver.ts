@@ -14,8 +14,8 @@ import {
 	GetBatteryStatus,
 	InstallPackage,
 	GetCurrentTimeWithTimezone,
-	SetCurrentTime,
-	SetCurrentTimeWithTimezone,
+	SetManualTimeWithTimezone,
+	SetNTPTimeWithTimezone,
 	SetDebug,
 	RemoteControlSetEnabled,
 	RemoteControlIsEnabled,
@@ -219,24 +219,37 @@ export default class FrontManagementDriver implements IManagementDriver {
 		});
 	}
 
-	public async getCurrentTimeWithTimezone(): Promise<{ currentDate: Date; timezone?: string | undefined; }> {
-		const currentTime = await this.bridge.invoke<GetCurrentTimeWithTimezone, { currentDate: Date; timezone?: string | undefined; }>({
+	public async getCurrentTimeWithTimezone(): Promise<{ currentDate: Date; timezone?: string; ntpServer?: string }> {
+		const result = await this.bridge.invoke<GetCurrentTimeWithTimezone, {
+			currentTimestampMs: number;
+			timezone?: string;
+			ntpServer?: string
+		}>({
 			type: GetCurrentTimeWithTimezone,
 		});
-		return currentTime;
+		return {
+			currentDate: new Date(result.currentTimestampMs),
+			timezone: result.timezone,
+			ntpServer: result.ntpServer,
+		};
 	}
 
-	public async setCurrentTime(currentDate: moment.Moment): Promise<void> {
-		await this.bridge.invoke<SetCurrentTime, void>({
-			type: SetCurrentTime,
-			currentDate: currentDate.toDate(),
+	public async setManualTime(_currentDate: moment.Moment): Promise<void> {
+		throw new Error('not implemented');
+	}
+
+	public async setManualTimeWithTimezone(currentDate: moment.Moment, timezone: string): Promise<void> {
+		await this.bridge.invoke<SetManualTimeWithTimezone, {}>({
+			type: SetManualTimeWithTimezone,
+			timestampMs: currentDate.valueOf(),
+			timezone,
 		});
 	}
 
-	public async setCurrentTimeWithTimezone(currentDate: moment.Moment, timezone: string): Promise<void> {
-		await this.bridge.invoke<SetCurrentTimeWithTimezone, {}>({
-			type: SetCurrentTimeWithTimezone,
-			currentDate: currentDate.toDate(),
+	public async setNTPTimeWithTimezone(ntpServer: string, timezone: string): Promise<void> {
+		await this.bridge.invoke<SetNTPTimeWithTimezone, {}>({
+			type: SetNTPTimeWithTimezone,
+			ntpServer,
 			timezone,
 		});
 	}
