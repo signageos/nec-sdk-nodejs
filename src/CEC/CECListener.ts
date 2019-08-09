@@ -14,10 +14,6 @@ export default class CECListener implements ICECListener {
 	private unixSocketEventListener: UnixSocketEventListener;
 	private cecListenerChildProcess: ChildProcess | null = null;
 	private eventEmitter: EventEmitter;
-	private lastEmittedKey: {
-		key: Key,
-		timestamp: number,
-	} | null = null;
 
 	constructor(socketRootPath: string) {
 		this.unixSocketPath = path.join(socketRootPath, SOCKET_FILE_NAME);
@@ -50,19 +46,10 @@ export default class CECListener implements ICECListener {
 			const key = Key[index as keyof typeof Key];
 			if (typeof key === 'number') {
 				this.unixSocketEventListener.addListener(key.toString(), () => {
-					this.emitKeypressWithDebounce(key);
+					this.eventEmitter.emit('keypress', key);
 				});
 			}
 		}
-	}
-
-	private emitKeypressWithDebounce(key: Key) {
-		const DEBOUCE_MS = 400;
-		const now = new Date().valueOf();
-		if (!this.lastEmittedKey || key !== this.lastEmittedKey.key || now - this.lastEmittedKey.timestamp >= DEBOUCE_MS) {
-			this.eventEmitter.emit('keypress', key);
-		}
-		this.lastEmittedKey = { key, timestamp: now };
 	}
 
 	private startCecListenerChildProcess() {
