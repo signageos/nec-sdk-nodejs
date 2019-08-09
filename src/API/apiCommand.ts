@@ -4,39 +4,41 @@ const debug = Debug('@signageos/display-linux:API:apiCommand');
 
 const SOS_COMMAND = 'signageos';
 
+export interface IOptions {
+	asRoot?: boolean;
+	verbose?: boolean;
+}
+
 export function execApiCommand(
 	namespace: string,
 	command: string,
 	args: string[] = [],
-	execAsRoot: boolean = true,
-	verbose: boolean = false,
+	options: IOptions = {},
 ) {
-	return execCommand(SOS_COMMAND, [namespace, command, ...args], execAsRoot, verbose);
+	return execCommand(SOS_COMMAND, [namespace, command, ...args], options);
 }
 
 export function execGetApiVersion() {
-	return execCommand(SOS_COMMAND, ['--version'], false, false);
+	return execCommand(SOS_COMMAND, ['--version']);
 }
 
 export function spawnApiCommandChildProcess(
 	namespace: string,
 	command: string,
 	args: string[] = [],
-	spawnAsRoot: boolean = false,
-	verbose: boolean = false,
+	options: IOptions = {},
 ) {
 	const fullArgs: ReadonlyArray<string> = [namespace, command, ...args];
-	return spawnChildProcess(SOS_COMMAND, fullArgs, spawnAsRoot, verbose);
+	return spawnChildProcess(SOS_COMMAND, fullArgs, options);
 }
 
 function execCommand(
 	command: string,
 	args: string[],
-	execAsRoot: boolean,
-	verbose: boolean,
+	options: IOptions = {},
 ) {
 	return new Promise<string>((resolve: (stdout: string) => void, reject: (error: Error) => void) => {
-		const spawnedChildProcess = spawnChildProcess(command, args, execAsRoot, verbose);
+		const spawnedChildProcess = spawnChildProcess(command, args, options);
 		let stdout = '';
 		spawnedChildProcess.stdout.on('data', (chunk: any) => stdout += chunk);
 		spawnedChildProcess.once('close', (code: number) => {
@@ -52,19 +54,20 @@ function execCommand(
 function spawnChildProcess(
 	command: string,
 	args: ReadonlyArray<string>,
-	spawnAsRoot: boolean,
-	verbose: boolean,
+	options: IOptions = {},
 ) {
+	const DEFAULT_OPTIONS = { asRoot: false, verbose: false };
+	const fullOptions = { ...DEFAULT_OPTIONS, ...options };
 	let fullCommand = [command, ...args];
-	if (spawnAsRoot) {
+	if (fullOptions.asRoot) {
 		fullCommand = ['sudo', ...fullCommand];
 	}
 	const [commandName, ...commandArgs] = fullCommand;
 	const spawnedChildProcess = childProcess.spawn(commandName, commandArgs);
-	if (verbose) {
+	if (fullOptions.verbose) {
 		spawnedChildProcess.stdout.on('data', (chunk: any) => console.log(fullCommand.join(' '), chunk.toString()));
 		spawnedChildProcess.stderr.on('data', (chunk: any) => {
-			if (verbose) {
+			if (fullOptions.verbose) {
 				console.error(fullCommand.join(' '), chunk.toString());
 			} else {
 				debug(`spawnApiCommandChildProcess`, commandName, commandArgs, chunk.toString());

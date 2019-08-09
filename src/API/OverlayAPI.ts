@@ -34,8 +34,7 @@ export function showOverlay(
 		'overlay',
 		'show',
 		['-l 2', ...args, file],
-		false,
-		true,
+		{ verbose: true },
 	);
 }
 

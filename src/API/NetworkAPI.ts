@@ -86,11 +86,11 @@ export async function isWifiEnabled() {
 }
 
 export async function enableWifi() {
-	await execApiCommand('wifi', 'enable');
+	await execApiCommand('wifi', 'enable', [], { asRoot: true });
 }
 
 export async function disableWifi() {
-	await execApiCommand('wifi', 'disable');
+	await execApiCommand('wifi', 'disable', [], { asRoot: true });
 }
 
 export async function connectToWifi(ssid: string, password?: string) {
@@ -98,11 +98,11 @@ export async function connectToWifi(ssid: string, password?: string) {
 	if (password) {
 		args.push(password);
 	}
-	await execApiCommand('wifi', 'connect', args);
+	await execApiCommand('wifi', 'connect', args, { asRoot: true });
 }
 
 export async function disconnectFromWifi() {
-	await execApiCommand('wifi', 'disconnect');
+	await execApiCommand('wifi', 'disconnect', [], { asRoot: true });
 }
 
 export async function getConnectedToWifi() {
@@ -116,7 +116,7 @@ export async function getWifiCountryCode() {
 }
 
 export async function setWifiCountryCode(countryCode: string) {
-	await execApiCommand('wifi', 'set_country', [countryCode]);
+	await execApiCommand('wifi', 'set_country', [countryCode], { asRoot: true });
 }
 
 export interface IWifiDevice {
@@ -126,7 +126,7 @@ export interface IWifiDevice {
 }
 
 export async function scanWifiDevices(): Promise<IWifiDevice[]> {
-	const devicesJson = await execApiCommand('wifi', 'scan', ['--json']);
+	const devicesJson = await execApiCommand('wifi', 'scan', ['--json'], { asRoot: true });
 	const devices = JSON.parse(devicesJson);
 	return _.uniqWith(devices, (device1: IWifiDevice, device2: IWifiDevice) => device1.ssid === device2.ssid);
 }

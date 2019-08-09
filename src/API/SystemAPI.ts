@@ -5,7 +5,7 @@ export async function getSerialNumber() {
 }
 
 export async function getModel() {
-	return await execApiCommand('system_info', 'model');
+	return await execApiCommand('system_info', 'model', [], { asRoot: true });
 }
 
 export interface IStorageUnit {
@@ -35,23 +35,23 @@ export async function getCpuTemperature() {
 
 export async function reboot() {
 	console.log("reboot device");
-	await execApiCommand('device', 'reboot');
+	await execApiCommand('device', 'reboot', [], { asRoot: true });
 }
 
 export async function applicationReady() {
-	await execApiCommand('application', 'ready');
+	await execApiCommand('application', 'ready', [], { asRoot: true });
 }
 
 export async function applicationNotReady() {
-	await execApiCommand('application', 'not_ready');
+	await execApiCommand('application', 'not_ready', [], { asRoot: true });
 }
 
 export async function restartApplication() {
-	await execApiCommand('application', 'restart');
+	await execApiCommand('application', 'restart', [], { asRoot: true });
 }
 
 export async function upgradeApp(version: string) {
-	await execApiCommand('application', 'upgrade', [version], true, true);
+	await execApiCommand('application', 'upgrade', [version], { asRoot: true, verbose: true });
 }
 
 export async function getFirmwareVersion() {
@@ -59,7 +59,7 @@ export async function getFirmwareVersion() {
 }
 
 export async function upgradeFirmware(sourceUrl: string) {
-	await execApiCommand('firmware', 'upgrade', [sourceUrl], true, true);
+	await execApiCommand('firmware', 'upgrade', [sourceUrl], { asRoot: true, verbose: true });
 }
 
 export async function enableNativeDebug() {
@@ -71,19 +71,19 @@ export async function disableNativeDebug() {
 }
 
 export async function turnScreenOff() {
-	await execApiCommand('screen', 'off');
+	await execApiCommand('screen', 'off', [], { asRoot: true });
 }
 
 export async function turnScreenOn() {
-	await execApiCommand('screen', 'on');
+	await execApiCommand('screen', 'on', [], { asRoot: true });
 }
 
 export async function takeScreenshot(destination: string) {
-	await execApiCommand('screen', 'screenshot', [destination]);
+	await execApiCommand('screen', 'screenshot', [destination], { asRoot: true });
 }
 
 export function listenToCECKeypresses(socketPath: string) {
-	return spawnApiCommandChildProcess('cec', 'listen', [socketPath]);
+	return spawnApiCommandChildProcess('cec', 'listen', [socketPath], { asRoot: true });
 }
 
 export async function getFileMimeType(filePath: string) {
