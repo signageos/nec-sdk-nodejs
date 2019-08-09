@@ -60,11 +60,12 @@ export function createVideoAPI(): IVideoAPI {
 					filePath,
 					volume.toString(10),
 				],
+				{ asRoot: true },
 			);
 		},
 
 		async playVideo(videoProcess: ChildProcess) {
-			await execApiCommand('video', 'play', [videoProcess.pid.toString()]);
+			await execApiCommand('video', 'play', [videoProcess.pid.toString()], { asRoot: true });
 		},
 
 		async stopVideo(videoProcess: ChildProcess) {
@@ -123,13 +124,12 @@ export function createVideoAPI(): IVideoAPI {
 					filePath,
 					volume.toString(10),
 				],
-				false,
-				true,
+				{ asRoot: true },
 			);
 		},
 
 		async playStream(streamProcess: ChildProcess) {
-			await execApiCommand('stream', 'play', [streamProcess.pid.toString()]);
+			await execApiCommand('stream', 'play', [streamProcess.pid.toString()], { asRoot: true });
 		},
 
 		async stopStream(streamProcess: ChildProcess) {
