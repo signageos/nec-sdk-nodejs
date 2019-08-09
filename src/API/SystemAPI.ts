@@ -1,4 +1,4 @@
-import { execApiCommand, spawnApiCommandChildProcess } from './apiCommand';
+import { execGetApiVersion, execApiCommand, spawnApiCommandChildProcess } from './apiCommand';
 
 export async function getSerialNumber() {
 	return await execApiCommand('system_info', 'serial');
@@ -55,7 +55,7 @@ export async function upgradeApp(version: string) {
 }
 
 export async function getFirmwareVersion() {
-	return await execApiCommand('firmware', 'version');
+	return await execGetApiVersion();
 }
 
 export async function upgradeFirmware(sourceUrl: string) {
