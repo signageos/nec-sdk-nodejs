@@ -11,14 +11,13 @@ stages:
   - release
 
 cache:
-  untracked: true
   key: "$CI_PROJECT_ID"
   paths:
     - node_modules/
 
 before_script:
   - TAG=$([ "$CI_COMMIT_TAG" == "" ] && echo $CI_COMMIT_REF_NAME || echo "latest")
-  - VERSION=`cat ./VERSION`
+  - export VERSION=`cat ./VERSION`
   - tools/npm-login.sh
   - npx @signageos/lib@just-tools version-upgrade $VERSION
   - npm install --tag $TAG
