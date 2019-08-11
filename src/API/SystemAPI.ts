@@ -109,7 +109,7 @@ export async function takeScreenshot(destination: string) {
 }
 
 export function listenToCECKeypresses(socketPath: string) {
-	return spawnApiCommandChildProcess('cec', 'listen', [socketPath], { asRoot: true });
+	return spawnApiCommandChildProcess('cec', 'listen', [socketPath]);
 }
 
 export async function getFileMimeType(filePath: string) {
