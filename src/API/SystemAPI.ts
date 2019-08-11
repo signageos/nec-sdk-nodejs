@@ -84,7 +84,7 @@ export async function getDatetime() {
 }
 
 export async function setDatetime(datetime: string) {
-	await execApiCommand('time', 'set_datetime', [datetime]);
+	await execApiCommand('time', 'set_datetime', [datetime], { asRoot: true });
 }
 
 export async function getTimezone() {
@@ -93,7 +93,7 @@ export async function getTimezone() {
 }
 
 export async function setTimezone(timezone: string) {
-	await execApiCommand('time', 'set_timezone', [timezone]);
+	await execApiCommand('time', 'set_timezone', [timezone], { asRoot: true });
 }
 
 export async function getNTPServer() {
@@ -101,7 +101,7 @@ export async function getNTPServer() {
 }
 
 export async function setNTPServer(ntpServer: string) {
-	await execApiCommand('time', 'set_ntp_server', [ntpServer]);
+	await execApiCommand('time', 'set_ntp_server', [ntpServer], { asRoot: true });
 }
 
 export async function takeScreenshot(destination: string) {
