@@ -33,80 +33,73 @@ export class NECAPI implements INECAPI {
 
 	@locked('necapi')
 	public async isNEC() {
-		const result = await execApiCommand('nec', 'is_nec', [], { asRoot: true });
-		const resultTrimmed = result.trim();
-		return resultTrimmed === '1';
+		const result = await execNECDisplayCommand('misc', 'is_nec');
+		return result === '1';
 	}
 
 	@locked('necapi')
 	public async isDisplayOn() {
-		const result = await execApiCommand('nec', 'get_power_status', [], { asRoot: true });
-		const resultTrimmed = result.trim();
-		return resultTrimmed === '1';
+		const result = await execNECDisplayCommand('power', 'get');
+		return result === '1';
 	}
 
 	@locked('necapi')
 	public async powerOff() {
-		await execApiCommand('nec', 'set_power_standby', [], { asRoot: true });
+		await execNECDisplayCommand('power', 'standby');
 	}
 
 	@locked('necapi')
 	public async powerOn() {
-		await execApiCommand('nec', 'set_power_on', [], { asRoot: true });
+		await execNECDisplayCommand('power', 'on');
 	}
 
 	@locked('necapi')
 	public async getBrightness() {
-		const result = await execApiCommand('nec', 'get_brightness', [], { asRoot: true });
-		return parseInt(result.trim());
+		const result = await execNECDisplayCommand('brightness', 'get');
+		return parseInt(result);
 	}
 
 	@locked('necapi')
 	public async setBrightness(brightness: number) {
-		await execApiCommand('nec', 'set_brightness', [brightness.toString()], { asRoot: true });
+		await execNECDisplayCommand('brightness', 'set', [brightness.toString()]);
 	}
 
 	@locked('necapi')
 	public async getVolume() {
-		const result = await execApiCommand('nec', 'get_volume', [], { asRoot: true });
-		return parseInt(result.trim());
+		const result = await execNECDisplayCommand('volume', 'get');
+		return parseInt(result);
 	}
 
 	@locked('necapi')
 	public async setVolume(volume: number) {
-		await execApiCommand('nec', 'set_volume', [volume.toString()], { asRoot: true });
+		await execNECDisplayCommand('volume', 'set', [volume.toString()]);
 	}
 
 	@locked('necapi')
 	public async getSchedules() {
-		const result = await execApiCommand('nec', 'get_schedules', [], { asRoot: true });
-		return parseGetSchedulesOutput(result.trim());
+		const result = await execNECDisplayCommand('schedules', 'get_list');
+		return parseGetSchedulesOutput(result);
 	}
 
 	@locked('necapi')
 	public async setSchedule(index: number, event: ScheduleEvent, hour: number, minute: number, days: number) {
-		await execApiCommand(
-			'nec',
-			'set_schedule',
-			[
-				index.toString(),
-				event.toString(),
-				hour.toString(),
-				minute.toString(),
-				days.toString(),
-			],
-			{ asRoot: true },
-		);
+		await execNECDisplayCommand('schedules', 'set', [
+			index.toString(),
+			event.toString(),
+			hour.toString(),
+			minute.toString(),
+			days.toString(),
+		]);
 	}
 
 	@locked('necapi')
 	public async disableSchedule(index: number) {
-		await execApiCommand('nec', 'disable_schedule', [index.toString()], { asRoot: true });
+		await execNECDisplayCommand('schedules', 'disable', [index.toString()]);
 	}
 
 	@locked('necapi')
 	public async setDisplayTimeFromSystemTime() {
-		await execApiCommand('nec', 'refresh_display_time', [], { asRoot: true });
+		await execNECDisplayCommand('time', 'set_from_system_to_display');
 	}
 }
 
@@ -129,4 +122,9 @@ export function parseGetSchedulesOutput(rawOutput: string): ISchedule[] {
 		}
 	}
 	return schedules;
+}
+
+async function execNECDisplayCommand(category: string, command: string, args: string[] = []) {
+	const result = await execApiCommand('nec', 'display', [category, command, ...args], { asRoot: true });
+	return result.trim();
 }
