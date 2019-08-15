@@ -8,6 +8,7 @@ export function createBridgeAndItsDependencies() {
 	const fileSystem = {};
 	const fileDetailsProvider = {};
 	const nativeDriver = {};
+	const display = {};
 	const systemSettings = {};
 	const videoPlayer = {
 		initialize: sinon.stub().resolves(),
@@ -24,6 +25,7 @@ export function createBridgeAndItsDependencies() {
 		fileSystem as any,
 		fileDetailsProvider as any,
 		nativeDriver as any,
+		display as any,
 		systemSettings as any,
 		videoPlayer as any,
 		overlayRenderer as any,
@@ -34,6 +36,7 @@ export function createBridgeAndItsDependencies() {
 		fileSystem,
 		fileDetailsProvider,
 		nativeDriver,
+		display,
 		systemSettings,
 		videoPlayer,
 		overlayRenderer,

@@ -52,7 +52,7 @@ describe('Bridge', function () {
 		describe('PowerMessages.SetTimer', function () {
 
 			it('should set timer', async function () {
-				this.nativeDriver.setTimer = sinon.stub().resolves();
+				this.bridge.nativeDriver.setTimer = sinon.stub().resolves();
 
 				await this.bridge.bridgeClient.invoke({
 					type: PowerMessages.SetTimer,

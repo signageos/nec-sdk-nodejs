@@ -1,4 +1,5 @@
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import { VideoInput } from '../Driver/Display/IDisplay';
 
 export const PrepareVideo = 'Video.PrepareVideo';
 export interface PrepareVideo {
@@ -93,4 +94,15 @@ export interface VideoError {
 export const AllVideosStopped = 'Video.AllVideosStopped';
 export interface AllVideosStopped {
 	type: typeof AllVideosStopped;
+}
+
+export const OpenInternalVideoInput = 'Video.OpenInternalVideoInput';
+export interface OpenInternalVideoInput {
+	type: typeof OpenInternalVideoInput;
+	input: VideoInput;
+}
+
+export const CloseInternalVideoInput = 'Video.CloseInternalVideoInput';
+export interface CloseInternalVideoInput {
+	type: typeof CloseInternalVideoInput;
 }

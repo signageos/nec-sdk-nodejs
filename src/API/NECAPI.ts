@@ -27,6 +27,8 @@ export interface INECAPI {
 	setSchedule(index: number, event: ScheduleEvent, hour: number, minute: number, days: number): Promise<void>;
 	disableSchedule(index: number): Promise<void>;
 	setDisplayTimeFromSystemTime(): Promise<void>;
+	prepareQuickVideoInputSwitch(input1: string, input2: string): Promise<void>;
+	switchVideoInput(input1: string): Promise<void>;
 }
 
 export class NECAPI implements INECAPI {
@@ -100,6 +102,16 @@ export class NECAPI implements INECAPI {
 	@locked('necapi')
 	public async setDisplayTimeFromSystemTime() {
 		await execNECDisplayCommand('time', 'set_from_system_to_display');
+	}
+
+	@locked('necapi')
+	public async prepareQuickVideoInputSwitch(input1: string, input2: string): Promise<void> {
+		await execNECDisplayCommand('video_input', 'prepare_quick_switch', [input1, input2]);
+	}
+
+	@locked('necapi')
+	public async switchVideoInput(input: string): Promise<void> {
+		await execNECDisplayCommand('video_input', 'switch_input', [input]);
 	}
 }
 

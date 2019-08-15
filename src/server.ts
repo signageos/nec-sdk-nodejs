@@ -108,7 +108,15 @@ if (parameters.raven.enabled) {
 
 	const cecListener = new CECListener(parameters.video.socket_root);
 	const bridgeServer = new BridgeServer(
-		parameters.server.bridge_url, fileSystem, fileDetailsProvider, nativeDriver, systemSettings, videoPlayer, overlayRenderer, cecListener,
+		parameters.server.bridge_url,
+		fileSystem,
+		fileDetailsProvider,
+		nativeDriver,
+		display,
+		systemSettings,
+		videoPlayer,
+		overlayRenderer,
+		cecListener,
 	);
 	await bridgeServer.start();
 	await applicationReady();

@@ -68,7 +68,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
 		this.bridgeVideoClient = new BridgeVideoClient(this.window, () => this.getScreenOrientation(), this.lock, socketClient);
 		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridgeVideoClient, maxVideoCount);
-		this.stream = new BridgeStreamPlayer(this.bridgeVideoClient);
+		this.stream = new BridgeStreamPlayer(this.window, this.bridge, this.bridgeVideoClient);
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);
 		this.overlay = new OverlayHandler(this.window, this.frontAppletPrefix, this.bridge);
 		this.hardware = {
