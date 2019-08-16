@@ -1,4 +1,4 @@
-import IDisplay from './IDisplay';
+import IDisplay, { VideoInput } from './IDisplay';
 import DisplayCapability from './DisplayCapability';
 import * as SystemAPI from '../../API/SystemAPI';
 import ISystemSettings from '../../SystemSettings/ISystemSettings';
@@ -50,6 +50,14 @@ export default class EmulatedDisplay implements IDisplay {
 	}
 
 	public setTimer(_index: number, _timeOn: string | null, _timeOff: string | null, _days: TimerWeekday[]): Promise<void> {
+		throw new Error('Not implemented');
+	}
+
+	public openVideoInput(_videoInput: VideoInput): Promise<void> {
+		throw new Error('Not implemented');
+	}
+
+	public closeVideoInput(): Promise<void> {
 		throw new Error('Not implemented');
 	}
 }

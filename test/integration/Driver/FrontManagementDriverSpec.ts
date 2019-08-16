@@ -9,7 +9,7 @@ function createFrontManagementDriver(bridgeClient: BridgeClient) {
 	return new FrontManagementDriver(bridgeClient, new EventEmitter() as any, 'file://');
 }
 
-describe.only('Driver.FrontManagementDriver', function () {
+describe('Driver.FrontManagementDriver', function () {
 
 	beforeEach('start bridge server', async function () {
 		this.bridge = createBridgeAndItsDependencies();

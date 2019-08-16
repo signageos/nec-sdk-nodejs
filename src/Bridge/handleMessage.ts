@@ -17,6 +17,7 @@ import * as OverlayMessages from './bridgeOverlayMessages';
 import * as ScreenMessages from './bridgeScreenMessages';
 import * as PowerMessages from './bridgePowerMessages';
 import * as AudioMessages from './bridgeAudioMessages';
+import * as VideoMessages from './bridgeVideoMessages';
 import * as SystemAPI from '../API/SystemAPI';
 import * as NetworkAPI from '../API/NetworkAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
@@ -24,6 +25,7 @@ import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 import ISystemSettings from '../SystemSettings/ISystemSettings';
 import Resolution from '@signageos/front-display/es6/NativeDevice/Resolution';
+import IDisplay from '../Driver/Display/IDisplay';
 
 export class InvalidMessageError extends Error {}
 
@@ -33,6 +35,7 @@ export default async function handleMessage(
 	fileSystem: IFileSystem,
 	fileDetailsProvider: IFileDetailsProvider,
 	nativeDriver: IBasicDriver & IManagementDriver,
+	display: IDisplay,
 	systemSettings: ISystemSettings,
 	overlayRenderer: OverlayRenderer,
 	message:
@@ -56,6 +59,8 @@ export default async function handleMessage(
 		ScreenMessages.GetBrightness |
 		AudioMessages.SetVolume |
 		AudioMessages.GetVolume |
+		VideoMessages.OpenInternalVideoInput |
+		VideoMessages.CloseInternalVideoInput |
 		NetworkMessages.IsWifiSupported |
 		NetworkMessages.IsWifiEnabled |
 		NetworkMessages.EnableWifi |
@@ -184,6 +189,14 @@ export default async function handleMessage(
 		case AudioMessages.GetVolume:
 			const volume = await nativeDriver.getVolume();
 			return { volume };
+
+		case VideoMessages.OpenInternalVideoInput:
+			await display.openVideoInput(message.input);
+			return {};
+
+		case VideoMessages.CloseInternalVideoInput:
+			await display.closeVideoInput();
+			return {};
 
 		case NetworkMessages.EnableWifi:
 			await NetworkAPI.enableWifi();

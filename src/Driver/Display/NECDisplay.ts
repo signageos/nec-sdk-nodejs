@@ -2,7 +2,7 @@ import * as moment from 'moment-timezone';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
 import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
-import IDisplay from './IDisplay';
+import IDisplay, { VideoInput } from './IDisplay';
 import DisplayCapability from './DisplayCapability';
 import { INECAPI, ScheduleEvent, ISchedule } from '../../API/NECAPI';
 
@@ -83,6 +83,15 @@ export default class NECDisplay implements IDisplay {
 		} else {
 			await this.necAPI.disableSchedule(offIndex);
 		}
+	}
+
+	public async openVideoInput(videoInput: VideoInput): Promise<void> {
+		await this.necAPI.prepareQuickVideoInputSwitch(VideoInput.COMPUTE_MODULE, videoInput);
+		await this.necAPI.switchVideoInput(videoInput);
+	}
+
+	public async closeVideoInput(): Promise<void> {
+		await this.necAPI.switchVideoInput(VideoInput.COMPUTE_MODULE);
 	}
 
 	private getOnScheduleIndexFromTimerIndex(timerIndex: number) {
