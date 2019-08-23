@@ -34,6 +34,7 @@ import IDisplay from './Display/IDisplay';
 import DisplayCapability from './Display/DisplayCapability';
 import { resolveCurrentBrightness } from '@signageos/front-display/es6/NativeDevice/Screen/screenHelper';
 import { now } from '@signageos/lib/dist/DateTime/dateTimeFactory';
+import ISensors, { SensorCapability } from './Sensors/ISensors';
 
 export default class ManagementDriver implements IBasicDriver, IManagementDriver, ICacheDriver {
 
@@ -51,6 +52,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		private overlayRenderer: OverlayRenderer,
 		fileDetailsProvider: IFileDetailsProvider,
 		private display: IDisplay,
+		public readonly sensors: ISensors,
 	) {
 		this.fileSystem = new ManagementFileSystem(fileSystemUrl, internalFileSystem, fileDetailsProvider);
 		this.servletRunner = new ServletRunner(internalFileSystem);
@@ -220,6 +222,9 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 
 			case Capability.TIMERS_NATIVE:
 				return this.display.supports(DisplayCapability.SCHEDULE);
+
+			case Capability.PROXIMITY_SENSOR:
+				return this.sensors.supports(SensorCapability.PROXIMITY);
 
 			default:
 				return false;

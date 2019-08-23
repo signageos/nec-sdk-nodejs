@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - getTimers method in management API
 - Support get/set system time, both manual and via NTP server
 - Support PIP (only fullscreen)
+- Support proximity sensor on NEC displays (there it's called "human sensor")
 
 ### Fixed
 - Casually not loading of applet after restart app

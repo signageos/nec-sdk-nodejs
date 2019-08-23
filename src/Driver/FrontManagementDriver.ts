@@ -28,18 +28,20 @@ import FrontFileSystem from './FrontFileSystem';
 import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import IBrightness from '@signageos/front-display/es6/NativeDevice/IBrightness';
 import Resolution from '@signageos/front-display/es6/NativeDevice/Resolution';
-import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
+import IManagementDriver, { ISensors } from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import IBatteryStatus from '@signageos/front-display/es6/NativeDevice/Battery/IBatteryStatus';
 import ManagementCapability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
 import IServletRunner from '@signageos/front-display/es6/Servlet/IServletRunner';
 import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
+import { createFrontSensors } from './FrontSensors';
 
 export default class FrontManagementDriver implements IManagementDriver {
 
 	public servletRunner: IServletRunner;
 	public readonly fileSystem: IFileSystem;
+	public readonly sensors: ISensors;
 
 	constructor(
 		private bridge: BridgeClient,
@@ -47,6 +49,7 @@ export default class FrontManagementDriver implements IManagementDriver {
 		private fileSystemUrl: string,
 	) {
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);
+		this.sensors = createFrontSensors(this.socketClient);
 	}
 
 	public async initialize(_staticBaseUrl: string) {

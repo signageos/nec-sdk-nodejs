@@ -29,14 +29,20 @@ export interface INECAPI {
 	setDisplayTimeFromSystemTime(): Promise<void>;
 	prepareQuickVideoInputSwitch(input1: string, input2: string): Promise<void>;
 	switchVideoInput(input1: string): Promise<void>;
+	isHumanDetected(): Promise<boolean>;
 }
 
 export class NECAPI implements INECAPI {
 
+	private isNECCached: boolean | null = null;
+
 	@locked('necapi')
 	public async isNEC() {
-		const result = await execNECDisplayCommand('misc', 'is_nec');
-		return result === '1';
+		if (this.isNECCached === null) {
+			const result = await execNECDisplayCommand('misc', 'is_nec');
+			this.isNECCached = result === '1';
+		}
+		return this.isNECCached;
 	}
 
 	@locked('necapi')
@@ -112,6 +118,12 @@ export class NECAPI implements INECAPI {
 	@locked('necapi')
 	public async switchVideoInput(input: string): Promise<void> {
 		await execNECDisplayCommand('video_input', 'switch_input', [input]);
+	}
+
+	@locked('necapi')
+	public async isHumanDetected(): Promise<boolean> {
+		const result = await execNECDisplayCommand('human_sensing', 'is_human_detected');
+		return result === '1';
 	}
 }
 

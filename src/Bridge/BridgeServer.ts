@@ -12,6 +12,7 @@ import socketHandleVideo from './socketHandleVideo';
 import socketHandleCEC from './socketHandleCEC';
 import socketHandleApplication from './socketHandleApplication';
 import socketHandleStorageUnitsChanged from './socketHandleStorageUnitsChanged';
+import socketHandleSensors from './socketHandleSensors';
 import IFileSystem from '../FileSystem/IFileSystem';
 import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
 import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
@@ -170,6 +171,7 @@ export default class BridgeServer {
 			socketHandleCEC(socket, this.cecListener);
 			socketHandleApplication(socket);
 			socketHandleStorageUnitsChanged(socket, this.fileSystem);
+			socketHandleSensors(socket, this.nativeDriver);
 		});
 	}
 }
