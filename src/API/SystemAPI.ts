@@ -78,6 +78,15 @@ export async function turnScreenOn() {
 	await execApiCommand('screen', 'on', [], { asRoot: true });
 }
 
+export async function getScreenRotation(): Promise<number> {
+	const result = await execApiCommand('screen', 'get_rotation');
+	return parseInt(result.trim());
+}
+
+export async function rotateScreen(angle: number) {
+	await execApiCommand('screen', 'rotate', [angle.toString()], { asRoot: true });
+}
+
 export async function getDatetime() {
 	const result = await execApiCommand('time', 'get_datetime');
 	return result.trim();

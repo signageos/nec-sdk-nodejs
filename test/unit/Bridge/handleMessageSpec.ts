@@ -28,7 +28,6 @@ import IFileDetailsProvider from '../../../src/FileSystem/IFileDetailsProvider';
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import IDisplay from '../../../src/Driver/Display/IDisplay';
-import ISystemSettings from '../../../src/SystemSettings/ISystemSettings';
 import OverlayRenderer from '../../../src/Overlay/OverlayRenderer';
 
 const testStorageUnit = {
@@ -52,7 +51,6 @@ function createHandleMessageCallback(
 		fileDetailsProvider?: IFileDetailsProvider;
 		nativeDriver?: IBasicDriver & IManagementDriver;
 		display?: IDisplay;
-		systemSettings?: ISystemSettings;
 		overlayRenderer?: OverlayRenderer;
 	},
 ) {
@@ -61,7 +59,6 @@ function createHandleMessageCallback(
 		dependencies.fileDetailsProvider || {} as any,
 		dependencies.nativeDriver || {} as any,
 		dependencies.display || {} as any,
-		dependencies.systemSettings || {} as any,
 		dependencies.overlayRenderer || {} as any,
 		message,
 	);

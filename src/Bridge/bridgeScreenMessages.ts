@@ -1,11 +1,6 @@
 import Orientation from "@signageos/front-display/es6/NativeDevice/Orientation";
 import IBrightness from "@signageos/front-display/es6/NativeDevice/IBrightness";
 
-export const GetOrientation = 'Screen.GetOrientation';
-export interface GetOrientation {
-	type: typeof GetOrientation;
-}
-
 export const SetOrientation = 'Screen.SetOrientation';
 export interface SetOrientation {
 	type: typeof SetOrientation;
