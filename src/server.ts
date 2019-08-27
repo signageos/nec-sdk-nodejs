@@ -24,12 +24,14 @@ import FileSystem from './FileSystem/FileSystem';
 import FileSystemCache from './Cache/FileSystemCache';
 import { fetch } from './WebWorker/serverFetch';
 import OverlayRenderer from './Overlay/OverlayRenderer';
+import { NECAPI } from './API/NECAPI';
 import CECListener from './CEC/CECListener';
 import FileDetailsProvider from './FileSystem/FileDetailsProvider';
 import FileMetadataCache from './FileSystem/FileMetadataCache';
 import { applicationReady, applicationNotReady } from './API/SystemAPI';
 import FSSystemSettings from './SystemSettings/FSSystemSettings';
 import { createDisplay } from './Driver/Display/displayFactory';
+import { createSensors } from './Driver/Sensors/sensorsFactory';
 import { getAutoVerification } from './helper';
 const parameters = require('../config/parameters');
 
@@ -50,7 +52,9 @@ if (parameters.raven.enabled) {
 	await cache.initialize();
 	const systemSettings = new FSSystemSettings(parameters.fileSystem.system);
 	const overlayRenderer = new OverlayRenderer(fileSystem);
-	const display = await createDisplay(systemSettings);
+	const necAPI = new NECAPI();
+	const display = await createDisplay(necAPI, systemSettings);
+	const sensors = await createSensors(necAPI);
 
 	const createVideo = (key: string) => {
 		const unixSocketPath = path.join(parameters.video.socket_root, key + '.sock');
@@ -69,6 +73,7 @@ if (parameters.raven.enabled) {
 		overlayRenderer,
 		fileDetailsProvider,
 		display,
+		sensors,
 	);
 
 	if (raven) {
