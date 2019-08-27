@@ -2,7 +2,6 @@ import { EventEmitter } from 'events';
 import * as should from 'should';
 import * as sinon from 'sinon';
 import wait from '@signageos/lib/dist/Timer/wait';
-import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import ServerVideo from '../../../../src/Driver/Video/ServerVideo';
 import { ChildProcess } from "child_process";
 import IUnixSocketEventListener from '../../../../src/UnixSocket/IUnixSocketEventListener';
@@ -15,7 +14,6 @@ interface IMockVideoAPI {
 		y: number,
 		width: number,
 		height: number,
-		orientation: Orientation,
 	): ChildProcess;
 	playVideo?(videoProcess: ChildProcess): Promise<void>;
 	stopVideo?(videoProcess: ChildProcess): Promise<void>;
@@ -25,7 +23,6 @@ interface IMockVideoAPI {
 		y: number,
 		width: number,
 		height: number,
-		orientation: Orientation,
 	): ChildProcess;
 
 	playStream?(streamProcess: ChildProcess): Promise<void>;
@@ -117,12 +114,12 @@ describe('Driver.Video.ServerVideo', function () {
 			const videoEventListener = new MockVideoEventListener();
 			const serverVideo = createServerVideo(videoEventListener, { prepareVideo, prepareStream }, undefined, 55);
 
-			const preparedPromise = serverVideo.prepare('test/video1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
+			const preparedPromise = serverVideo.prepare('test/video1Uri', 0, 1, 1920, 1080, false);
 			videoEventListener.emit('ready');
 			await preparedPromise;
 			prepareVideo.calledOnce.should.be.true();
 			prepareVideo.getCall(0).args.should.deepEqual([
-				'test/video1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, '/tmp/test.sock', 55,
+				'test/video1Uri', 0, 1, 1920, 1080, '/tmp/test.sock', 55,
 			]);
 			prepareStream.called.should.be.false();
 			serverVideo.isIdle().should.be.true();
@@ -135,12 +132,12 @@ describe('Driver.Video.ServerVideo', function () {
 			const videoEventListener = new MockVideoEventListener();
 			const serverVideo = createServerVideo(videoEventListener, { prepareVideo, prepareStream }, undefined, 10);
 
-			const preparedPromise = serverVideo.prepare('stream1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			const preparedPromise = serverVideo.prepare('stream1Uri', 0, 1, 1920, 1080, true);
 			videoEventListener.emit('ready');
 			await preparedPromise;
 			prepareStream.calledOnce.should.be.true();
 			prepareStream.getCall(0).args.should.deepEqual([
-				'stream1Uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, '/tmp/test.sock', 10,
+				'stream1Uri', 0, 1, 1920, 1080, '/tmp/test.sock', 10,
 			]);
 			prepareVideo.called.should.be.false();
 			serverVideo.isIdle().should.be.true();
@@ -159,7 +156,7 @@ describe('Driver.Video.ServerVideo', function () {
 			const videoEventListener = new MockVideoEventListener();
 			const serverVideo = createServerVideo(videoEventListener, { prepareVideo });
 
-			const preparedPromise = serverVideo.prepare('test/videoUri1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
+			const preparedPromise = serverVideo.prepare('test/videoUri1', 0, 1, 1920, 1080, false);
 			videoEventListener.emit('ready');
 			await preparedPromise;
 
@@ -168,7 +165,7 @@ describe('Driver.Video.ServerVideo', function () {
 			await startedPromise;
 			serverVideo.isPlaying().should.be.true();
 
-			const preparedPromise2 = serverVideo.prepare('test/videoUri2', 2, 3, 1000, 500, Orientation.LANDSCAPE, false);
+			const preparedPromise2 = serverVideo.prepare('test/videoUri2', 2, 3, 1000, 500, false);
 			await wait(500);
 			videoEventListener.emit('ready');
 			await preparedPromise2;
@@ -194,7 +191,7 @@ describe('Driver.Video.ServerVideo', function () {
 				playVideo,
 			});
 
-			const preparedPromise = serverVideo.prepare('test/videoUri1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
+			const preparedPromise = serverVideo.prepare('test/videoUri1', 0, 1, 1920, 1080, false);
 			videoEventListener.emit('ready');
 			await preparedPromise;
 
@@ -220,7 +217,7 @@ describe('Driver.Video.ServerVideo', function () {
 			const videoEventListener = new MockVideoEventListener();
 			const serverVideo = createServerVideo(videoEventListener, { stopVideo });
 
-			const preparedPromise = serverVideo.prepare('test/videoUri1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false);
+			const preparedPromise = serverVideo.prepare('test/videoUri1', 0, 1, 1920, 1080, false);
 			videoEventListener.emit('ready');
 			await preparedPromise;
 

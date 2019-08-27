@@ -1,5 +1,4 @@
 import * as sinon from 'sinon';
-import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import {
 	AllVideosStopped,
 	PlayVideo,
@@ -43,12 +42,11 @@ describe('Bridge.socketHandleVideo', function () {
 							y: 1,
 							width: 1920,
 							height: 1080,
-							orientation: Orientation.LANDSCAPE,
 							isStream: false,
 						});
 						videoPlayer.prepare.callCount.should.equal(1);
 						videoPlayer.prepare.getCall(0).args.should.deepEqual([
-							'test_uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false,
+							'test_uri', 0, 1, 1920, 1080, false,
 						]);
 						done();
 					}
@@ -83,12 +81,11 @@ describe('Bridge.socketHandleVideo', function () {
 							y: 1,
 							width: 1920,
 							height: 1080,
-							orientation: Orientation.LANDSCAPE,
 							isStream: false,
 						});
 						videoPlayer.prepare.callCount.should.equal(1);
 						videoPlayer.prepare.getCall(0).args.should.deepEqual([
-							'test_uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false,
+							'test_uri', 0, 1, 1920, 1080, false,
 						]);
 						done();
 					}
@@ -127,12 +124,11 @@ describe('Bridge.socketHandleVideo', function () {
 							y: 1,
 							width: 1920,
 							height: 1080,
-							orientation: Orientation.LANDSCAPE,
 							isStream: false,
 						});
 						videoPlayer.play.callCount.should.equal(1);
 						videoPlayer.play.getCall(0).args.should.deepEqual([
-							'test_uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false,
+							'test_uri', 0, 1, 1920, 1080, false,
 						]);
 						done();
 					}
@@ -167,12 +163,11 @@ describe('Bridge.socketHandleVideo', function () {
 							y: 1,
 							width: 1920,
 							height: 1080,
-							orientation: Orientation.LANDSCAPE,
 							isStream: false,
 						});
 						videoPlayer.play.callCount.should.equal(1);
 						videoPlayer.play.getCall(0).args.should.deepEqual([
-							'test_uri', 0, 1, 1920, 1080, Orientation.LANDSCAPE, false,
+							'test_uri', 0, 1, 1920, 1080, false,
 						]);
 						done();
 					}

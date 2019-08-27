@@ -6,11 +6,16 @@ EXTRA_FLAGS=""
 
 APP_VERSION=`apk list -I | grep '{signageos-display-linux}' | grep -v openrc | sed -E 's/signageos-display-linux-([^ ]+).*/\1/'`
 
-#WINDOW_DIMENSIONS=`xrandr 2> /dev/null | grep '*' | sed -E 's/^[[:space:]]*([0-9]+)x([0-9]+).*/\1,\2/'`
+SCREEN_ROTATION=`signageos screen get_rotation`
+if [ "$SCREEN_ROTATION" = "90" ] || [ "$SCREEN_ROTATION" = "270" ]; then
+    WINDOW_SIZE=1080,1920
+else
+    WINDOW_SIZE=1920,1080
+fi
 
 chromium-browser \
     --window-position=0,0 \
-    --window-size=1920,1080 \
+    --window-size=$WINDOW_SIZE \
     $EXTRA_FLAGS \
     --disable-extensions \
     --kiosk \

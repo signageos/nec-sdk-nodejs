@@ -31,9 +31,9 @@ function listenToVideoEventsFromClient(socket: ISocket, videoPlayer: IServerVide
 
 function listenToPrepareVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	socket.bindMessage(PrepareVideo, async (message: PrepareVideo) => {
-		const { uri, x, y, width, height, orientation, isStream } = message;
+		const { uri, x, y, width, height, isStream } = message;
 		try {
-			await videoPlayer.prepare(uri, x, y, width, height, orientation, isStream);
+			await videoPlayer.prepare(uri, x, y, width, height, isStream);
 			await socket.sendMessage(VideoPrepared, {
 				uri, x, y, width, height,
 			});
@@ -50,7 +50,7 @@ function listenToPlayVideoEventFromClient(socket: ISocket, videoPlayer: IServerV
 	socket.bindMessage(PlayVideo, async (message: PlayVideo) => {
 		const { uri, x, y, width, height } = message;
 		try {
-			await videoPlayer.play(uri, x, y, width, height, message.orientation, message.isStream);
+			await videoPlayer.play(uri, x, y, width, height, message.isStream);
 			await socket.sendMessage(VideoStarted, {
 				uri, x, y, width, height,
 			});

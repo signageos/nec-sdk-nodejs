@@ -1,7 +1,6 @@
 import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";
 import wait from '@signageos/lib/dist/Timer/wait';
-import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import {
 	IVideoAPI,
@@ -61,7 +60,7 @@ export default class ServerVideo implements IServerVideo {
 		return this.videoArguments;
 	}
 
-	public async prepare(uri: string, x: number, y: number, width: number, height: number, orientation: Orientation, isStream: boolean) {
+	public async prepare(uri: string, x: number, y: number, width: number, height: number, isStream: boolean) {
 		if (this.childProcess) {
 			await this.stop();
 		}
@@ -70,7 +69,7 @@ export default class ServerVideo implements IServerVideo {
 			this.videoEventListener.once('ready', resolve);
 		});
 
-		this.childProcess = await this.prepareVideoChildProcess(uri, x, y, width, height, orientation, isStream);
+		this.childProcess = await this.prepareVideoChildProcess(uri, x, y, width, height, isStream);
 		this.videoArguments = { uri, x, y, width, height };
 		this.isStream = isStream;
 
@@ -149,18 +148,17 @@ export default class ServerVideo implements IServerVideo {
 		y: number,
 		width: number,
 		height: number,
-		orientation: Orientation,
 		isStream: boolean,
 	) {
 		const socketPath = this.videoEventListener.getSocketPath();
 		const volume = await this.systemSettings.getVolume();
 		let videoProcess: ChildProcess;
 		if (isStream) {
-			videoProcess = this.videoAPI.prepareStream(uri, x, y, width, height, orientation, socketPath, volume);
+			videoProcess = this.videoAPI.prepareStream(uri, x, y, width, height, socketPath, volume);
 		} else {
 			const filePath = await this.fileSystem.convertRelativePathToFilePath(uri);
 			const fileAbsolutePath = this.fileSystem.getAbsolutePath(filePath);
-			videoProcess = this.videoAPI.prepareVideo(fileAbsolutePath, x, y, width, height, orientation, socketPath, volume);
+			videoProcess = this.videoAPI.prepareVideo(fileAbsolutePath, x, y, width, height, socketPath, volume);
 		}
 
 		const videoEventSrcArgs = { uri, x, y, width, height };
