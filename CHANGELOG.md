@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Support get/set system time, both manual and via NTP server
 - Support PIP (only fullscreen)
 - Support proximity sensor on NEC displays (there it's called "human sensor")
+- Support reset NEC display settings as means of recovery from breaking external changes
 
 ### Fixed
 - Casually not loading of applet after restart app

@@ -380,4 +380,8 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	public cacheGetStorageInfo(): Promise<ICacheStorageInfo> {
 		return this.cache.getStorageInfo();
 	}
+
+	public resetSettings(): Promise<void> {
+		return this.display.resetSettings();
+	}
 }

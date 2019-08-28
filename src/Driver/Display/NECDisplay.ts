@@ -98,6 +98,10 @@ export default class NECDisplay implements IDisplay {
 		await this.necAPI.searchCECDevice();
 	}
 
+	public async resetSettings(): Promise<void> {
+		await this.necAPI.setFactorySettings();
+	}
+
 	private getOnScheduleIndexFromTimerIndex(timerIndex: number) {
 		return timerIndex * 2;
 	}

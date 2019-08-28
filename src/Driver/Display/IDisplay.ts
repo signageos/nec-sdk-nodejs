@@ -27,6 +27,7 @@ interface IDisplay {
 	openVideoInput(videoInput: VideoInput): Promise<void>;
 	closeVideoInput(): Promise<void>;
 	initCEC(): Promise<void>;
+	resetSettings(): Promise<void>;
 }
 
 export default IDisplay;

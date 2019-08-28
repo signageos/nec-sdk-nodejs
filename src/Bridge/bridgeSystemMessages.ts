@@ -82,6 +82,11 @@ export interface SetDebug {
 	enabled: boolean;
 }
 
+export const ResetSettings = 'System.ResetSettings';
+export interface ResetSettings {
+	type: typeof ResetSettings;
+}
+
 export const RemoteControlSetEnabled = 'RemoteControl.SetEnabled';
 export interface RemoteControlSetEnabled {
 	type: typeof RemoteControlSetEnabled;

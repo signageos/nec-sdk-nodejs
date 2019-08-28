@@ -31,6 +31,7 @@ export interface INECAPI {
 	switchVideoInput(input1: string): Promise<void>;
 	isHumanDetected(): Promise<boolean>;
 	searchCECDevice(): Promise<void>;
+	setFactorySettings(): Promise<void>;
 }
 
 export class NECAPI implements INECAPI {
@@ -130,6 +131,11 @@ export class NECAPI implements INECAPI {
 	@locked('necapi')
 	public async searchCECDevice() {
 		await execNECDisplayCommand('cec', 'search_device');
+	}
+
+	@locked('necapi')
+	public async setFactorySettings(): Promise<void> {
+		await execNECDisplayCommand('settings', 'factory');
 	}
 }
 

@@ -64,4 +64,8 @@ export default class EmulatedDisplay implements IDisplay {
 	public async initCEC(): Promise<void> {
 		// do nothing
 	}
+
+	public async resetSettings(): Promise<void> {
+		// do nothing
+	}
 }
