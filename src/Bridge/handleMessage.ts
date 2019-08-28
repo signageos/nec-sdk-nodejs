@@ -10,6 +10,7 @@ import {
 	GetCurrentTimeWithTimezone,
 	SetManualTimeWithTimezone,
 	SetNTPTimeWithTimezone,
+	ResetSettings,
 } from './bridgeSystemMessages';
 import * as NetworkMessages from './bridgeNetworkMessages';
 import * as FSMessages from './bridgeFileSystemMessages';
@@ -45,6 +46,7 @@ export default async function handleMessage(
 		GetCurrentTimeWithTimezone |
 		SetManualTimeWithTimezone |
 		SetNTPTimeWithTimezone |
+		ResetSettings |
 		ScreenMessages.SetOrientation |
 		PowerMessages.AppRestart |
 		PowerMessages.SystemReboot |
@@ -117,6 +119,10 @@ export default async function handleMessage(
 
 		case SetNTPTimeWithTimezone:
 			await nativeDriver.setNTPTimeWithTimezone(message.ntpServer, message.timezone);
+			return {};
+
+		case ResetSettings:
+			await nativeDriver.resetSettings();
 			return {};
 
 		case ScreenMessages.SetOrientation:

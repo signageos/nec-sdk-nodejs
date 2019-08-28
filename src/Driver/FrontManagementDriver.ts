@@ -19,6 +19,7 @@ import {
 	SetDebug,
 	RemoteControlSetEnabled,
 	RemoteControlIsEnabled,
+	ResetSettings,
 } from '../Bridge/bridgeSystemMessages';
 import * as ScreenMessages from '../Bridge/bridgeScreenMessages';
 import * as PowerMessages from '../Bridge/bridgePowerMessages';
@@ -306,4 +307,7 @@ export default class FrontManagementDriver implements IManagementDriver {
 		return enabled;
 	}
 
+	public async resetSettings(): Promise<void> {
+		await this.bridge.invoke<ResetSettings, {}>({ type: ResetSettings });
+	}
 }

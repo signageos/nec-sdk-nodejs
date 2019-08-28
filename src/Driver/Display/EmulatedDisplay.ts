@@ -60,4 +60,12 @@ export default class EmulatedDisplay implements IDisplay {
 	public closeVideoInput(): Promise<void> {
 		throw new Error('Not implemented');
 	}
+
+	public async initCEC(): Promise<void> {
+		// do nothing
+	}
+
+	public async resetSettings(): Promise<void> {
+		// do nothing
+	}
 }
