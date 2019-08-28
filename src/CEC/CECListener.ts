@@ -5,6 +5,7 @@ import UnixSocketEventListener from '../UnixSocket/UnixSocketEventListener';
 import Key from './Key';
 import ICECListener from './ICECListener';
 import { listenToCECKeypresses } from '../API/SystemAPI';
+import IDisplay from '../Driver/Display/IDisplay';
 
 const SOCKET_FILE_NAME = 'cec.sock';
 
@@ -15,7 +16,7 @@ export default class CECListener implements ICECListener {
 	private cecListenerChildProcess: ChildProcess | null = null;
 	private eventEmitter: EventEmitter;
 
-	constructor(socketRootPath: string) {
+	constructor(private display: IDisplay, socketRootPath: string) {
 		this.unixSocketPath = path.join(socketRootPath, SOCKET_FILE_NAME);
 		this.unixSocketEventListener = new UnixSocketEventListener(this.unixSocketPath);
 		this.eventEmitter = new EventEmitter();
@@ -25,6 +26,7 @@ export default class CECListener implements ICECListener {
 	public async listen() {
 		await this.unixSocketEventListener.listen();
 		this.startCecListenerChildProcess();
+		await this.display.initCEC();
 	}
 
 	public async close() {

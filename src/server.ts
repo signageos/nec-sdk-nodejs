@@ -110,7 +110,7 @@ if (parameters.raven.enabled) {
 		autoVerification,
 	);
 
-	const cecListener = new CECListener(parameters.video.socket_root);
+	const cecListener = new CECListener(display, parameters.video.socket_root);
 	const bridgeServer = new BridgeServer(
 		parameters.server.bridge_url,
 		fileSystem,

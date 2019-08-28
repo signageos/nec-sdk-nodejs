@@ -26,6 +26,7 @@ interface IDisplay {
 	setTimer(type: TimerType, timeOn: string | null, timeOff: string | null, weekdays: TimerWeekday[]): Promise<void>;
 	openVideoInput(videoInput: VideoInput): Promise<void>;
 	closeVideoInput(): Promise<void>;
+	initCEC(): Promise<void>;
 }
 
 export default IDisplay;
