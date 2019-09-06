@@ -62,6 +62,10 @@ export async function upgradeFirmware(sourceUrl: string) {
 	await execApiCommand('firmware', 'upgrade', [sourceUrl], { asRoot: true, verbose: true });
 }
 
+export async function overwriteFirmware(imgUrl: string) {
+	await execApiCommand('firmware', 'overwrite', [imgUrl], { asRoot: true, verbose: true });
+}
+
 export async function enableNativeDebug() {
 	await execApiCommand('debug', 'on');
 }
