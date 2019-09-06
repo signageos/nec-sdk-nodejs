@@ -13,6 +13,7 @@ extra_started_commands="reload_storage_units"
 
 env_fs_root_path=/var/lib/signageos-display-linux/fs
 env_fs_system_path=/var/lib/signageos-display-linux/system
+env_fs_app_files_path=/usr/share/signageos-display-linux
 
 depend() {
     need net localmount loopback logger
@@ -38,6 +39,7 @@ start() {
         --group $command_group \
         --env fs_root_path=$env_fs_root_path \
         --env fs_system_path=$env_fs_system_path \
+        --env fs_app_files_path=$env_fs_app_files_path \
         --stdout-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.info'" \
         --stderr-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.err'" \
         --background \

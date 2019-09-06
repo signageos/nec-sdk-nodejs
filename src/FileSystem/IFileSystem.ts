@@ -5,6 +5,7 @@ import { IFileDetails } from './IFileDetails';
 export const EXTERNAL_STORAGE_UNITS_PATH = 'external';
 export const TMP_DIRECTORY_PATH = 'signageos';
 export const TMP_STORAGE_UNIT = 'tmp';
+export const APP_FILES_STORAGE_UNIT = 'app';
 export const INTERNAL_STORAGE_UNIT = 'internal';
 
 export default interface IFileSystem {
@@ -28,6 +29,7 @@ export default interface IFileSystem {
 	removeStorageUnitsChangedListener(listener: () => void): void;
 	getInternalStorageUnit(): Promise<IStorageUnit>;
 	getTmpStorageUnit(): IStorageUnit;
+	getAppFilesStorageUnit(): IStorageUnit;
 	getAbsolutePath(filePath: IFilePath): string;
 	convertRelativePathToFilePath(relativePath: string): Promise<IFilePath>;
 }

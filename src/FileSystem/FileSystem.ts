@@ -13,6 +13,7 @@ import {
 } from '../API/SystemAPI';
 import IFileSystem, {
 	TMP_STORAGE_UNIT,
+	APP_FILES_STORAGE_UNIT,
 	INTERNAL_STORAGE_UNIT,
 	TMP_DIRECTORY_PATH,
 	EXTERNAL_STORAGE_UNITS_PATH,
@@ -33,6 +34,7 @@ export default class FileSystem implements IFileSystem {
 	constructor(
 		private baseDirectory: string,
 		private tmpDirectory: string,
+		private appFilesDirectory: string,
 		private storageUnitsChangedSignal: NodeJS.Signals,
 	) {
 		this.eventEmitter = new EventEmitter();
@@ -311,16 +313,29 @@ export default class FileSystem implements IFileSystem {
 		};
 	}
 
-	public getAbsolutePath(filePath: IFilePath) {
-		if (filePath.storageUnit.type === TMP_STORAGE_UNIT) {
-			return path.join(this.tmpDirectory, TMP_DIRECTORY_PATH, filePath.filePath.trim());
-		}
-		let basePath = this.baseDirectory;
-		if (filePath.storageUnit.removable) {
-			basePath = path.join(basePath, EXTERNAL_STORAGE_UNITS_PATH);
-		}
+	public getAppFilesStorageUnit(): IStorageUnit {
+		return {
+			type: APP_FILES_STORAGE_UNIT,
+			capacity: 0,
+			freeSpace: 0,
+			usableSpace: 0,
+			removable: false,
+		};
+	}
 
-		return path.join(basePath, filePath.storageUnit.type, filePath.filePath.trim());
+	public getAbsolutePath(filePath: IFilePath) {
+		switch (filePath.storageUnit.type) {
+			case TMP_STORAGE_UNIT:
+				return path.join(this.tmpDirectory, TMP_DIRECTORY_PATH, filePath.filePath.trim());
+			case APP_FILES_STORAGE_UNIT:
+				return path.join(this.appFilesDirectory, filePath.filePath.trim());
+			default:
+				let basePath = this.baseDirectory;
+				if (filePath.storageUnit.removable) {
+					basePath = path.join(basePath, EXTERNAL_STORAGE_UNITS_PATH);
+				}
+				return path.join(basePath, filePath.storageUnit.type, filePath.filePath.trim());
+		}
 	}
 
 	public async convertRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
