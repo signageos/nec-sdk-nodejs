@@ -15,6 +15,7 @@ import FileSystem from '../../../src/FileSystem/FileSystem';
 const parameters = require('../../../config/parameters');
 const fileSystemRoot = parameters.fileSystem.root;
 const tmpFileSystemRoot = parameters.fileSystem.tmp;
+const appFilesFileSystemRoot = parameters.fileSystem.appFiles;
 
 const testStorageUnit = {
 	type: 'test',
@@ -25,7 +26,7 @@ const testStorageUnit = {
 } as IStorageUnit;
 
 function createFileSystem() {
-	return new FileSystem(fileSystemRoot, tmpFileSystemRoot, 'SIGUSR2');
+	return new FileSystem(fileSystemRoot, appFilesFileSystemRoot, tmpFileSystemRoot, 'SIGUSR2');
 }
 
 function getRootPath() {

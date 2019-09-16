@@ -44,7 +44,12 @@ if (parameters.raven.enabled) {
 }
 
 (async () => {
-	const fileSystem = new FileSystem(parameters.fileSystem.root, parameters.fileSystem.tmp, 'SIGUSR2');
+	const fileSystem = new FileSystem(
+		parameters.fileSystem.root,
+		parameters.fileSystem.tmp,
+		parameters.fileSystem.appFiles,
+		'SIGUSR2',
+	);
 	const videoAPI = createVideoAPI();
 	const fileMetadataCache = new FileMetadataCache(fileSystem);
 	const fileDetailsProvider = new FileDetailsProvider(fileSystem, videoAPI, fileMetadataCache);
@@ -107,6 +112,13 @@ if (parameters.raven.enabled) {
 		webWorkerFactory,
 		parameters.app.version,
 		isOpen,
+		parameters.bundledServlet === null ? null : {
+			filePath: {
+				filePath: parameters.bundledServlet.filePath,
+				storageUnit: fileSystem.getAppFilesStorageUnit(),
+			},
+			env: parameters.bundledServlet.env,
+		},
 		autoVerification,
 	);
 

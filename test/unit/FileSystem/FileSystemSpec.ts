@@ -7,7 +7,7 @@ describe('FileSystem', function () {
 	describe('getAbsolutePath', function () {
 
 		it('should return correct path for internal storage unit', function () {
-			const fileSystem = new FileSystem('/base/directory', '/tmp', 'SIGUSR2');
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2');
 			const internalStorageUnit = {
 				type: 'internal',
 				capacity: 0,
@@ -23,7 +23,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should return correct path for external storage unit', function () {
-			const fileSystem = new FileSystem('/base/directory', '/tmp', 'SIGUSR2');
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2');
 			const externalStorageUnit = {
 				type: 'sda1',
 				capacity: 0,
@@ -39,7 +39,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should return correct path for tmp storage unit', function () {
-			const fileSystem = new FileSystem('/base/directory', '/tmp', 'SIGUSR2');
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2');
 			const tmpStorageUnit = fileSystem.getTmpStorageUnit();
 			const absolutePath = fileSystem.getAbsolutePath({
 				filePath: 'test3/file3',
@@ -47,12 +47,22 @@ describe('FileSystem', function () {
 			});
 			absolutePath.should.equal('/tmp/signageos/test3/file3');
 		});
+
+		it('should return correct path for app files storage unit', function () {
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2');
+			const appFilesStorageUnit = fileSystem.getAppFilesStorageUnit();
+			const absolutePath = fileSystem.getAbsolutePath({
+				filePath: 'test4/file4',
+				storageUnit: appFilesStorageUnit,
+			});
+			absolutePath.should.equal('/app/test4/file4');
+		});
 	});
 
 	describe('onStorageUnitsChanged', function () {
 
 		it('should call listener every time storage units changed', function () {
-			const fileSystem = new FileSystem('/base/directory', '/tmp', 'TESTSIGNAL' as any);
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'TESTSIGNAL' as any);
 			const listener = sinon.spy();
 			fileSystem.onStorageUnitsChanged(listener);
 			process.emit('TESTSIGNAL' as any);
@@ -63,7 +73,7 @@ describe('FileSystem', function () {
 	describe('removeStorageUnitsChangedListener', function () {
 
 		it('should remove listener', function () {
-			const fileSystem = new FileSystem('/base/directory', '/tmp', 'TESTSIGNAL' as any);
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'TESTSIGNAL' as any);
 			const listener = sinon.spy();
 			fileSystem.onStorageUnitsChanged(listener);
 			fileSystem.removeStorageUnitsChangedListener(listener);

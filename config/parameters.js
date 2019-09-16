@@ -64,6 +64,7 @@ exports = module.exports = Object.assign({}, basicParameters, {
 	fileSystem: {
 		root: process.env.fs_root_path,
 		tmp: process.env.fs_tmp_path || '/tmp',
+		appFiles: process.env.fs_app_files_path,
 		system: process.env.fs_system_path,
 	},
 	video: {
@@ -77,6 +78,12 @@ exports = module.exports = Object.assign({}, basicParameters, {
 			checksum: process.env.bundled_applet_checksum,
 			binaryFile: process.env.bundled_applet_binary_file,
 			frontAppletBinaryFile: process.env.bundled_applet_front_applet_binary_file,
+		}
+		: null,
+	bundledServlet: process.env.bundled_servlet === '1'
+		? {
+			filePath: process.env.bundled_servlet_file_path,
+			env: JSON.parse(process.env.bundled_servlet_env),
 		}
 		: null,
 	autoVerification: process.env.auto_verification_organization_uid
