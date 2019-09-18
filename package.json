@@ -27,7 +27,7 @@
   "devDependencies": {
     "@signageos/front-display": "7.0.0-beta.1-master.3327",
     "@signageos/front-osd": "^0.1.0",
-    "@signageos/lib": "2.2.3",
+    "@signageos/lib": "2.5.0",
     "@types/async-lock": "0.0.19",
     "@types/checksum": "^0.1.30",
     "@types/cors": "^2.8.4",

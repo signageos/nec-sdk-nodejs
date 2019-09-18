@@ -13,7 +13,7 @@ import { useRavenLogging } from '@signageos/front-display/es6/Logging/logger';
 import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
-import createSocket from '@signageos/lib/dist/WebSocket/Client/WS/createWSSocket';
+import { createAutoReconnectingSocket } from '@signageos/lib/dist/WebSocket/Client/WS/createWSSocket';
 import notifyApplicationAlive from './Application/notifyApplicationAlive';
 import { getAutoVerification } from './helper';
 import FrontManagementDriver from './Driver/FrontManagementDriver';
@@ -27,7 +27,7 @@ if (parameters.raven.enabled) {
 
 (async () => {
 	const socketClient = await new Promise((resolve: (socket: ISocket) => void, reject: (error: Error) => void) => {
-		const socket = createSocket(
+		const socket = createAutoReconnectingSocket(
 			parameters.server.bridge_url,
 			() => resolve(socket),
 			() => console.log('Bridge socket disconnected'),

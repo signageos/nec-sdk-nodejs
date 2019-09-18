@@ -3,6 +3,7 @@ import * as http from 'http';
 import * as express from 'express';
 import * as cors from 'cors';
 import * as bodyParser from 'body-parser';
+import * as Debug from 'debug';
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import { ISocketServerWrapper, ISocket } from '@signageos/lib/dist/WebSocket/socketServer';
@@ -155,8 +156,9 @@ export default class BridgeServer {
 	}
 
 	private handleSocketMessage() {
+		const debug = Debug('@signageos/display-linux:Bridge:BridgeServer:websocket');
 		this.socketServer.server.bindConnection((socket: ISocket) => {
-			console.log('socket connected');
+			debug('websocket client connected');
 			socketHandleMessage(
 				socket,
 				this.fileSystem,
@@ -170,6 +172,7 @@ export default class BridgeServer {
 			socketHandleApplication(socket);
 			socketHandleStorageUnitsChanged(socket, this.fileSystem);
 			socketHandleSensors(socket, this.nativeDriver);
+			socket.getDisconnectedPromise().then(() => debug('websocket client disconnected'));
 		});
 	}
 }
