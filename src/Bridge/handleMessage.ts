@@ -58,6 +58,7 @@ export default async function handleMessage(
 		ScreenMessages.PowerOn |
 		ScreenMessages.SetBrightness |
 		ScreenMessages.GetBrightness |
+		ScreenMessages.ScreenshotUpload |
 		AudioMessages.SetVolume |
 		AudioMessages.GetVolume |
 		VideoMessages.OpenInternalVideoInput |
@@ -156,6 +157,10 @@ export default async function handleMessage(
 		case ScreenMessages.GetBrightness:
 			const brightness = await nativeDriver.screenGetBrightness();
 			return { brightness };
+
+		case ScreenMessages.ScreenshotUpload:
+			const uploadedUri = await nativeDriver.screenshotUpload(message.uploadBaseUrl);
+			return { uploadedUri };
 
 		case NetworkGetInfo:
 			const networkInfo = await nativeDriver.getNetworkInfo();
