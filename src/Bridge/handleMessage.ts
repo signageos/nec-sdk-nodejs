@@ -13,6 +13,7 @@ import {
 	ResetSettings,
 	OverwriteFirmware,
 } from './bridgeSystemMessages';
+import * as FirmwareMessages from './bridgeFirmwareMessages';
 import * as NetworkMessages from './bridgeNetworkMessages';
 import * as FSMessages from './bridgeFileSystemMessages';
 import * as OverlayMessages from './bridgeOverlayMessages';
@@ -63,6 +64,7 @@ export default async function handleMessage(
 		AudioMessages.GetVolume |
 		VideoMessages.OpenInternalVideoInput |
 		VideoMessages.CloseInternalVideoInput |
+		FirmwareMessages.GetVersion |
 		NetworkMessages.IsWifiSupported |
 		NetworkMessages.IsWifiEnabled |
 		NetworkMessages.EnableWifi |
@@ -165,6 +167,10 @@ export default async function handleMessage(
 		case NetworkGetInfo:
 			const networkInfo = await nativeDriver.getNetworkInfo();
 			return { networkInfo };
+
+		case FirmwareMessages.GetVersion:
+			const version = await nativeDriver.firmwareGetVersion();
+			return { version };
 
 		case NetworkMessages.IsWifiSupported:
 			const isWifiSupported = await NetworkAPI.isWifiSupported();
