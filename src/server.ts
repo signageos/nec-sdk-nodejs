@@ -19,6 +19,7 @@ import BridgeServer from './Bridge/BridgeServer';
 import * as Raven from 'raven';
 import { useRavenLogging } from '@signageos/lib/dist/Logging/logger';
 import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
+import { createWsSocketServer } from '@signageos/lib/dist/WebSocket/wsServerFactory';
 import { createSameThreadWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
 import FileSystem from './FileSystem/FileSystem';
 import FileSystemCache from './Cache/FileSystemCache';
@@ -132,6 +133,7 @@ if (parameters.raven.enabled) {
 		videoPlayer,
 		overlayRenderer,
 		cecListener,
+		createWsSocketServer,
 	);
 	await bridgeServer.start();
 	await applicationReady();

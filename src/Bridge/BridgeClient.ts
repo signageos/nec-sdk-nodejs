@@ -1,28 +1,30 @@
+import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
+import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
+import BridgeMessage from './IBridgeMessage';
+import { IBridgeServerResponse } from './IBridgeServerResponse';
+
 export class BridgeRequestFailedError {}
 
 export default class BridgeClient {
 
 	constructor(
 		private serverUri: string,
+		private socketClient: ISocket,
 	) {}
 
-	public async invoke<TMessage extends { type: string }, TResult>(message: TMessage): Promise<TResult> {
-		const response = await fetch(
-			this.serverUri + '/message',
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(message),
-			},
-		);
+	public invoke<TMessage extends { type: string }, TResult>(message: TMessage): Promise<TResult> {
+		const invocationUid = generateUniqueHash();
+		this.socketClient.emit('message', { invocationUid, message } as BridgeMessage<TMessage>);
 
-		if (!response.ok) {
-			throw new BridgeRequestFailedError();
-		}
-
-		return await response.json();
+		return new Promise((resolve: (result: TResult) => void, reject: (error: BridgeRequestFailedError) => void) => {
+			this.socketClient.once(invocationUid, (response: IBridgeServerResponse<TResult>) => {
+				if (response.success) {
+					resolve(response.response);
+				} else {
+					reject(new BridgeRequestFailedError());
+				}
+			});
+		});
 	}
 
 	public async uploadOverlay(

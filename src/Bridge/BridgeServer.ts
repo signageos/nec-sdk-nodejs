@@ -6,8 +6,7 @@ import * as bodyParser from 'body-parser';
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import { ISocketServerWrapper, ISocket } from '@signageos/lib/dist/WebSocket/socketServer';
-import { createWsSocketServer } from '@signageos/lib/dist/WebSocket/wsServerFactory';
-import handleMessage, { InvalidMessageError, ResourceNotFound } from './handleMessage';
+import socketHandleMessage from './socketHandleMessage';
 import socketHandleVideo from './socketHandleVideo';
 import socketHandleCEC from './socketHandleCEC';
 import socketHandleApplication from './socketHandleApplication';
@@ -35,10 +34,11 @@ export default class BridgeServer {
 		private videoPlayer: IServerVideoPlayer,
 		private overlayRenderer: OverlayRenderer,
 		private cecListener: ICECListener,
+		private createSocketServer: (httpServer: http.Server) => ISocketServerWrapper
 	) {
 		this.expressApp = express();
 		this.httpServer = http.createServer(this.expressApp);
-		this.socketServer = createWsSocketServer(this.httpServer);
+		this.socketServer = this.createSocketServer(this.httpServer);
 		this.defineHttpRoutes();
 		this.handleSocketMessage();
 	}
@@ -83,28 +83,6 @@ export default class BridgeServer {
 	private defineHttpRoutes() {
 		this.expressApp.use(cors());
 		this.expressApp.use(bodyParser.json());
-		this.expressApp.post('/message', async (request: express.Request, response: express.Response) => {
-			try {
-				const responseMessage = await handleMessage(
-					this.fileSystem,
-					this.fileDetailsProvider,
-					this.nativeDriver,
-					this.display,
-					this.overlayRenderer,
-					request.body,
-				);
-				response.send(responseMessage);
-			} catch (error) {
-				if (error instanceof InvalidMessageError) {
-					response.sendStatus(400);
-				} else if (error instanceof ResourceNotFound) {
-					response.sendStatus(404);
-				} else {
-					response.status(500).send(error.message);
-					throw error;
-				}
-			}
-		});
 
 		const rawBody = bodyParser.raw({ inflate: true, limit: '100mb', type: '*/*' });
 		this.expressApp.post('/overlay', rawBody, async (request: express.Request, response: express.Response) => {
@@ -164,6 +142,15 @@ export default class BridgeServer {
 
 	private handleSocketMessage() {
 		this.socketServer.server.bindConnection((socket: ISocket) => {
+			console.log('socket connected');
+			socketHandleMessage(
+				socket,
+				this.fileSystem,
+				this.fileDetailsProvider,
+				this.nativeDriver,
+				this.display,
+				this.overlayRenderer,
+			);
 			socketHandleVideo(socket, this.videoPlayer);
 			socketHandleCEC(socket, this.cecListener);
 			socketHandleApplication(socket);
