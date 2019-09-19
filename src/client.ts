@@ -10,6 +10,7 @@ import * as Raven from 'raven-js';
 delete window.fetch;
 import "whatwg-fetch";
 import { useRavenLogging } from '@signageos/front-display/es6/Logging/logger';
+import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
 import createSocket from '@signageos/lib/dist/WebSocket/Client/WS/createWSSocket';
@@ -25,13 +26,15 @@ if (parameters.raven.enabled) {
 }
 
 (async () => {
-	const socketClient = createSocket(
-		parameters.server.bridge_url,
-		() => console.log('Bridge socket connected'),
-		() => console.log('Bridge socket disconnected'),
-		(error: any) => console.error('Bridge socket error', error),
-	);
-	const bridge = new BridgeClient(parameters.server.bridge_url);
+	const socketClient = await new Promise((resolve: (socket: ISocket) => void, reject: (error: Error) => void) => {
+		const socket = createSocket(
+			parameters.server.bridge_url,
+			() => resolve(socket),
+			() => console.log('Bridge socket disconnected'),
+			(error: any) => reject(error),
+		);
+	});
+	const bridge = new BridgeClient(parameters.server.bridge_url, socketClient);
 	const nativeDriver = new FrontDriver(
 		window,
 		frontAppletPrefix,

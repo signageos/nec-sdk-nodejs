@@ -7,7 +7,7 @@ import { createBridgeAndItsDependencies } from './bridgeManagement';
 describe('Bridge', function () {
 
 	beforeEach('start bridge server', async function () {
-		this.bridge = createBridgeAndItsDependencies();
+		this.bridge = await createBridgeAndItsDependencies();
 		await this.bridge.bridgeServer.start();
 	});
 
