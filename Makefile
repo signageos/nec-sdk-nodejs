@@ -32,8 +32,8 @@ alpine: dist
 	tools/make-package-json-public.js $(ALPINE_DIST)/server/package.json
 	cd $(ALPINE_DIST)/server; npm install
 	cd $(ALPINE_DIST); tar -czf display-linux.tar.gz client server
-	cd $(ALPINE_DIST); abuild checksum
-	cd $(ALPINE_DIST); abuild -r
+	cd $(ALPINE_DIST); abuild -F checksum
+	cd $(ALPINE_DIST); abuild -Fr
 
 dist:
 	mkdir -p $(DIST)/server
