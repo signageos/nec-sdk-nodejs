@@ -87,12 +87,6 @@ export interface ResetSettings {
 	type: typeof ResetSettings;
 }
 
-export const OverwriteFirmware = 'System.OverwriteFirmware';
-export interface OverwriteFirmware {
-	type: typeof OverwriteFirmware;
-	imgUrl: string;
-}
-
 export const RemoteControlSetEnabled = 'RemoteControl.SetEnabled';
 export interface RemoteControlSetEnabled {
 	type: typeof RemoteControlSetEnabled;

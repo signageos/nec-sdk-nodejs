@@ -18,6 +18,7 @@ import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 import ICECListener from '../CEC/ICECListener';
 import IDisplay from '../Driver/Display/IDisplay';
+import * as SystemAPI from '../API/SystemAPI';
 
 export default class BridgeServer {
 
@@ -85,6 +86,19 @@ export default class BridgeServer {
 		this.expressApp.use(bodyParser.json());
 
 		const rawBody = bodyParser.raw({ inflate: true, limit: '100mb', type: '*/*' });
+		this.expressApp.post('/firmware/overwrite', async (request: express.Request, response: express.Response) => {
+			const { imgUrl } = request.body;
+			if (imgUrl) {
+				try {
+					await SystemAPI.overwriteFirmware(imgUrl);
+					response.sendStatus(200);
+				} catch (error) {
+					response.status(500).send(error.message);
+				}
+			} else {
+				response.status(400).send('missing imgUrl');
+			}
+		});
 		this.expressApp.post('/overlay', rawBody, async (request: express.Request, response: express.Response) => {
 			const { id, width, height, x, y } = request.query;
 			const fileBuffer = request.body;

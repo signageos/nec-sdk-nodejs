@@ -11,7 +11,6 @@ import {
 	SetManualTimeWithTimezone,
 	SetNTPTimeWithTimezone,
 	ResetSettings,
-	OverwriteFirmware,
 } from './bridgeSystemMessages';
 import * as FirmwareMessages from './bridgeFirmwareMessages';
 import * as NetworkMessages from './bridgeNetworkMessages';
@@ -49,7 +48,6 @@ export default async function handleMessage(
 		SetManualTimeWithTimezone |
 		SetNTPTimeWithTimezone |
 		ResetSettings |
-		OverwriteFirmware |
 		ScreenMessages.SetOrientation |
 		PowerMessages.AppRestart |
 		PowerMessages.SystemReboot |
@@ -128,10 +126,6 @@ export default async function handleMessage(
 
 		case ResetSettings:
 			await nativeDriver.resetSettings();
-			return {};
-
-		case OverwriteFirmware:
-			await SystemAPI.overwriteFirmware(message.imgUrl);
 			return {};
 
 		case ScreenMessages.SetOrientation:
