@@ -68,4 +68,12 @@ export default class EmulatedDisplay implements IDisplay {
 	public async resetSettings(): Promise<void> {
 		// do nothing
 	}
+
+	public cpuFanOn(): Promise<void> {
+		throw new Error('Not implemented');
+	}
+
+	public cpuFanOff(): Promise<void> {
+		throw new Error('Not implemented');
+	}
 }

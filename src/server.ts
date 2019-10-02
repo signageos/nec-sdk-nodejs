@@ -34,6 +34,7 @@ import FSSystemSettings from './SystemSettings/FSSystemSettings';
 import { createDisplay } from './Driver/Display/displayFactory';
 import { createSensors } from './Driver/Sensors/sensorsFactory';
 import { getAutoVerification } from './helper';
+import { manageCpuFan } from './CPUFanManager/cpuFanManager';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -137,6 +138,7 @@ if (parameters.raven.enabled) {
 	);
 	await bridgeServer.start();
 	await applicationReady();
+	manageCpuFan(display);
 
 	async function stopApplication() {
 		console.log('stopping application');

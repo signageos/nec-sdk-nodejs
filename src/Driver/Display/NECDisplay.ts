@@ -21,6 +21,7 @@ export default class NECDisplay implements IDisplay {
 		switch (capability) {
 			case DisplayCapability.BRIGHTNESS:
 			case DisplayCapability.SCHEDULE:
+			case DisplayCapability.CPU_FAN:
 				return true;
 
 			default:
@@ -100,6 +101,14 @@ export default class NECDisplay implements IDisplay {
 
 	public async resetSettings(): Promise<void> {
 		await this.necAPI.setFactorySettings();
+	}
+
+	public async cpuFanOn(): Promise<void> {
+		await this.necAPI.fanOn();
+	}
+
+	public async cpuFanOff(): Promise<void> {
+		await this.necAPI.fanOff();
 	}
 
 	private getOnScheduleIndexFromTimerIndex(timerIndex: number) {

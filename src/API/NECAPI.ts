@@ -32,6 +32,8 @@ export interface INECAPI {
 	isHumanDetected(): Promise<boolean>;
 	searchCECDevice(): Promise<void>;
 	setFactorySettings(): Promise<void>;
+	fanOn(): Promise<void>;
+	fanOff(): Promise<void>;
 }
 
 export class NECAPI implements INECAPI {
@@ -136,6 +138,16 @@ export class NECAPI implements INECAPI {
 	@locked('necapi')
 	public async setFactorySettings(): Promise<void> {
 		await execNECDisplayCommand('settings', 'factory');
+	}
+
+	@locked('necapi')
+	public async fanOn() {
+		await execNECDisplayCommand('compute_module', 'fan_on');
+	}
+
+	@locked('necapi')
+	public async fanOff() {
+		await execNECDisplayCommand('compute_module', 'fan_off');
 	}
 }
 

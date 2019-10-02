@@ -28,6 +28,8 @@ interface IDisplay {
 	closeVideoInput(): Promise<void>;
 	initCEC(): Promise<void>;
 	resetSettings(): Promise<void>;
+	cpuFanOn(): Promise<void>;
+	cpuFanOff(): Promise<void>;
 }
 
 export default IDisplay;
