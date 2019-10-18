@@ -68,7 +68,7 @@ export default class FileSystemCache implements ICache {
 	}
 
 	private async getCacheDirectory(): Promise<IFilePath> {
-		const CACHE_DIR = 'cache';
+		const CACHE_DIR = '.cache';
 		const internalStorageUnit = await this.fileSystem.getInternalStorageUnit();
 		return {
 			storageUnit: internalStorageUnit,
