@@ -77,7 +77,11 @@ export default class BridgeStreamPlayer implements IStreamPlayer {
 	}
 
 	private async stopStream(uri: string, x: number, y: number, width: number, height: number) {
-		await this.bridgeVideoClient.stopVideo(uri, x, y, width, height);
+		try {
+			await this.bridgeVideoClient.stopVideo(uri, x, y, width, height);
+		} catch (error) {
+			console.warn('failed to stop stream', uri);
+		}
 	}
 
 	private isStreamingProtocolSupported(protocol: StreamProtocol) {
