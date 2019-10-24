@@ -67,8 +67,10 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 	}
 
 	public async stop(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
-		const video = this.getVideoByArgumentsOrThrowException(uri, x, y, width, height);
-		await video.stop();
+		const video = this.getVideoByArguments(uri, x, y, width, height);
+		if (video) {
+			await video.stop();
+		}
 	}
 
 	public async pause(_uri: string, _x: number, _y: number, _width: number, _height: number): Promise<void> {
@@ -109,7 +111,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		throw new Error('All available video players are busy');
 	}
 
-	private getVideoByArgumentsOrThrowException(uri: string, x: number, y: number, width: number, height: number) {
+	private getVideoByArguments(uri: string, x: number, y: number, width: number, height: number): IServerVideo | null {
 		for (let video of this.videos) {
 			const videoArguments = video.getVideoArguments();
 			if (videoArguments &&
@@ -123,7 +125,16 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 			}
 		}
 
-		throw new Error('Video with arguments ' + JSON.stringify({ uri, x, y, width, height }) + ' not found');
+		return null;
+	}
+
+	private getVideoByArgumentsOrThrowException(uri: string, x: number, y: number, width: number, height: number) {
+		const video = this.getVideoByArguments(uri, x, y, width, height);
+		if (video) {
+			return video;
+		} else {
+			throw new Error('Video with arguments ' + JSON.stringify({ uri, x, y, width, height }) + ' not found');
+		}
 	}
 
 	private forwardVideoEventsToSingleOwnEventEmitter() {

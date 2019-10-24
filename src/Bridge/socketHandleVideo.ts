@@ -5,86 +5,53 @@ import {
 	PlayVideo,
 	StopVideo,
 	StopAllVideos,
-	VideoPrepared,
-	VideoStarted,
 	VideoEnded,
 	VideoStopped,
 	VideoError,
-	AllVideosStopped,
 } from './bridgeVideoMessages';
 import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
+import { MessageType } from './BridgeClient';
+import IBridgeMessage from './IBridgeMessage';
 
 export default function socketHandleVideo(
 	socket: ISocket,
 	videoPlayer: IServerVideoPlayer,
 ) {
-	listenToVideoEventsFromClient(socket, videoPlayer);
+	bindVideoMessages(socket, videoPlayer);
 	forwardVideoEventsToClient(socket, videoPlayer);
 }
 
-function listenToVideoEventsFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
-	listenToPrepareVideoEventFromClient(socket, videoPlayer);
-	listenToPlayVideoEventFromClient(socket, videoPlayer);
-	listenToStopVideoEventFromClient(socket, videoPlayer);
-	listenToStopAllVideosEventFromClient(socket, videoPlayer);
-}
-
-function listenToPrepareVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
-	socket.bindMessage(PrepareVideo, async (message: PrepareVideo) => {
-		const { uri, x, y, width, height, isStream } = message;
+function bindVideoMessages(socket: ISocket, videoPlayer: IServerVideoPlayer) {
+	socket.bindMessage('message.' + MessageType.VIDEO, async (message: IBridgeMessage<any>) => {
 		try {
-			await videoPlayer.prepare(uri, x, y, width, height, isStream);
-			await socket.sendMessage(VideoPrepared, {
-				uri, x, y, width, height,
-			});
+			await handleVideoMessage(videoPlayer, message.message);
+			await socket.sendMessage(message.invocationUid, { success: true, response: {} });
 		} catch (error) {
-			await socket.sendMessage(VideoError, {
-				uri, x, y, width, height,
-				data: { message: 'Failed to prepare video' },
-			});
+			await socket.sendMessage(message.invocationUid, { success: false });
 		}
 	});
 }
 
-function listenToPlayVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
-	socket.bindMessage(PlayVideo, async (message: PlayVideo) => {
-		const { uri, x, y, width, height } = message;
-		try {
-			await videoPlayer.play(uri, x, y, width, height, message.isStream);
-			await socket.sendMessage(VideoStarted, {
-				uri, x, y, width, height,
-			});
-		} catch (error) {
-			await socket.sendMessage(VideoError, {
-				uri, x, y, width, height,
-				data: { message: 'Failed to start video playback' },
-			});
-		}
-	});
-}
-
-function listenToStopVideoEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
-	socket.bindMessage(StopVideo, async (message: StopVideo) => {
-		const { uri, x, y, width, height } = message;
-		try {
-			await videoPlayer.stop(uri, x, y, width, height);
-			await socket.sendMessage(VideoStopped, {
-				uri, x, y, width, height,
-			});
-		} catch (error) {
-			await socket.sendMessage(VideoError, {
-				uri, x, y, width, height,
-				data: { message: 'Failed to stop video playback' },
-			});
-		}
-	});
-}
-
-function listenToStopAllVideosEventFromClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
-	socket.bindMessage(StopAllVideos, async () => {
-		await videoPlayer.clearAll();
-		await socket.sendMessage(AllVideosStopped, {});
-	});
+async function handleVideoMessage(
+	videoPlayer: IServerVideoPlayer,
+	message: PrepareVideo | PlayVideo | StopVideo | StopAllVideos,
+) {
+	switch (message.type) {
+		case PrepareVideo:
+			await videoPlayer.prepare(message.uri, message.x, message.y, message.width, message.height, message.isStream);
+			break;
+		case PlayVideo:
+			await videoPlayer.play(message.uri, message.x, message.y, message.width, message.height, message.isStream);
+			break;
+		case StopVideo:
+			await videoPlayer.stop(message.uri, message.x, message.y, message.width, message.height);
+			break;
+		case StopAllVideos:
+			await videoPlayer.clearAll();
+			break;
+		default:
+			throw new Error('invalid video message');
+	}
 }
 
 function forwardVideoEventsToClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {

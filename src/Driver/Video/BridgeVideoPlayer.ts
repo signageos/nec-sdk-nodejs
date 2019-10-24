@@ -33,11 +33,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 	@locked('video')
 	public async stop(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const uriRelative = this.stripFileSystemRootFromUri(uri);
-		try {
-			await this.bridgeVideoClient.stopVideo(uriRelative, x, y, width, height);
-		} catch (error) {
-			console.warn('video stop error', error);
-		}
+		await this.bridgeVideoClient.stopVideo(uriRelative, x, y, width, height);
 	}
 
 	@locked('video')

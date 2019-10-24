@@ -8,6 +8,7 @@ import IDisplay from '../Driver/Display/IDisplay';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 import handleMessage from './handleMessage';
 import * as Debug from 'debug';
+import { MessageType } from './BridgeClient';
 const debug = Debug('@signageos/display-linux:Bridge:socketHandleMessage');
 
 export default function socketHandleMessage(
@@ -18,7 +19,7 @@ export default function socketHandleMessage(
 	display: IDisplay,
 	overlayRenderer: OverlayRenderer,
 ) {
-	socket.bindMessage('message', async (message: IBridgeMessage<any>) => {
+	socket.bindMessage('message.' + MessageType.GENERIC, async (message: IBridgeMessage<any>) => {
 		try {
 			const response = await handleMessage(fileSystem, fileDetailsProvider, nativeDriver, display, overlayRenderer, message.message);
 			debug('bridge message success', message);

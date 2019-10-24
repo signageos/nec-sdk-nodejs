@@ -3,6 +3,12 @@ import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 import BridgeMessage from './IBridgeMessage';
 import { IBridgeServerResponse } from './IBridgeServerResponse';
 
+export enum MessageType {
+	GENERIC = 'generic',
+	VIDEO = 'video',
+	// TODO create other types to remove messages from generic
+}
+
 export class BridgeRequestFailedError {}
 
 export default class BridgeClient {
@@ -12,9 +18,12 @@ export default class BridgeClient {
 		private socketClient: ISocket,
 	) {}
 
-	public invoke<TMessage extends { type: string }, TResult>(message: TMessage): Promise<TResult> {
+	public invoke<TMessage extends { type: string }, TResult>(
+		message: TMessage,
+		messageType: MessageType = MessageType.GENERIC,
+	): Promise<TResult> {
 		const invocationUid = generateUniqueHash();
-		this.socketClient.emit('message', { invocationUid, message } as BridgeMessage<TMessage>);
+		this.socketClient.emit('message.' + messageType, { invocationUid, message } as BridgeMessage<TMessage>);
 
 		return new Promise((resolve: (result: TResult) => void, reject: (error: BridgeRequestFailedError) => void) => {
 			this.socketClient.once(invocationUid, (response: IBridgeServerResponse<TResult>) => {
