@@ -1,4 +1,3 @@
-import * as AsyncLock from 'async-lock';
 import IFrontDriver, { Hardware } from '@signageos/front-display/es6/NativeDevice/Front/IFrontDriver';
 import FrontCapability from '@signageos/front-display/es6/NativeDevice/Front/FrontCapability';
 import INetworkInfo from '@signageos/front-display/es6/Management/Device/Network/INetworkInfo';
@@ -45,7 +44,6 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	public readonly fileSystem: IFileSystem;
 
 	private deviceUid: string;
-	private lock: AsyncLock;
 	private cache: ICache;
 	private bridgeVideoClient: BridgeVideoClient;
 	private overlay: OverlayHandler;
@@ -59,9 +57,8 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		maxVideoCount: number,
 	) {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
-		this.lock = new AsyncLock();
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
-		this.bridgeVideoClient = new BridgeVideoClient(this.lock, socketClient);
+		this.bridgeVideoClient = new BridgeVideoClient(this.bridge, socketClient);
 		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridgeVideoClient, maxVideoCount);
 		this.stream = new BridgeStreamPlayer(this.window, this.bridge, this.bridgeVideoClient);
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);

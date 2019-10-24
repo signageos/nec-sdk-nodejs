@@ -37,26 +37,6 @@ export interface StopAllVideos {
 	type: typeof StopAllVideos;
 }
 
-export const VideoPrepared = 'Video.VideoPrepared';
-export interface VideoPrepared {
-	type: typeof VideoPrepared;
-	uri: string;
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-}
-
-export const VideoStarted = 'Video.VideoStarted';
-export interface VideoStarted {
-	type: typeof VideoStarted;
-	uri: string;
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-}
-
 export const VideoEnded = 'Video.VideoEnded';
 export interface VideoEnded {
 	type: typeof VideoEnded;
@@ -86,11 +66,6 @@ export interface VideoError {
 	width: number;
 	height: number;
 	data?: any;
-}
-
-export const AllVideosStopped = 'Video.AllVideosStopped';
-export interface AllVideosStopped {
-	type: typeof AllVideosStopped;
 }
 
 export const OpenInternalVideoInput = 'Video.OpenInternalVideoInput';
