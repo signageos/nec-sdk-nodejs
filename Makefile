@@ -22,7 +22,7 @@ signageos-display-linux.deb:
 	cd $(RASPBIAN_DIST)/usr/lib/signageos/server; npm install
 	dpkg-deb --build $(RASPBIAN_DIST) signageos-display-linux.deb
 
-alpine: dist
+apk: dist
 	mkdir -p $(ALPINE_DIST)/
 	cp $(DIST)/LICENSE $(ALPINE_DIST)
 	cp -r $(DIST)/client $(ALPINE_DIST)/client
