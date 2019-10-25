@@ -96,6 +96,7 @@ export default class NECDisplay implements IDisplay {
 	}
 
 	public async initCEC() {
+		await this.necAPI.enableCEC();
 		await this.necAPI.searchCECDevice();
 	}
 
