@@ -21,17 +21,17 @@ export async function checkCpuTemperatureAndSetFanOnOff(
 	display: IDisplay,
 	getCpuTemperature: () => Promise<number>,
 ) {
-	console.log('check cpu temperature and control fan');
+	debug('check cpu temperature and control fan');
 	try {
 		const cpuTemperature = await getCpuTemperature();
 		debug('cpu temperature', cpuTemperature);
 		const fanDesiredState = getFanDesiredState(cpuTemperature);
 		if (fanDesiredState === FanDesiredState.ON && !lastSetOn) {
-			console.log('set cpu fan on');
+			debug('set cpu fan on');
 			await display.cpuFanOn();
 			lastSetOn = true;
 		} else if (fanDesiredState === FanDesiredState.OFF && (lastSetOn || lastSetOn === null)) {
-			console.log('set cpu fan off');
+			debug('set cpu fan off');
 			await display.cpuFanOff();
 			lastSetOn = false;
 		}
