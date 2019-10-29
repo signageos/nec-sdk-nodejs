@@ -25,8 +25,8 @@ signageos-display-linux.deb:
 apk: dist
 	mkdir -p $(ALPINE_DIST)/
 	cp $(DIST)/LICENSE $(ALPINE_DIST)
-	cp -r $(DIST)/client $(ALPINE_DIST)/client
-	cp -r $(DIST)/server $(ALPINE_DIST)/server
+	cp -r $(DIST)/client $(ALPINE_DIST)/
+	cp -r $(DIST)/server $(ALPINE_DIST)/
 	cp alpine/* $(ALPINE_DIST)
 	sed -i "s/pkgver=\"x\"/pkgver=\"${VERSION}\"/" $(ALPINE_DIST)/APKBUILD
 	tools/make-package-json-public.js $(ALPINE_DIST)/server/package.json
