@@ -1,4 +1,4 @@
-image: $CI_REGISTRY/signageos/docker-node:8.9.0-alpine-zip
+image: $CI_REGISTRY/signageos/docker-node:10.14.2-alpine-build-zip-vips
 services:
   - docker:dind
 

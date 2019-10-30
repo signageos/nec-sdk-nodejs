@@ -345,6 +345,13 @@ export default class FileSystem implements IFileSystem {
 		}
 	}
 
+	public getParentDirectoryFilePath(filePath: IFilePath): IFilePath {
+		return {
+			storageUnit: filePath.storageUnit,
+			filePath: path.dirname(filePath.filePath),
+		};
+	}
+
 	private async convertInternalRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
 		const startsWith = INTERNAL_STORAGE_UNIT;
 		if (!relativePath.startsWith(startsWith)) {
@@ -391,13 +398,6 @@ export default class FileSystem implements IFileSystem {
 		return {
 			storageUnit: destinationFilePath.storageUnit,
 			filePath: path.join(parentDirectoryFilePath.filePath, tmpFileName),
-		};
-	}
-
-	private getParentDirectoryFilePath(filePath: IFilePath): IFilePath {
-		return {
-			storageUnit: filePath.storageUnit,
-			filePath: path.dirname(filePath.filePath),
 		};
 	}
 

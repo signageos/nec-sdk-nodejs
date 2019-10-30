@@ -23,11 +23,11 @@ import { ISystemAPI } from '../API/SystemAPI';
 
 export default class BridgeServer {
 
-	private readonly expressApp: express.Application;
 	private readonly httpServer: http.Server;
 	private readonly socketServer: ISocketServerWrapper;
 
 	constructor(
+		private expressApp: express.Application,
 		private serverUrl: string,
 		private fileSystem: IFileSystem,
 		private fileDetailsProvider: IFileDetailsProvider,
@@ -39,7 +39,6 @@ export default class BridgeServer {
 		private createSocketServer: (httpServer: http.Server) => ISocketServerWrapper,
 		private systemAPI: ISystemAPI,
 	) {
-		this.expressApp = express();
 		this.httpServer = http.createServer(this.expressApp);
 		this.socketServer = this.createSocketServer(this.httpServer);
 		this.defineHttpRoutes();

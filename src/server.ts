@@ -5,6 +5,7 @@ require('util').promisify = require('util.promisify');
 // polyfill WebSocket for node.js
 (global as any).WebSocket = require('ws');
 
+import * as express from 'express';
 import * as path from 'path';
 import * as AsyncLock from 'async-lock';
 import nodeFetch from 'node-fetch';
@@ -29,12 +30,13 @@ import { NECAPI } from './API/NECAPI';
 import CECListener from './CEC/CECListener';
 import FileDetailsProvider from './FileSystem/FileDetailsProvider';
 import FileMetadataCache from './FileSystem/FileMetadataCache';
-import { applicationReady, applicationNotReady } from './API/SystemAPI';
+import { createSystemAPI } from './API/SystemAPI';
 import FSSystemSettings from './SystemSettings/FSSystemSettings';
 import { createDisplay } from './Driver/Display/displayFactory';
 import { createSensors } from './Driver/Sensors/sensorsFactory';
 import { getAutoVerification } from './helper';
 import { manageCpuFan } from './CPUFanManager/cpuFanManager';
+import ImageResizer from './FileSystem/Image/ImageResizer';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -47,6 +49,7 @@ if (parameters.raven.enabled) {
 
 (async () => {
 	const systemAPI = createSystemAPI();
+	const bridgeExpressApp = express();
 	const fileSystem = new FileSystem(
 		parameters.fileSystem.root,
 		parameters.fileSystem.tmp,
@@ -56,7 +59,8 @@ if (parameters.raven.enabled) {
 	);
 	const videoAPI = createVideoAPI();
 	const fileMetadataCache = new FileMetadataCache(fileSystem);
-	const fileDetailsProvider = new FileDetailsProvider(fileSystem, videoAPI, fileMetadataCache);
+	const imageResizer = new ImageResizer(parameters.server.file_system_url, bridgeExpressApp, fileSystem);
+	const fileDetailsProvider = new FileDetailsProvider(fileSystem, videoAPI, fileMetadataCache, imageResizer);
 	const cache = new FileSystemCache(fileSystem);
 	await cache.initialize();
 	const systemSettings = new FSSystemSettings(parameters.fileSystem.system);
@@ -129,6 +133,7 @@ if (parameters.raven.enabled) {
 
 	const cecListener = new CECListener(display, parameters.video.socket_root, systemAPI);
 	const bridgeServer = new BridgeServer(
+		bridgeExpressApp,
 		parameters.server.bridge_url,
 		fileSystem,
 		fileDetailsProvider,

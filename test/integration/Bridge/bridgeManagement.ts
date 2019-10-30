@@ -1,4 +1,5 @@
 import * as sinon from 'sinon';
+import * as express from 'express';
 import BridgeServer from '../../../src/Bridge/BridgeServer';
 import BridgeClient from '../../../src/Bridge/BridgeClient';
 import { createMockSocketServerClientPair } from '../WebSocket/mockWebSocket';
@@ -32,6 +33,7 @@ export async function createBridgeAndItsDependencies() {
 		close: () => Promise.resolve(),
 	};
 	const bridgeServer = new BridgeServer(
+		express(),
 		params.server.bridge_url,
 		fileSystem as any,
 		fileDetailsProvider as any,
