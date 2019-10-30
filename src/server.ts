@@ -46,11 +46,13 @@ if (parameters.raven.enabled) {
 }
 
 (async () => {
+	const systemAPI = createSystemAPI();
 	const fileSystem = new FileSystem(
 		parameters.fileSystem.root,
 		parameters.fileSystem.tmp,
 		parameters.fileSystem.appFiles,
 		'SIGUSR2',
+		systemAPI,
 	);
 	const videoAPI = createVideoAPI();
 	const fileMetadataCache = new FileMetadataCache(fileSystem);
@@ -60,7 +62,7 @@ if (parameters.raven.enabled) {
 	const systemSettings = new FSSystemSettings(parameters.fileSystem.system);
 	const overlayRenderer = new OverlayRenderer(fileSystem);
 	const necAPI = new NECAPI();
-	const display = await createDisplay(necAPI, systemSettings);
+	const display = await createDisplay(necAPI, systemSettings, systemAPI);
 	const sensors = await createSensors(necAPI);
 
 	const createVideo = (key: string) => {
@@ -80,6 +82,7 @@ if (parameters.raven.enabled) {
 		fileDetailsProvider,
 		display,
 		sensors,
+		systemAPI,
 	);
 
 	if (raven) {
@@ -124,7 +127,7 @@ if (parameters.raven.enabled) {
 		autoVerification,
 	);
 
-	const cecListener = new CECListener(display, parameters.video.socket_root);
+	const cecListener = new CECListener(display, parameters.video.socket_root, systemAPI);
 	const bridgeServer = new BridgeServer(
 		parameters.server.bridge_url,
 		fileSystem,
@@ -135,10 +138,11 @@ if (parameters.raven.enabled) {
 		overlayRenderer,
 		cecListener,
 		createWsSocketServer,
+		systemAPI,
 	);
 	await bridgeServer.start();
-	await applicationReady();
-	manageCpuFan(display);
+	await systemAPI.applicationReady();
+	manageCpuFan(display, systemAPI);
 
 	async function stopApplication() {
 		console.log('stopping application');
@@ -146,7 +150,7 @@ if (parameters.raven.enabled) {
 			bridgeServer.stop(),
 			nativeDriver.servletRunner.closeAll(),
 		]);
-		await applicationNotReady();
+		await systemAPI.applicationNotReady();
 		console.log('application will exit');
 		process.exit(0);
 	}

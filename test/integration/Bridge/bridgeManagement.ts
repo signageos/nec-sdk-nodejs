@@ -2,6 +2,7 @@ import * as sinon from 'sinon';
 import BridgeServer from '../../../src/Bridge/BridgeServer';
 import BridgeClient from '../../../src/Bridge/BridgeClient';
 import { createMockSocketServerClientPair } from '../WebSocket/mockWebSocket';
+import { ISystemAPI } from '../../../src/API/SystemAPI';
 
 const params = require('../../../config/parameters');
 
@@ -40,6 +41,7 @@ export async function createBridgeAndItsDependencies() {
 		overlayRenderer as any,
 		cecListener as any,
 		() => (socketServerWrapper as any),
+		{} as ISystemAPI,
 	);
 	const bridgeClient = new BridgeClient(params.server.bridge_url, socketClient);
 	return {

@@ -20,7 +20,7 @@ import * as ScreenMessages from './bridgeScreenMessages';
 import * as PowerMessages from './bridgePowerMessages';
 import * as AudioMessages from './bridgeAudioMessages';
 import * as VideoMessages from './bridgeVideoMessages';
-import * as SystemAPI from '../API/SystemAPI';
+import { ISystemAPI } from '../API/SystemAPI';
 import * as NetworkAPI from '../API/NetworkAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
 import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
@@ -38,6 +38,7 @@ export default async function handleMessage(
 	nativeDriver: IBasicDriver & IManagementDriver,
 	display: IDisplay,
 	overlayRenderer: OverlayRenderer,
+	systemAPI: ISystemAPI,
 	message:
 		Supports |
 		GetDeviceUid |
@@ -96,7 +97,7 @@ export default async function handleMessage(
 			return { deviceUid };
 
 		case GetModel:
-			const model = await SystemAPI.getModel();
+			const model = await systemAPI.getModel();
 			return { model };
 
 		case Supports:

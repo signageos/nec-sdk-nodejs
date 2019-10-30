@@ -1,14 +1,14 @@
 import IDisplay from '../Driver/Display/IDisplay';
 import DisplayCapability from '../Driver/Display/DisplayCapability';
-import * as SystemAPI from '../API/SystemAPI';
+import { ISystemAPI } from '../API/SystemAPI';
 import * as Debug from 'debug';
 const debug = Debug('@signageos/display-linux:CPUFanManager');
 
-export function manageCpuFan(display: IDisplay) {
+export function manageCpuFan(display: IDisplay, systemAPI: ISystemAPI) {
 	const INTERVAL = 5e3;
 	if (display.supports(DisplayCapability.CPU_FAN)) {
 		setInterval(
-			() => checkCpuTemperatureAndSetFanOnOff(display, SystemAPI.getCpuTemperature),
+			() => checkCpuTemperatureAndSetFanOnOff(display, systemAPI.getCpuTemperature),
 			INTERVAL,
 		);
 	}

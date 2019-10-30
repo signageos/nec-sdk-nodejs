@@ -19,7 +19,7 @@ import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 import ICECListener from '../CEC/ICECListener';
 import IDisplay from '../Driver/Display/IDisplay';
-import * as SystemAPI from '../API/SystemAPI';
+import { ISystemAPI } from '../API/SystemAPI';
 
 export default class BridgeServer {
 
@@ -36,7 +36,8 @@ export default class BridgeServer {
 		private videoPlayer: IServerVideoPlayer,
 		private overlayRenderer: OverlayRenderer,
 		private cecListener: ICECListener,
-		private createSocketServer: (httpServer: http.Server) => ISocketServerWrapper
+		private createSocketServer: (httpServer: http.Server) => ISocketServerWrapper,
+		private systemAPI: ISystemAPI,
 	) {
 		this.expressApp = express();
 		this.httpServer = http.createServer(this.expressApp);
@@ -91,7 +92,7 @@ export default class BridgeServer {
 			const { imgUrl } = request.body;
 			if (imgUrl) {
 				try {
-					await SystemAPI.overwriteFirmware(imgUrl);
+					await this.systemAPI.overwriteFirmware(imgUrl);
 					response.sendStatus(200);
 				} catch (error) {
 					response.status(500).send(error.message);
@@ -166,10 +167,11 @@ export default class BridgeServer {
 				this.nativeDriver,
 				this.display,
 				this.overlayRenderer,
+				this.systemAPI,
 			);
 			socketHandleVideo(socket, this.videoPlayer);
 			socketHandleCEC(socket, this.cecListener);
-			socketHandleApplication(socket);
+			socketHandleApplication(socket, this.systemAPI);
 			socketHandleStorageUnitsChanged(socket, this.fileSystem);
 			socketHandleSensors(socket, this.nativeDriver);
 			socket.getDisconnectedPromise().then(() => debug('websocket client disconnected'));

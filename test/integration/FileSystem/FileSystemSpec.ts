@@ -11,6 +11,7 @@ import * as multer from 'multer';
 import { IFilePath, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { FileOrDirectoryNotFound } from '../../../src/FileSystem/IFileSystem';
 import FileSystem from '../../../src/FileSystem/FileSystem';
+import { ISystemAPI } from '../../../src/API/SystemAPI';
 
 const parameters = require('../../../config/parameters');
 const fileSystemRoot = parameters.fileSystem.root;
@@ -26,7 +27,7 @@ const testStorageUnit = {
 } as IStorageUnit;
 
 function createFileSystem() {
-	return new FileSystem(fileSystemRoot, appFilesFileSystemRoot, tmpFileSystemRoot, 'SIGUSR2');
+	return new FileSystem(fileSystemRoot, appFilesFileSystemRoot, tmpFileSystemRoot, 'SIGUSR2', {} as ISystemAPI);
 }
 
 function getRootPath() {
