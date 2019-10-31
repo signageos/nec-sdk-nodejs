@@ -54,7 +54,7 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 	private stripFileSystemRootFromUri(uri: string) {
 		if (uri.startsWith(this.fileSystemUrl + '/')) {
 			const skipChars = (this.fileSystemUrl + '/').length;
-			return uri.substring(skipChars);
+			return decodeURI(uri.substring(skipChars));
 		}
 
 		throw new Error('Videos can only be played from local storage. Supply full URI.');

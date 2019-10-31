@@ -6,5 +6,5 @@ export function getFileUriPath(filePath: IFilePath) {
 	if (filePath.storageUnit.removable) {
 		uriPath = EXTERNAL_STORAGE_UNITS_PATH + '/' + uriPath;
 	}
-	return uriPath;
+	return encodeURI(uriPath);
 }
