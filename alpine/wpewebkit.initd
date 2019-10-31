@@ -9,11 +9,6 @@ depend() {
 
 start() {
     ebegin "starting signageOS WPE Webkit"
-    einfo "waiting for server to start accepting connections"
-    while ! /usr/bin/signageos application is_ready; do
-        sleep 1
-    done
-    einfo "server is ready, starting now"
     docker start wpewebkit
     eend $? "failed to start WPE Webkit"
 }
