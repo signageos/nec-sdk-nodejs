@@ -31,6 +31,7 @@ export default interface IFileSystem {
 	getTmpStorageUnit(): IStorageUnit;
 	getAppFilesStorageUnit(): IStorageUnit;
 	getAbsolutePath(filePath: IFilePath): string;
+	getParentDirectoryFilePath(filePath: IFilePath): IFilePath;
 	convertRelativePathToFilePath(relativePath: string): Promise<IFilePath>;
 }
 

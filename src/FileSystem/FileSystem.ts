@@ -7,9 +7,7 @@ import { IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 import {
-	IStorageUnit as ISystemStorageUnit,
-	getStorageStatus,
-	getFileMimeType,
+	IStorageUnit as ISystemStorageUnit, ISystemAPI,
 } from '../API/SystemAPI';
 import IFileSystem, {
 	TMP_STORAGE_UNIT,
@@ -36,6 +34,7 @@ export default class FileSystem implements IFileSystem {
 		private tmpDirectory: string,
 		private appFilesDirectory: string,
 		private storageUnitsChangedSignal: NodeJS.Signals,
+		private systemAPI: ISystemAPI,
 	) {
 		this.eventEmitter = new EventEmitter();
 		this.listenToStorageUnitsChanged();
@@ -116,7 +115,7 @@ export default class FileSystem implements IFileSystem {
 
 		let mimeType: string | undefined = undefined;
 		try {
-			mimeType = await getFileMimeType(absolutePath);
+			mimeType = await this.systemAPI.getFileMimeType(absolutePath);
 		} catch (error) {
 			console.warn('failed to get mime type', error);
 		}
@@ -274,7 +273,7 @@ export default class FileSystem implements IFileSystem {
 	}
 
 	public async listStorageUnits() {
-		const storageUnits = await getStorageStatus();
+		const storageUnits = await this.systemAPI.getStorageStatus();
 		return storageUnits.map((storageUnit: ISystemStorageUnit) => ({
 			type: storageUnit.type,
 			capacity: storageUnit.availableSpace + storageUnit.usedSpace,
@@ -346,6 +345,13 @@ export default class FileSystem implements IFileSystem {
 		}
 	}
 
+	public getParentDirectoryFilePath(filePath: IFilePath): IFilePath {
+		return {
+			storageUnit: filePath.storageUnit,
+			filePath: path.dirname(filePath.filePath),
+		};
+	}
+
 	private async convertInternalRelativePathToFilePath(relativePath: string): Promise<IFilePath> {
 		const startsWith = INTERNAL_STORAGE_UNIT;
 		if (!relativePath.startsWith(startsWith)) {
@@ -392,13 +398,6 @@ export default class FileSystem implements IFileSystem {
 		return {
 			storageUnit: destinationFilePath.storageUnit,
 			filePath: path.join(parentDirectoryFilePath.filePath, tmpFileName),
-		};
-	}
-
-	private getParentDirectoryFilePath(filePath: IFilePath): IFilePath {
-		return {
-			storageUnit: filePath.storageUnit,
-			filePath: path.dirname(filePath.filePath),
 		};
 	}
 

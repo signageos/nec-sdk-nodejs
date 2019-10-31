@@ -3,6 +3,7 @@ import * as http from 'http';
 import * as express from 'express';
 import * as cors from 'cors';
 import * as bodyParser from 'body-parser';
+import * as Debug from 'debug';
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import { ISocketServerWrapper, ISocket } from '@signageos/lib/dist/WebSocket/socketServer';
@@ -18,15 +19,15 @@ import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 import ICECListener from '../CEC/ICECListener';
 import IDisplay from '../Driver/Display/IDisplay';
-import * as SystemAPI from '../API/SystemAPI';
+import { ISystemAPI } from '../API/SystemAPI';
 
 export default class BridgeServer {
 
-	private readonly expressApp: express.Application;
 	private readonly httpServer: http.Server;
 	private readonly socketServer: ISocketServerWrapper;
 
 	constructor(
+		private expressApp: express.Application,
 		private serverUrl: string,
 		private fileSystem: IFileSystem,
 		private fileDetailsProvider: IFileDetailsProvider,
@@ -35,9 +36,9 @@ export default class BridgeServer {
 		private videoPlayer: IServerVideoPlayer,
 		private overlayRenderer: OverlayRenderer,
 		private cecListener: ICECListener,
-		private createSocketServer: (httpServer: http.Server) => ISocketServerWrapper
+		private createSocketServer: (httpServer: http.Server) => ISocketServerWrapper,
+		private systemAPI: ISystemAPI,
 	) {
-		this.expressApp = express();
 		this.httpServer = http.createServer(this.expressApp);
 		this.socketServer = this.createSocketServer(this.httpServer);
 		this.defineHttpRoutes();
@@ -90,7 +91,7 @@ export default class BridgeServer {
 			const { imgUrl } = request.body;
 			if (imgUrl) {
 				try {
-					await SystemAPI.overwriteFirmware(imgUrl);
+					await this.systemAPI.overwriteFirmware(imgUrl);
 					response.sendStatus(200);
 				} catch (error) {
 					response.status(500).send(error.message);
@@ -148,15 +149,12 @@ export default class BridgeServer {
 				response.status(400).send({ error: error.message });
 			}
 		});
-
-		this.expressApp.use((_request: express.Request, response: express.Response) => {
-			response.send(404);
-		});
 	}
 
 	private handleSocketMessage() {
+		const debug = Debug('@signageos/display-linux:Bridge:BridgeServer:websocket');
 		this.socketServer.server.bindConnection((socket: ISocket) => {
-			console.log('socket connected');
+			debug('websocket client connected');
 			socketHandleMessage(
 				socket,
 				this.fileSystem,
@@ -164,12 +162,14 @@ export default class BridgeServer {
 				this.nativeDriver,
 				this.display,
 				this.overlayRenderer,
+				this.systemAPI,
 			);
 			socketHandleVideo(socket, this.videoPlayer);
 			socketHandleCEC(socket, this.cecListener);
-			socketHandleApplication(socket);
+			socketHandleApplication(socket, this.systemAPI);
 			socketHandleStorageUnitsChanged(socket, this.fileSystem);
 			socketHandleSensors(socket, this.nativeDriver);
+			socket.getDisconnectedPromise().then(() => debug('websocket client disconnected'));
 		});
 	}
 }

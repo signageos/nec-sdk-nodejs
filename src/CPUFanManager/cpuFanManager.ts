@@ -1,14 +1,14 @@
 import IDisplay from '../Driver/Display/IDisplay';
 import DisplayCapability from '../Driver/Display/DisplayCapability';
-import * as SystemAPI from '../API/SystemAPI';
+import { ISystemAPI } from '../API/SystemAPI';
 import * as Debug from 'debug';
 const debug = Debug('@signageos/display-linux:CPUFanManager');
 
-export function manageCpuFan(display: IDisplay) {
+export function manageCpuFan(display: IDisplay, systemAPI: ISystemAPI) {
 	const INTERVAL = 5e3;
 	if (display.supports(DisplayCapability.CPU_FAN)) {
 		setInterval(
-			() => checkCpuTemperatureAndSetFanOnOff(display, SystemAPI.getCpuTemperature),
+			() => checkCpuTemperatureAndSetFanOnOff(display, systemAPI.getCpuTemperature),
 			INTERVAL,
 		);
 	}
@@ -21,17 +21,17 @@ export async function checkCpuTemperatureAndSetFanOnOff(
 	display: IDisplay,
 	getCpuTemperature: () => Promise<number>,
 ) {
-	console.log('check cpu temperature and control fan');
+	debug('check cpu temperature and control fan');
 	try {
 		const cpuTemperature = await getCpuTemperature();
 		debug('cpu temperature', cpuTemperature);
 		const fanDesiredState = getFanDesiredState(cpuTemperature);
 		if (fanDesiredState === FanDesiredState.ON && !lastSetOn) {
-			console.log('set cpu fan on');
+			debug('set cpu fan on');
 			await display.cpuFanOn();
 			lastSetOn = true;
 		} else if (fanDesiredState === FanDesiredState.OFF && (lastSetOn || lastSetOn === null)) {
-			console.log('set cpu fan off');
+			debug('set cpu fan off');
 			await display.cpuFanOff();
 			lastSetOn = false;
 		}

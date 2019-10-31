@@ -22,7 +22,7 @@ signageos-display-linux.deb:
 	cd $(RASPBIAN_DIST)/usr/lib/signageos/server; npm install
 	dpkg-deb --build $(RASPBIAN_DIST) signageos-display-linux.deb
 
-alpine: dist
+apk: dist
 	mkdir -p $(ALPINE_DIST)/
 	cp $(DIST)/LICENSE $(ALPINE_DIST)
 	cp -r $(DIST)/client $(ALPINE_DIST)/client
@@ -32,8 +32,8 @@ alpine: dist
 	tools/make-package-json-public.js $(ALPINE_DIST)/server/package.json
 	cd $(ALPINE_DIST)/server; npm install
 	cd $(ALPINE_DIST); tar -czf display-linux.tar.gz client server
-	cd $(ALPINE_DIST); abuild -F checksum
-	cd $(ALPINE_DIST); abuild -Fr
+	cd $(ALPINE_DIST); abuild checksum
+	cd $(ALPINE_DIST); abuild -r
 
 dist:
 	mkdir -p $(DIST)/server

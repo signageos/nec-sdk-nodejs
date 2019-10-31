@@ -12,7 +12,7 @@ import IBatteryStatus from '@signageos/front-display/es6/NativeDevice/Battery/IB
 import { APPLICATION_TYPE } from './constants';
 import IBasicDriver from '../../node_modules/@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import { IFilePath } from '@signageos/front-display/es6/NativeDevice/fileSystem';
-import * as SystemAPI from '../API/SystemAPI';
+import { ISystemAPI } from '../API/SystemAPI';
 import * as NetworkAPI from '../API/NetworkAPI';
 import IInternalFileSystem from '../FileSystem/IFileSystem';
 import ManagementFileSystem from './ManagementFileSystem';
@@ -51,6 +51,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		fileDetailsProvider: IFileDetailsProvider,
 		private display: IDisplay,
 		public readonly sensors: ISensors,
+		private systemAPI: ISystemAPI,
 	) {
 		this.fileSystem = new ManagementFileSystem(fileSystemUrl, internalFileSystem, fileDetailsProvider);
 		this.servletRunner = new ServletRunner(internalFileSystem);
@@ -83,22 +84,24 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async appUpgrade(_baseUrl: string, version: string) {
-		await SystemAPI.upgradeApp(version);
+		await this.systemAPI.upgradeApp(version);
+		return () => this.systemReboot();
 	}
 
 	public async firmwareGetVersion(): Promise<string> {
-		return await SystemAPI.getFirmwareVersion();
+		return await this.systemAPI.getFirmwareVersion();
 	}
 
 	public async firmwareUpgrade(baseUrl: string, version: string, onProgress: (progress: number) => void) {
 		onProgress(0);
 		const fullUrl = baseUrl + '/linux/firmware/armhf/upgrade/upgrade_' + version + '.tar.gz';
-		await SystemAPI.upgradeFirmware(fullUrl);
+		await this.systemAPI.upgradeFirmware(fullUrl);
 		onProgress(100);
+		return () => this.systemReboot();
 	}
 
 	public async getModel(): Promise<string> {
-		return await SystemAPI.getModel();
+		return await this.systemAPI.getModel();
 	}
 
 	public async batteryGetStatus(): Promise<IBatteryStatus> {
@@ -106,7 +109,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async getCurrentTemperature(): Promise<number> {
-		return await SystemAPI.getCpuTemperature();
+		return await this.systemAPI.getCpuTemperature();
 	}
 
 	public async getNetworkInfo(): Promise<INetworkInfo> {
@@ -141,7 +144,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async getSerialNumber(): Promise<string> {
-		return await SystemAPI.getSerialNumber();
+		return await this.systemAPI.getSerialNumber();
 	}
 
 	public async screenshotUpload(uploadBaseUrl: string): Promise<string> {
@@ -158,7 +161,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		};
 		await this.internalFileSystem.ensureDirectory(destinationDir);
 		const destinationAbsolutePath = this.internalFileSystem.getAbsolutePath(destinationFile);
-		await SystemAPI.takeScreenshot(destinationAbsolutePath);
+		await this.systemAPI.takeScreenshot(destinationAbsolutePath);
 		const uploadUri = uploadBaseUrl + '/upload/file?prefix=screenshot/';
 
 		try {
@@ -263,12 +266,12 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async systemReboot(): Promise<void> {
-		await SystemAPI.reboot();
+		await this.systemAPI.reboot();
 	}
 
 	public async appRestart() {
 		await Promise.all([
-			SystemAPI.restartApplication(),
+			this.systemAPI.restartApplication(),
 			this.videoPlayer.clearAll(),
 			this.overlayRenderer.hideAll(),
 		]);
@@ -294,7 +297,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		_videoOrientation?: Orientation,
 	): Promise<() => Promise<void> | Promise<void>> {
 		const angle = convertScreenOrientationToAngle(orientation);
-		await SystemAPI.rotateScreen(angle);
+		await this.systemAPI.rotateScreen(angle);
 		return () => this.systemReboot();
 	}
 
@@ -322,12 +325,12 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 
 	public async getCurrentTimeWithTimezone(): Promise<{ currentDate: Date; timezone?: string, ntpServer?: string }> {
 		const [currentDateString, timezone] = await Promise.all([
-			SystemAPI.getDatetime(),
-			SystemAPI.getTimezone(),
+			this.systemAPI.getDatetime(),
+			this.systemAPI.getTimezone(),
 		]);
 		const currentDate = moment.tz(currentDateString, timezone).toDate();
 		try {
-			const ntpServer = await SystemAPI.getNTPServer();
+			const ntpServer = await this.systemAPI.getNTPServer();
 			return { currentDate, timezone, ntpServer };
 		} catch (error) {
 			return { currentDate, timezone };
@@ -340,20 +343,20 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 
 	public async setManualTimeWithTimezone(currentDate: moment.Moment, timezone: string): Promise<void> {
 		const datetimeString = currentDate.clone().utc().format('YYYY-MM-DD HH:mm:ss');
-		await SystemAPI.setDatetime(datetimeString);
-		await SystemAPI.setTimezone(timezone);
+		await this.systemAPI.setDatetime(datetimeString);
+		await this.systemAPI.setTimezone(timezone);
 	}
 
 	public async setNTPTimeWithTimezone(ntpServer: string, timezone: string): Promise<void> {
-		await SystemAPI.setNTPServer(ntpServer);
-		await SystemAPI.setTimezone(timezone);
+		await this.systemAPI.setNTPServer(ntpServer);
+		await this.systemAPI.setTimezone(timezone);
 	}
 
 	public async setDebug(enabled: boolean): Promise<void> {
 		if (enabled) {
-			await SystemAPI.enableNativeDebug();
+			await this.systemAPI.enableNativeDebug();
 		} else {
-			await SystemAPI.disableNativeDebug();
+			await this.systemAPI.disableNativeDebug();
 		}
 	}
 

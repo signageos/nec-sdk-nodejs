@@ -4,7 +4,7 @@ import { ChildProcess } from 'child_process';
 import UnixSocketEventListener from '../UnixSocket/UnixSocketEventListener';
 import Key from './Key';
 import ICECListener from './ICECListener';
-import { listenToCECKeypresses } from '../API/SystemAPI';
+import { ISystemAPI } from '../API/SystemAPI';
 import IDisplay from '../Driver/Display/IDisplay';
 
 const SOCKET_FILE_NAME = 'cec.sock';
@@ -16,7 +16,7 @@ export default class CECListener implements ICECListener {
 	private cecListenerChildProcess: ChildProcess | null = null;
 	private eventEmitter: EventEmitter;
 
-	constructor(private display: IDisplay, socketRootPath: string) {
+	constructor(private display: IDisplay, socketRootPath: string, private systemAPI: ISystemAPI) {
 		this.unixSocketPath = path.join(socketRootPath, SOCKET_FILE_NAME);
 		this.unixSocketEventListener = new UnixSocketEventListener(this.unixSocketPath);
 		this.eventEmitter = new EventEmitter();
@@ -55,7 +55,7 @@ export default class CECListener implements ICECListener {
 	}
 
 	private startCecListenerChildProcess() {
-		this.cecListenerChildProcess = listenToCECKeypresses(this.unixSocketPath);
+		this.cecListenerChildProcess = this.systemAPI.listenToCECKeypresses(this.unixSocketPath);
 		this.cecListenerChildProcess.once('close', (code: number, signal: string | null) => {
 			console.warn('CEC process closed unexpectedly with code ' + code + (signal ? '; signal: ' + signal : ''));
 			this.cecListenerChildProcess = null;

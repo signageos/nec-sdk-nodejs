@@ -1,11 +1,34 @@
 import { execGetApiVersion, execApiCommand, spawnApiCommandChildProcess } from './apiCommand';
+import { ChildProcess } from 'child_process';
 
-export async function getSerialNumber() {
-	return await execApiCommand('system_info', 'serial');
-}
-
-export async function getModel() {
-	return await execApiCommand('system_info', 'model', [], { asRoot: true });
+export interface ISystemAPI {
+	getSerialNumber(): Promise<string>;
+	getModel(): Promise<string>;
+	getStorageStatus(): Promise<IStorageUnit[]>;
+	getCpuTemperature(): Promise<number>;
+	reboot(): Promise<void>;
+	applicationReady(): Promise<void>;
+	applicationNotReady(): Promise<void>;
+	restartApplication(): Promise<void>;
+	upgradeApp(version: string): Promise<void>;
+	getFirmwareVersion(): Promise<string>;
+	upgradeFirmware(sourceUrl: string): Promise<void>;
+	overwriteFirmware(imgUrl: string): Promise<void>;
+	enableNativeDebug(): Promise<void>;
+	disableNativeDebug(): Promise<void>;
+	turnScreenOff(): Promise<void>;
+	turnScreenOn(): Promise<void>;
+	getScreenRotation(): Promise<number>;
+	rotateScreen(angle: number): Promise<void>;
+	getDatetime(): Promise<string>;
+	setDatetime(datetime: string): Promise<void>;
+	getTimezone(): Promise<string>;
+	setTimezone(timezone: string): Promise<void>;
+	getNTPServer(): Promise<string>;
+	setNTPServer(ntpServer: string): Promise<void>;
+	takeScreenshot(destination: string): Promise<void>;
+	listenToCECKeypresses(socketPath: string): ChildProcess;
+	getFileMimeType(filePath: string): Promise<string>;
 }
 
 export interface IStorageUnit {
@@ -14,118 +37,130 @@ export interface IStorageUnit {
 	availableSpace: number;
 }
 
-export async function getStorageStatus(): Promise<IStorageUnit[]> {
-	const result = await execApiCommand('system_info', 'storage');
-	const linesSplit = result.trim().split("\n");
-	return linesSplit.map((line: string) => {
-		const [type, usedSpace, availableSpace] = line.split(',');
-		return {
-			type,
-			usedSpace: usedSpace ? parseInt(usedSpace) * 1000 : 0,
-			availableSpace: availableSpace ? parseInt(availableSpace) * 1000 : 0,
-		} as IStorageUnit;
-	});
-}
+export function createSystemAPI(): ISystemAPI {
+	return {
+		async getSerialNumber() {
+			return await execApiCommand('system_info', 'serial');
+		},
 
-export async function getCpuTemperature() {
-	const temperatureInMiliCelsiusString = await execApiCommand('cpu', 'temperature');
-	const temperatureInMiliCelsius = parseInt(temperatureInMiliCelsiusString, 10);
-	return temperatureInMiliCelsius / 1000;
-}
+		async getModel() {
+			return await execApiCommand('system_info', 'model', [], { asRoot: true });
+		},
 
-export async function reboot() {
-	console.log("reboot device");
-	await execApiCommand('device', 'reboot', [], { asRoot: true });
-}
+		async getStorageStatus(): Promise<IStorageUnit[]> {
+			const result = await execApiCommand('system_info', 'storage');
+			const linesSplit = result.trim().split("\n");
+			return linesSplit.map((line: string) => {
+				const [type, usedSpace, availableSpace] = line.split(',');
+				return {
+					type,
+					usedSpace: usedSpace ? parseInt(usedSpace) * 1000 : 0,
+					availableSpace: availableSpace ? parseInt(availableSpace) * 1000 : 0,
+				} as IStorageUnit;
+			});
+		},
 
-export async function applicationReady() {
-	await execApiCommand('application', 'ready', [], { asRoot: true });
-}
+		async getCpuTemperature() {
+			const temperatureInMiliCelsiusString = await execApiCommand('cpu', 'temperature');
+			const temperatureInMiliCelsius = parseInt(temperatureInMiliCelsiusString, 10);
+			return temperatureInMiliCelsius / 1000;
+		},
 
-export async function applicationNotReady() {
-	await execApiCommand('application', 'not_ready', [], { asRoot: true });
-}
+		async reboot() {
+			console.log("reboot device");
+			await execApiCommand('device', 'reboot', [], { asRoot: true });
+		},
 
-export async function restartApplication() {
-	await execApiCommand('application', 'restart', [], { asRoot: true });
-}
+		async applicationReady() {
+			await execApiCommand('application', 'ready', [], { asRoot: true });
+		},
 
-export async function upgradeApp(version: string) {
-	await execApiCommand('application', 'upgrade', [version], { asRoot: true, verbose: true });
-}
+		async applicationNotReady() {
+			await execApiCommand('application', 'not_ready', [], { asRoot: true });
+		},
 
-export async function getFirmwareVersion() {
-	return await execGetApiVersion();
-}
+		async restartApplication() {
+			await execApiCommand('application', 'restart', [], { asRoot: true });
+		},
 
-export async function upgradeFirmware(sourceUrl: string) {
-	await execApiCommand('firmware', 'upgrade', [sourceUrl], { asRoot: true, verbose: true });
-}
+		async upgradeApp(version: string) {
+			await execApiCommand('application', 'upgrade', [version], { asRoot: true, verbose: true });
+		},
 
-export async function overwriteFirmware(imgUrl: string) {
-	await execApiCommand('firmware', 'overwrite', [imgUrl], { asRoot: true, verbose: true });
-}
+		async getFirmwareVersion() {
+			return await execGetApiVersion();
+		},
 
-export async function enableNativeDebug() {
-	await execApiCommand('debug', 'on');
-}
+		async upgradeFirmware(sourceUrl: string) {
+			await execApiCommand('firmware', 'upgrade', [sourceUrl], { asRoot: true, verbose: true });
+		},
 
-export async function disableNativeDebug() {
-	await execApiCommand('debug', 'off');
-}
+		async overwriteFirmware(imgUrl: string) {
+			await execApiCommand('firmware', 'overwrite', [imgUrl], { asRoot: true, verbose: true });
+		},
 
-export async function turnScreenOff() {
-	await execApiCommand('screen', 'off', [], { asRoot: true });
-}
+		async enableNativeDebug() {
+			await execApiCommand('debug', 'on');
+		},
 
-export async function turnScreenOn() {
-	await execApiCommand('screen', 'on', [], { asRoot: true });
-}
+		async disableNativeDebug() {
+			await execApiCommand('debug', 'off');
+		},
 
-export async function getScreenRotation(): Promise<number> {
-	const result = await execApiCommand('screen', 'get_rotation');
-	return parseInt(result.trim());
-}
+		async turnScreenOff() {
+			await execApiCommand('screen', 'off', [], { asRoot: true });
+		},
 
-export async function rotateScreen(angle: number) {
-	await execApiCommand('screen', 'rotate', [angle.toString()], { asRoot: true });
-}
+		async turnScreenOn() {
+			await execApiCommand('screen', 'on', [], { asRoot: true });
+		},
 
-export async function getDatetime() {
-	const result = await execApiCommand('time', 'get_datetime');
-	return result.trim();
-}
+		async getScreenRotation(): Promise<number> {
+			const result = await execApiCommand('screen', 'get_rotation');
+			return parseInt(result.trim());
+		},
 
-export async function setDatetime(datetime: string) {
-	await execApiCommand('time', 'set_datetime', [datetime], { asRoot: true });
-}
+		async rotateScreen(angle: number) {
+			await execApiCommand('screen', 'rotate', [angle.toString()], { asRoot: true });
+		},
 
-export async function getTimezone() {
-	const result = await execApiCommand('time', 'get_timezone');
-	return result.trim();
-}
+		async getDatetime() {
+			const result = await execApiCommand('time', 'get_datetime');
+			return result.trim();
+		},
 
-export async function setTimezone(timezone: string) {
-	await execApiCommand('time', 'set_timezone', [timezone], { asRoot: true });
-}
+		async setDatetime(datetime: string) {
+			await execApiCommand('time', 'set_datetime', [datetime], { asRoot: true });
+		},
 
-export async function getNTPServer() {
-	return await execApiCommand('time', 'get_ntp_server');
-}
+		async getTimezone() {
+			const result = await execApiCommand('time', 'get_timezone');
+			return result.trim();
+		},
 
-export async function setNTPServer(ntpServer: string) {
-	await execApiCommand('time', 'set_ntp_server', [ntpServer], { asRoot: true });
-}
+		async setTimezone(timezone: string) {
+			await execApiCommand('time', 'set_timezone', [timezone], { asRoot: true });
+		},
 
-export async function takeScreenshot(destination: string) {
-	await execApiCommand('screen', 'screenshot', [destination], { asRoot: true });
-}
+		async getNTPServer() {
+			return await execApiCommand('time', 'get_ntp_server');
+		},
 
-export function listenToCECKeypresses(socketPath: string) {
-	return spawnApiCommandChildProcess('cec', 'listen', [socketPath]);
-}
+		async setNTPServer(ntpServer: string) {
+			await execApiCommand('time', 'set_ntp_server', [ntpServer], { asRoot: true });
+		},
 
-export async function getFileMimeType(filePath: string) {
-	const mimeType = await execApiCommand('file', 'mime_type', [filePath]);
-	return mimeType.trim();
+		async takeScreenshot(destination: string) {
+			await execApiCommand('screen', 'screenshot', [destination], { asRoot: true });
+		},
+
+		listenToCECKeypresses(socketPath: string) {
+			return spawnApiCommandChildProcess('cec', 'listen', [socketPath]);
+		},
+
+		async getFileMimeType(filePath: string) {
+			const mimeType = await execApiCommand('file', 'mime_type', [filePath]);
+			return mimeType.trim();
+		},
+	};
 }

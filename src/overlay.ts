@@ -1,13 +1,13 @@
 import BridgeClient from './Bridge/BridgeClient';
 import { handleMutations } from './Overlay/overlayMutationsHandler';
-import createSocket from '@signageos/lib/dist/WebSocket/Client/WS/createWSSocket';
+import { createAutoReconnectingSocket } from '@signageos/lib/dist/WebSocket/Client/WS/createWSSocket';
 const parameters = require('../config/basic_parameters');
 
 let observer: MutationObserver | undefined = undefined;
 
 (window as any).sos.overlay = {
 	enable: function () {
-		const socketClient = createSocket(
+		const socketClient = createAutoReconnectingSocket(
 			parameters.server.bridge_url,
 			() => console.log('Bridge socket connected'),
 			() => console.log('Bridge socket disconnected'),

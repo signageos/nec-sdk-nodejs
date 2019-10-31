@@ -30,6 +30,7 @@ export interface INECAPI {
 	prepareQuickVideoInputSwitch(input1: string, input2: string): Promise<void>;
 	switchVideoInput(input1: string): Promise<void>;
 	isHumanDetected(): Promise<boolean>;
+	enableCEC(): Promise<void>;
 	searchCECDevice(): Promise<void>;
 	setFactorySettings(): Promise<void>;
 	fanOn(): Promise<void>;
@@ -128,6 +129,11 @@ export class NECAPI implements INECAPI {
 	public async isHumanDetected(): Promise<boolean> {
 		const result = await execNECDisplayCommand('human_sensing', 'is_human_detected');
 		return result === '1';
+	}
+
+	@locked('necapi')
+	public async enableCEC(): Promise<void> {
+		await execNECDisplayCommand('cec', 'on');
 	}
 
 	@locked('necapi')

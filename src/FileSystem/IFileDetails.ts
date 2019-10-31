@@ -9,4 +9,8 @@ export interface IVideoFileDetails {
 	videoDurationMs?: number;
 }
 
-export type IExtendedFileDetails = IVideoFileDetails;
+export interface IImageFileDetails {
+	imageThumbnailUriTemplate?: string;
+}
+
+export type IExtendedFileDetails = IVideoFileDetails & IImageFileDetails;
