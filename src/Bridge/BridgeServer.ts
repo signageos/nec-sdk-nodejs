@@ -46,7 +46,6 @@ export default class BridgeServer {
 	}
 
 	public async start() {
-		await this.videoPlayer.initialize();
 		await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
 			const serverUrl = url.parse(this.serverUrl);
 			this.httpServer.setTimeout(60e3 * 60); // 1 hour
@@ -66,8 +65,11 @@ export default class BridgeServer {
 				});
 		});
 
-		await this.socketServer.listen();
-		await this.cecListener.listen();
+		await Promise.all([
+			this.videoPlayer.initialize(),
+			this.socketServer.listen(),
+			this.cecListener.listen(),
+		]);
 	}
 
 	public async stop() {
