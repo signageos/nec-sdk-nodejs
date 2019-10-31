@@ -149,10 +149,6 @@ export default class BridgeServer {
 				response.status(400).send({ error: error.message });
 			}
 		});
-
-		this.expressApp.use((_request: express.Request, response: express.Response) => {
-			response.send(404);
-		});
 	}
 
 	private handleSocketMessage() {
