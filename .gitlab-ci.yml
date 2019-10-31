@@ -80,7 +80,9 @@ build:raspbian:
 
 build:alpine:
   stage: build
-  image: $CI_REGISTRY/signageos/alpine:armhf
+  tags:
+    - armhf
+    - alpine
   dependencies:
     - prepare
     - prebuild
