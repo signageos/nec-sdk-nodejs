@@ -84,6 +84,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 
 	public async appUpgrade(_baseUrl: string, version: string) {
 		await SystemAPI.upgradeApp(version);
+		return () => this.systemReboot();
 	}
 
 	public async firmwareGetVersion(): Promise<string> {
@@ -95,6 +96,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		const fullUrl = baseUrl + '/linux/firmware/armhf/upgrade/upgrade_' + version + '.tar.gz';
 		await SystemAPI.upgradeFirmware(fullUrl);
 		onProgress(100);
+		return () => this.systemReboot();
 	}
 
 	public async getModel(): Promise<string> {
