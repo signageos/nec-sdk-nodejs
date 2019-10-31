@@ -17,7 +17,7 @@ export default function socketHandleMessage(
 	fileSystem: IFileSystem,
 	fileDetailsProvider: IFileDetailsProvider,
 	nativeDriver: IBasicDriver & IManagementDriver,
-	display: IDisplay,
+	getDisplay: () => Promise<IDisplay>,
 	overlayRenderer: OverlayRenderer,
 	systemAPI: ISystemAPI,
 ) {
@@ -27,7 +27,7 @@ export default function socketHandleMessage(
 				fileSystem,
 				fileDetailsProvider,
 				nativeDriver,
-				display,
+				getDisplay,
 				overlayRenderer,
 				systemAPI,
 				message.message,

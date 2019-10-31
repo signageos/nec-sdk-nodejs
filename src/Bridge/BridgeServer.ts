@@ -32,7 +32,7 @@ export default class BridgeServer {
 		private fileSystem: IFileSystem,
 		private fileDetailsProvider: IFileDetailsProvider,
 		private nativeDriver: IBasicDriver & IManagementDriver,
-		private display: IDisplay,
+		private getDisplay: () => Promise<IDisplay>,
 		private videoPlayer: IServerVideoPlayer,
 		private overlayRenderer: OverlayRenderer,
 		private cecListener: ICECListener,
@@ -160,7 +160,7 @@ export default class BridgeServer {
 				this.fileSystem,
 				this.fileDetailsProvider,
 				this.nativeDriver,
-				this.display,
+				this.getDisplay,
 				this.overlayRenderer,
 				this.systemAPI,
 			);

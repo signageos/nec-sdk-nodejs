@@ -4,8 +4,9 @@ import { ISystemAPI } from '../API/SystemAPI';
 import * as Debug from 'debug';
 const debug = Debug('@signageos/display-linux:CPUFanManager');
 
-export function manageCpuFan(display: IDisplay, systemAPI: ISystemAPI) {
+export async function manageCpuFan(getDisplay: () => Promise<IDisplay>, systemAPI: ISystemAPI) {
 	const INTERVAL = 5e3;
+	const display = await getDisplay();
 	if (display.supports(DisplayCapability.CPU_FAN)) {
 		setInterval(
 			() => checkCpuTemperatureAndSetFanOnOff(display, systemAPI.getCpuTemperature),
