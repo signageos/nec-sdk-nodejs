@@ -91,14 +91,13 @@ if (parameters.raven.enabled) {
 	);
 
 	if (raven) {
-		try {
-			const deviceUid = await nativeDriver.getDeviceUid();
-			raven.setUserContext({
-				id: deviceUid,
-			});
-		} catch (error) {
-			console.error(error);
-		}
+		nativeDriver.getDeviceUid()
+			.then((deviceUid: string) => {
+				raven!.setUserContext({
+					id: deviceUid,
+				});
+			})
+			.catch((error: any) => console.error(error));
 	}
 
 	const offlineStorageLock = new AsyncLock({
