@@ -1,4 +1,4 @@
-image: $CI_REGISTRY/signageos/docker-node:8.9.0-alpine-zip
+image: $CI_REGISTRY/signageos/docker-node:10.14.2-alpine-build-zip-vips
 services:
   - docker:dind
 
@@ -80,7 +80,9 @@ build:raspbian:
 
 build:alpine:
   stage: build
-  image: $CI_REGISTRY/signageos/alpine:armhf
+  tags:
+    - armhf
+    - alpine
   dependencies:
     - prepare
     - prebuild
@@ -90,7 +92,7 @@ build:alpine:
     - VERSION=`cat ./VERSION`
     - npx @signageos/lib@just-tools version-upgrade $VERSION
     - export VERSION=`echo $VERSION | sed -r 's/-[^.]+//g'` # omit branch version
-    - make alpine
+    - make apk
     - aws s3 cp ~/packages/dist/armhf "$AWS_ALPINE_REPO_S3_PATH/armhf" --recursive --exclude "*" --include "signageos-display-linux*-$VERSION-r0.apk"
 
 publish:npm:

@@ -1,6 +1,6 @@
 import IDisplay, { VideoInput } from './IDisplay';
 import DisplayCapability from './DisplayCapability';
-import * as SystemAPI from '../../API/SystemAPI';
+import { ISystemAPI } from '../../API/SystemAPI';
 import ISystemSettings from '../../SystemSettings/ISystemSettings';
 import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
@@ -9,7 +9,7 @@ export default class EmulatedDisplay implements IDisplay {
 
 	private isDisplayOn: boolean = true;
 
-	constructor(private systemSettings: ISystemSettings) {}
+	constructor(private systemSettings: ISystemSettings, private systemAPI: ISystemAPI) {}
 
 	public supports(_capability: DisplayCapability): boolean {
 		return false;
@@ -20,12 +20,12 @@ export default class EmulatedDisplay implements IDisplay {
 	}
 
 	public async powerOff(): Promise<void> {
-		await SystemAPI.turnScreenOff();
+		await this.systemAPI.turnScreenOff();
 		this.isDisplayOn = false;
 	}
 
 	public async powerOn(): Promise<void> {
-		await SystemAPI.turnScreenOn();
+		await this.systemAPI.turnScreenOn();
 		this.isDisplayOn = true;
 	}
 

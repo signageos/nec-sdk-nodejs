@@ -1,9 +1,10 @@
 import { IFilePath } from '@signageos/front-display/es6/NativeDevice/fileSystem';
-import { IExtendedFileDetails, IFileDetails, IVideoFileDetails } from './IFileDetails';
+import { IExtendedFileDetails, IFileDetails, IVideoFileDetails, IImageFileDetails } from './IFileDetails';
 import IFileSystem from './IFileSystem';
 import { IVideoAPI } from '../API/VideoAPI';
 import IFileDetailsProvider from './IFileDetailsProvider';
 import IFileMetadataCache from './IFileMetadataCache';
+import ImageResizer from './Image/ImageResizer';
 
 export default class FileDetailsProvider implements IFileDetailsProvider {
 
@@ -11,6 +12,7 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 		private fileSystem: IFileSystem,
 		private videoAPI: IVideoAPI,
 		private metadataCache: IFileMetadataCache,
+		private imageResizer: ImageResizer,
 	) {}
 
 	public async getFileDetails(filePath: IFilePath): Promise<IFileDetails & IExtendedFileDetails> {
@@ -56,6 +58,12 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 			return {
 				videoDurationMs,
 			} as IVideoFileDetails;
+		} else
+		if (this.isImage(mimeType)) {
+			const imageThumbnailUriTemplate = await this.imageResizer.getImageThumbnailUriTemplate(filePath);
+			return {
+				imageThumbnailUriTemplate,
+			} as IImageFileDetails;
 		}
 
 		return null;
@@ -71,5 +79,9 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 
 	private isVideo(mimeType: string) {
 		return mimeType.startsWith('video/');
+	}
+
+	private isImage(mimeType: string) {
+		return mimeType.startsWith('image/');
 	}
 }

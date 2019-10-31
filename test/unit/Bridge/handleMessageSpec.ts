@@ -29,6 +29,7 @@ import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import IDisplay from '../../../src/Driver/Display/IDisplay';
 import OverlayRenderer from '../../../src/Overlay/OverlayRenderer';
+import { ISystemAPI } from '../../../src/API/SystemAPI';
 
 const testStorageUnit = {
 	type: 'test',
@@ -60,6 +61,7 @@ function createHandleMessageCallback(
 		dependencies.nativeDriver || {} as any,
 		dependencies.display || {} as any,
 		dependencies.overlayRenderer || {} as any,
+		{} as ISystemAPI,
 		message,
 	);
 }
