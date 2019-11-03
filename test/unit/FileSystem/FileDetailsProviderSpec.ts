@@ -67,6 +67,18 @@ describe('FileSystem.FileDetailsProvider', function () {
 					async getVideoDurationMs() {
 						return 4000;
 					},
+					async getVideoResolution() {
+						return { width: 1920, height: 1080 };
+					},
+					async getVideoFramerate() {
+						return 30;
+					},
+					async getVideoBitrate() {
+						return 24000;
+					},
+					async getVideoCodec() {
+						return 'h264';
+					},
 				};
 				const fileMetadataCache = {
 					getFileMetadata: sinon.stub().rejects(),
@@ -80,6 +92,10 @@ describe('FileSystem.FileDetailsProvider', function () {
 					sizeBytes: 100,
 					mimeType: 'video/mp4',
 					videoDurationMs: 4000,
+					videoResolution: { width: 1920, height: 1080 },
+					videoFramerate: 30,
+					videoBitrate: 24000,
+					videoCodec: 'h264',
 				});
 				fileMetadataCache.saveFileMetadata.callCount.should.equal(1);
 				fileMetadataCache.saveFileMetadata.getCall(0).args.should.deepEqual([
@@ -87,6 +103,10 @@ describe('FileSystem.FileDetailsProvider', function () {
 					new Date(2018, 21, 11, 8, 30).valueOf(),
 					{
 						videoDurationMs: 4000,
+						videoResolution: { width: 1920, height: 1080 },
+						videoFramerate: 30,
+						videoBitrate: 24000,
+						videoCodec: 'h264',
 					},
 				]);
 			},
@@ -112,6 +132,18 @@ describe('FileSystem.FileDetailsProvider', function () {
 					async getVideoDurationMs() {
 						return 4000;
 					},
+					async getVideoResolution() {
+						return { width: 1920, height: 1080 };
+					},
+					async getVideoFramerate() {
+						return 30;
+					},
+					async getVideoBitrate() {
+						return 24000;
+					},
+					async getVideoCodec() {
+						return 'h264';
+					},
 				};
 				const fileMetadataCache = {
 					getFileMetadata: sinon.stub().rejects(),
@@ -125,6 +157,10 @@ describe('FileSystem.FileDetailsProvider', function () {
 					sizeBytes: 100,
 					mimeType: 'video/mp4',
 					videoDurationMs: 4000,
+					videoResolution: { width: 1920, height: 1080 },
+					videoFramerate: 30,
+					videoBitrate: 24000,
+					videoCodec: 'h264',
 				});
 				fileMetadataCache.saveFileMetadata.callCount.should.equal(1);
 				fileMetadataCache.saveFileMetadata.getCall(0).args.should.deepEqual([
@@ -132,6 +168,10 @@ describe('FileSystem.FileDetailsProvider', function () {
 					new Date(2018, 21, 11, 8, 30).valueOf(),
 					{
 						videoDurationMs: 4000,
+						videoResolution: { width: 1920, height: 1080 },
+						videoFramerate: 30,
+						videoBitrate: 24000,
+						videoCodec: 'h264',
 					},
 				]);
 			},
@@ -156,6 +196,10 @@ describe('FileSystem.FileDetailsProvider', function () {
 				const fileMetadataCache = {
 					getFileMetadata: sinon.stub().resolves({
 						videoDurationMs: 5000,
+						videoResolution: { width: 1920, height: 1080 },
+						videoFramerate: 30,
+						videoBitrate: 24000,
+						videoCodec: 'h264',
 					}),
 				};
 				const fileDetailsProvider = new FileDetailsProvider(fileSystem as any, {} as any, fileMetadataCache as any, {} as any);
@@ -166,6 +210,10 @@ describe('FileSystem.FileDetailsProvider', function () {
 					sizeBytes: 100,
 					mimeType: 'video/mp4',
 					videoDurationMs: 5000,
+					videoResolution: { width: 1920, height: 1080 },
+					videoFramerate: 30,
+					videoBitrate: 24000,
+					videoCodec: 'h264',
 				});
 			},
 		);

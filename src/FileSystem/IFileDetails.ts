@@ -7,6 +7,13 @@ export interface IFileDetails {
 
 export interface IVideoFileDetails {
 	videoDurationMs?: number;
+	videoResolution?: {
+		width: number;
+		height: number;
+	};
+	videoFramerate?: number;
+	videoBitrate?: number;
+	videoCodec?: string;
 }
 
 export interface IImageFileDetails {

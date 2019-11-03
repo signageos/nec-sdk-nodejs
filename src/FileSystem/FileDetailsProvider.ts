@@ -55,8 +55,16 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 		if (this.isVideo(mimeType)) {
 			const fileAbsolutePath = this.fileSystem.getAbsolutePath(filePath);
 			const videoDurationMs = await this.videoAPI.getVideoDurationMs(fileAbsolutePath);
+			const videoResolution = await this.videoAPI.getVideoResolution(fileAbsolutePath);
+			const videoFramerate = await this.videoAPI.getVideoFramerate(fileAbsolutePath);
+			const videoBitrate = await this.videoAPI.getVideoBitrate(fileAbsolutePath);
+			const videoCodec = await this.videoAPI.getVideoCodec(fileAbsolutePath);
 			return {
 				videoDurationMs,
+				videoResolution,
+				videoFramerate,
+				videoBitrate,
+				videoCodec,
 			} as IVideoFileDetails;
 		} else
 		if (this.isImage(mimeType)) {

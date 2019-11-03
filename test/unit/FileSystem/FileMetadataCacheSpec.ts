@@ -7,7 +7,7 @@ describe('FileSystem.FileMetadataCache', function () {
 	describe('getFileMetadata', function () {
 
 		it('should return video metadata object', async function () {
-			const metadataFileContents = 'vd:3000';
+			const metadataFileContents = 'vd:3000\nvr:1920x1080\nvfr:30\nvbr:24000\nvc:h264';
 			const fileSystem = {
 				readFile: sinon.stub().resolves(metadataFileContents),
 			};
@@ -17,6 +17,10 @@ describe('FileSystem.FileMetadataCache', function () {
 			const metadata = await fileMetadataCache.getFileMetadata(getFilePath(filePath), lastModifiedAt);
 			metadata.should.deepEqual({
 				videoDurationMs: 3000,
+				videoResolution: { width: 1920, height: 1080 },
+				videoFramerate: 30,
+				videoBitrate: 24000,
+				videoCodec: 'h264',
 			});
 
 			const metadataFileName = '74a4f2a564a174ccb5f9b234e58b4c42';
