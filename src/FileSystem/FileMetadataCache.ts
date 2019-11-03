@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as _ from 'lodash';
 import * as crypto from "crypto";
 import { IFilePath } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import IFileSystem from './IFileSystem';
@@ -6,6 +7,17 @@ import { IExtendedFileDetails } from './IFileDetails';
 import IFileMetadataCache from './IFileMetadataCache';
 
 const KEY_VIDEO_DURATION = 'vd';
+const KEY_VIDEO_RESOLUTION = 'vr';
+const KEY_VIDEO_FRAMERATE = 'vfr';
+const KEY_VIDEO_BITRATE = 'vbr';
+const KEY_VIDEO_CODEC = 'vc';
+const REQUIRED_METADATA: (keyof IExtendedFileDetails)[] = [
+	'videoDurationMs',
+	'videoResolution',
+	'videoFramerate',
+	// 'videoBitrate', // Sometime not available
+	'videoCodec',
+];
 
 export default class FileMetadataCache implements IFileMetadataCache {
 
@@ -15,7 +27,11 @@ export default class FileMetadataCache implements IFileMetadataCache {
 
 	public async getFileMetadata(filePath: IFilePath, lastModifiedAt: number): Promise<IExtendedFileDetails> {
 		const metadataFilePath = this.getMetadataFilePath(filePath, lastModifiedAt);
-		return this.getMetadata(metadataFilePath);
+		const metadata = await this.getMetadata(metadataFilePath);
+		if (!this.haveMetadataAllRequiredKeys(metadata)) {
+			throw new Error(`Some metadata are missing in cache: ${JSON.stringify(metadata)}`);
+		}
+		return metadata;
 	}
 
 	public async saveFileMetadata(filePath: IFilePath, lastModifiedAt: number, metadata: IExtendedFileDetails) {
@@ -58,6 +74,23 @@ export default class FileMetadataCache implements IFileMetadataCache {
 				return {
 					videoDurationMs: parseInt(value),
 				};
+			case KEY_VIDEO_RESOLUTION:
+				const [width, height] = value.split('x');
+				return {
+					videoResolution: { width: parseInt(width), height: parseInt(height) },
+				};
+			case KEY_VIDEO_FRAMERATE:
+				return {
+					videoFramerate: parseInt(value),
+				};
+			case KEY_VIDEO_BITRATE:
+				return {
+					videoBitrate: parseInt(value),
+				};
+			case KEY_VIDEO_CODEC:
+				return {
+					videoCodec: value,
+				};
 			default:
 				return {};
 		}
@@ -93,8 +126,21 @@ export default class FileMetadataCache implements IFileMetadataCache {
 		switch (key) {
 			case 'videoDurationMs':
 				return KEY_VIDEO_DURATION + ':' + value;
+			case 'videoResolution':
+				const videoResolution = (value as IExtendedFileDetails[typeof key])!;
+				return KEY_VIDEO_RESOLUTION + ':' + videoResolution.width + 'x' + videoResolution.height;
+			case 'videoFramerate':
+				return KEY_VIDEO_FRAMERATE + ':' + value;
+			case 'videoBitrate':
+				return KEY_VIDEO_BITRATE + ':' + value;
+			case 'videoCodec':
+				return KEY_VIDEO_CODEC + ':' + value;
 			default:
 				return null;
 		}
+	}
+
+	private haveMetadataAllRequiredKeys(metadata: IExtendedFileDetails) {
+		return _.difference(REQUIRED_METADATA, Object.keys(metadata)).length === 0;
 	}
 }
