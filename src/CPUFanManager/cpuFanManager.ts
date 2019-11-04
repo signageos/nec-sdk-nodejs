@@ -1,7 +1,9 @@
+import wait from '@signageos/lib/dist/Timer/wait';
 import IDisplay from '../Driver/Display/IDisplay';
 import DisplayCapability from '../Driver/Display/DisplayCapability';
 import { ISystemAPI } from '../API/SystemAPI';
 import * as Debug from 'debug';
+import * as AsyncLock from 'async-lock';
 const debug = Debug('@signageos/display-linux:CPUFanManager');
 
 export async function manageCpuFan(getDisplay: () => Promise<IDisplay>, systemAPI: ISystemAPI) {
@@ -9,7 +11,7 @@ export async function manageCpuFan(getDisplay: () => Promise<IDisplay>, systemAP
 	const display = await getDisplay();
 	if (display.supports(DisplayCapability.CPU_FAN)) {
 		setInterval(
-			() => checkCpuTemperatureAndSetFanOnOff(display, systemAPI.getCpuTemperature),
+			() => checkCpuTemperatureAndSetFanOnOffLocked(display, systemAPI.getCpuTemperature),
 			INTERVAL,
 		);
 	}
@@ -17,6 +19,19 @@ export async function manageCpuFan(getDisplay: () => Promise<IDisplay>, systemAP
 
 enum FanDesiredState { ON, OFF, STAY_SAME}
 let lastSetOn: boolean | null = null;
+
+const lock = new AsyncLock({ maxPending: 1 });
+
+async function checkCpuTemperatureAndSetFanOnOffLocked(
+	display: IDisplay,
+	getCpuTemperature: () => Promise<number>,
+) {
+	await lock.acquire('cpu_fan', async () => {
+		await checkCpuTemperatureAndSetFanOnOff(display, getCpuTemperature);
+	});
+}
+
+let failCount = 0;
 
 export async function checkCpuTemperatureAndSetFanOnOff(
 	display: IDisplay,
@@ -36,8 +51,11 @@ export async function checkCpuTemperatureAndSetFanOnOff(
 			await display.cpuFanOff();
 			lastSetOn = false;
 		}
+		failCount = 0;
 	} catch (error) {
 		console.log('check cpu temperature error', error);
+		failCount = Math.min(failCount + 1, 6); // at max it will be every minute
+		await wait(Math.pow(2, failCount) * 1000);
 	}
 }
 
