@@ -73,12 +73,18 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		}
 	}
 
-	public async pause(_uri: string, _x: number, _y: number, _width: number, _height: number): Promise<void> {
-		throw new Error('Not implemented yet'); // TODO
+	public async pause(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
+		const video = this.getVideoByArguments(uri, x, y, width, height);
+		if (video) {
+			await video.pause();
+		}
 	}
 
-	public async resume(_uri: string, _x: number, _y: number, _width: number, _height: number): Promise<void> {
-		throw new Error('Not implemented yet'); // TODO
+	public async resume(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
+		const video = this.getVideoByArguments(uri, x, y, width, height);
+		if (video) {
+			await video.resume();
+		}
 	}
 
 	public addEventListener(event: string, listener: (event: IVideoEvent) => void): void {

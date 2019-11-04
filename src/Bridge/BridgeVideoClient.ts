@@ -5,6 +5,8 @@ import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import {
 	PlayVideo,
 	PrepareVideo,
+	PauseVideo,
+	ResumeVideo,
 	StopAllVideos,
 	StopVideo,
 	VideoEnded,
@@ -55,6 +57,20 @@ export default class BridgeVideoClient {
 		const videoId = getVideoIdentificator(uri, x, y, width, height);
 		this.playingVideos[videoId] = videoEmitter;
 		return videoEmitter;
+	}
+
+	public async pauseVideo(uri: string, x: number, y: number, width: number, height: number) {
+		await this.bridge.invoke<PauseVideo, {}>(
+			{ type: PauseVideo, uri, x, y, width, height },
+			MessageType.VIDEO,
+		);
+	}
+
+	public async resumeVideo(uri: string, x: number, y: number, width: number, height: number) {
+		await this.bridge.invoke<ResumeVideo, {}>(
+			{ type: ResumeVideo, uri, x, y, width, height },
+			MessageType.VIDEO,
+		);
 	}
 
 	public async stopVideo(uri: string, x: number, y: number, width: number, height: number) {

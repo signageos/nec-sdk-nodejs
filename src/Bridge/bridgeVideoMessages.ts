@@ -22,6 +22,26 @@ export interface PlayVideo {
 	isStream: boolean;
 }
 
+export const PauseVideo = 'Video.PauseVideo';
+export interface PauseVideo {
+	type: typeof PauseVideo;
+	uri: string;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
+export const ResumeVideo = 'Video.ResumeVideo';
+export interface ResumeVideo {
+	type: typeof ResumeVideo;
+	uri: string;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
 export const StopVideo = 'Video.StopVideo';
 export interface StopVideo {
 	type: typeof StopVideo;

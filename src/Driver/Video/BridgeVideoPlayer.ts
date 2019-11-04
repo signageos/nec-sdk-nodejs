@@ -37,13 +37,15 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 	}
 
 	@locked('video')
-	public pause(_uri: string, _x: number, _y: number, _width: number, _height: number): Promise<void> {
-		throw new Error('Not implemented'); // TODO
+	public async pause(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
+		const uriRelative = this.stripFileSystemRootFromUri(uri);
+		await this.bridgeVideoClient.pauseVideo(uriRelative, x, y, width, height);
 	}
 
 	@locked('video')
-	public resume(_uri: string, _x: number, _y: number, _width: number, _height: number): Promise<void> {
-		throw new Error('Not implemented'); // TODO
+	public async resume(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
+		const uriRelative = this.stripFileSystemRootFromUri(uri);
+		await this.bridgeVideoClient.resumeVideo(uriRelative, x, y, width, height);
 	}
 
 	@locked('video')

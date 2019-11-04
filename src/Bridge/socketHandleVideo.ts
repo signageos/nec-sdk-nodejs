@@ -8,6 +8,8 @@ import {
 	VideoEnded,
 	VideoStopped,
 	VideoError,
+	PauseVideo,
+	ResumeVideo,
 } from './bridgeVideoMessages';
 import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 import { MessageType } from './BridgeClient';
@@ -34,7 +36,7 @@ function bindVideoMessages(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 
 async function handleVideoMessage(
 	videoPlayer: IServerVideoPlayer,
-	message: PrepareVideo | PlayVideo | StopVideo | StopAllVideos,
+	message: PrepareVideo | PlayVideo | PauseVideo | ResumeVideo | StopVideo | StopAllVideos,
 ) {
 	switch (message.type) {
 		case PrepareVideo:
@@ -42,6 +44,12 @@ async function handleVideoMessage(
 			break;
 		case PlayVideo:
 			await videoPlayer.play(message.uri, message.x, message.y, message.width, message.height, message.isStream);
+			break;
+		case PauseVideo:
+			await videoPlayer.pause(message.uri, message.x, message.y, message.width, message.height);
+			break;
+		case ResumeVideo:
+			await videoPlayer.resume(message.uri, message.x, message.y, message.width, message.height);
 			break;
 		case StopVideo:
 			await videoPlayer.stop(message.uri, message.x, message.y, message.width, message.height);

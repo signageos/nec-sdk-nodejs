@@ -13,7 +13,6 @@ import ISystemSettings from '../../SystemSettings/ISystemSettings';
 export enum State {
 	IDLE,
 	PLAYING,
-	PAUSED,
 }
 
 export interface IVideoArguments {
@@ -105,6 +104,30 @@ export default class ServerVideo implements IServerVideo {
 		await wait(500);
 	}
 
+	public async pause() {
+		if (!this.childProcess) {
+			throw new Error('Trying to pause video that\'s not prepared, video key: ' + this.key);
+		}
+
+		if (this.isStream) {
+			await this.videoAPI.pauseStream(this.childProcess);
+		} else {
+			await this.videoAPI.pauseVideo(this.childProcess);
+		}
+	}
+
+	public async resume() {
+		if (!this.childProcess) {
+			throw new Error('Trying to resume video that\'s not prepared, video key: ' + this.key);
+		}
+
+		if (this.isStream) {
+			await this.videoAPI.resumeStream(this.childProcess);
+		} else {
+			await this.videoAPI.resumeVideo(this.childProcess);
+		}
+	}
+
 	public async stop() {
 		if (!this.childProcess) {
 			throw new Error('Trying to stop video that\'s not running, video key: ' + this.key);
@@ -132,10 +155,6 @@ export default class ServerVideo implements IServerVideo {
 
 	public isPlaying() {
 		return this.state === State.PLAYING;
-	}
-
-	public isPaused() {
-		return this.state === State.PAUSED;
 	}
 
 	public addEventListener(eventName: string, listener: (event: IVideoEvent) => void) {

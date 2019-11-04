@@ -48,6 +48,18 @@ class MockServerVideo implements IServerVideo {
 		this.state = State.PLAYING;
 	}
 
+	public async pause(): Promise<void> {
+		if (!this.isPlaying()) {
+			throw new Error('Trying to pause video that\'s not prepared');
+		}
+	}
+
+	public async resume(): Promise<void> {
+		if (!this.isPlaying()) {
+			throw new Error('Trying to resumr video that\'s not prepared');
+		}
+	}
+
 	public async stop(): Promise<void> {
 		this.state = State.IDLE;
 	}
@@ -58,10 +70,6 @@ class MockServerVideo implements IServerVideo {
 
 	public isPlaying(): boolean {
 		return this.state === State.PLAYING;
-	}
-
-	public isPaused(): boolean {
-		return false;
 	}
 
 	public isPrepared(): boolean {

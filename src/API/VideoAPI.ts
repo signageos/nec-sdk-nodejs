@@ -21,6 +21,8 @@ export interface IVideoAPI {
 		volume: number,
 	): ChildProcess;
 	playVideo(videoProcess: ChildProcess): Promise<void>;
+	pauseVideo(videoProcess: ChildProcess): Promise<void>;
+	resumeVideo(videoProcess: ChildProcess): Promise<void>;
 	stopVideo(videoProcess: ChildProcess): Promise<void>;
 	getVideoDurationMs(filePath: string): Promise<number>;
 	getVideoResolution(filePath: string): Promise<IResolution>;
@@ -38,6 +40,8 @@ export interface IVideoAPI {
 	): ChildProcess;
 
 	playStream(streamProcess: ChildProcess): Promise<void>;
+	pauseStream(streamProcess: ChildProcess): Promise<void>;
+	resumeStream(streamProcess: ChildProcess): Promise<void>;
 	stopStream(streamProcess: ChildProcess): Promise<void>;
 }
 
@@ -70,6 +74,14 @@ export function createVideoAPI(): IVideoAPI {
 
 		async playVideo(videoProcess: ChildProcess) {
 			await execApiCommand('video', 'play', [videoProcess.pid.toString()]);
+		},
+
+		async pauseVideo(videoProcess: ChildProcess): Promise<void> {
+			await execApiCommand('video', 'pause', [videoProcess.pid.toString()]);
+		},
+
+		async resumeVideo(videoProcess: ChildProcess): Promise<void> {
+			await execApiCommand('video', 'resume', [videoProcess.pid.toString()]);
 		},
 
 		async stopVideo(videoProcess: ChildProcess) {
@@ -171,6 +183,14 @@ export function createVideoAPI(): IVideoAPI {
 
 		async playStream(streamProcess: ChildProcess) {
 			await execApiCommand('stream', 'play', [streamProcess.pid.toString()]);
+		},
+
+		async pauseStream(streamProcess: ChildProcess): Promise<void> {
+			await execApiCommand('stream', 'pause', [streamProcess.pid.toString()]);
+		},
+
+		async resumeStream(streamProcess: ChildProcess): Promise<void> {
+			await execApiCommand('stream', 'resume', [streamProcess.pid.toString()]);
 		},
 
 		async stopStream(streamProcess: ChildProcess) {
