@@ -3,6 +3,7 @@ import {
 	execApiCommand,
 	spawnApiCommandChildProcess,
 } from './apiCommand';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 
 export type IResolution = {
@@ -17,6 +18,7 @@ export interface IVideoAPI {
 		y: number,
 		width: number,
 		height: number,
+		orientation: Orientation,
 		eventSocketPath: string,
 		volume: number,
 	): ChildProcess;
@@ -35,6 +37,7 @@ export interface IVideoAPI {
 		y: number,
 		width: number,
 		height: number,
+		orientation: Orientation,
 		eventSocketPath: string,
 		volume: number,
 	): ChildProcess;
@@ -53,11 +56,12 @@ export function createVideoAPI(): IVideoAPI {
 			y: number,
 			width: number,
 			height: number,
+			orientation: Orientation,
 			eventSocketPath: string,
 			volume: number,
 		) {
 			const windowCoords = getVideoWindowArgsString(x, y, width, height);
-			const rotationAngle = '0';
+			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
 
 			return spawnApiCommandChildProcess(
 				'video',
@@ -162,11 +166,12 @@ export function createVideoAPI(): IVideoAPI {
 			y: number,
 			width: number,
 			height: number,
+			orientation: Orientation,
 			eventSocketPath: string,
 			volume: number,
 		) {
 			const windowCoords = getVideoWindowArgsString(x, y, width, height);
-			const rotationAngle = '0';
+			const rotationAngle = convertOrientationToRotationAngle(orientation).toString();
 
 			return spawnApiCommandChildProcess(
 				'stream',
@@ -201,4 +206,17 @@ export function createVideoAPI(): IVideoAPI {
 
 function getVideoWindowArgsString(x: number, y: number, width: number, height: number) {
 	return `${x},${y},${x + width},${y + height}`;
+}
+
+function convertOrientationToRotationAngle(orientation: Orientation) {
+	switch (orientation) {
+		case Orientation.PORTRAIT:
+			return 90;
+		case Orientation.LANDSCAPE_FLIPPED:
+			return 180;
+		case Orientation.PORTRAIT_FLIPPED:
+			return 270;
+		default:
+			return 0;
+	}
 }

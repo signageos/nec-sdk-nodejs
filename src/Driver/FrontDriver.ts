@@ -1,6 +1,7 @@
 import IFrontDriver, { Hardware } from '@signageos/front-display/es6/NativeDevice/Front/IFrontDriver';
 import FrontCapability from '@signageos/front-display/es6/NativeDevice/Front/FrontCapability';
 import INetworkInfo from '@signageos/front-display/es6/Management/Device/Network/INetworkInfo';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import IKeyUpEvent from '@signageos/front-display/es6/NativeDevice/Input/IKeyUpEvent';
 import ProprietaryCache from '@signageos/front-display/es6/Cache/ProprietaryCache';
 import ICache from '@signageos/front-display/es6/Cache/ICache';
@@ -25,8 +26,10 @@ import {
 import {
 	IsWifiSupported,
 } from '../Bridge/bridgeNetworkMessages';
+import * as ScreenMessages from '../Bridge/bridgeScreenMessages';
 import BridgeVideoPlayer from './Video/BridgeVideoPlayer';
 import BridgeStreamPlayer from './Video/BridgeStreamPlayer';
+import PrivateOrientation, { convertScreenOrientationToAngle } from './Orientation';
 import FrontFileSystem from './FrontFileSystem';
 import OverlayHandler from '../Overlay/OverlayHandler';
 import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
@@ -48,6 +51,8 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	private bridgeVideoClient: BridgeVideoClient;
 	private overlay: OverlayHandler;
 
+	private orientation: Orientation | null = null;
+
 	constructor(
 		private window: Window,
 		private frontAppletPrefix: string,
@@ -58,7 +63,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	) {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
-		this.bridgeVideoClient = new BridgeVideoClient(this.bridge, socketClient);
+		this.bridgeVideoClient = new BridgeVideoClient(this.window, () => this.getScreenOrientation(), this.bridge, socketClient);
 		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridgeVideoClient, maxVideoCount);
 		this.stream = new BridgeStreamPlayer(this.window, this.bridge, this.bridgeVideoClient);
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);
@@ -97,7 +102,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	}
 
 	public async initialize(_staticBaseUrl: string) {
-		// do nothing
+		await this.screenUpdateOrientation();
 	}
 
 	public isDetected() {
@@ -233,6 +238,45 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	public getOSDUri(): string {
 		return "osd.html";
+	}
+
+	private async screenUpdateOrientation() {
+		const orientation = await this.getScreenOrientation();
+		const rotation = convertScreenOrientationToAngle(orientation);
+
+		const body = this.window.document.getElementById('body')!;
+		body.style.webkitTransform = `rotate(${rotation}deg)`;
+		body.style.position = 'absolute';
+
+		switch (orientation) {
+			case Orientation.LANDSCAPE:
+			case Orientation.LANDSCAPE_FLIPPED:
+				body.style.width = '100vw';
+				body.style.height = '100vh';
+				body.style.left = '0';
+				body.style.top = '0';
+				break;
+			case Orientation.PORTRAIT:
+			case Orientation.PORTRAIT_FLIPPED:
+				const fixingOffset = (this.window.innerWidth - this.window.innerHeight) / 2;
+				body.style.width = '100vh';
+				body.style.height = '100vw';
+				body.style.left = fixingOffset + 'px';
+				body.style.top = '-' + fixingOffset + 'px';
+				break;
+			default:
+		}
+	}
+
+	private async getScreenOrientation() {
+		if (this.orientation === null) {
+			const { orientation } = await this.bridge.invoke<ScreenMessages.GetOrientation, { orientation: PrivateOrientation }>({
+				type: ScreenMessages.GetOrientation,
+			});
+			this.orientation = Orientation[orientation as keyof typeof Orientation];
+		}
+
+		return this.orientation;
 	}
 
 	private async isWifiSupported() {

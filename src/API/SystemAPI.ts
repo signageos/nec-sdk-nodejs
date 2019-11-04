@@ -18,8 +18,6 @@ export interface ISystemAPI {
 	disableNativeDebug(): Promise<void>;
 	turnScreenOff(): Promise<void>;
 	turnScreenOn(): Promise<void>;
-	getScreenRotation(): Promise<number>;
-	rotateScreen(angle: number): Promise<void>;
 	getDatetime(): Promise<string>;
 	setDatetime(datetime: string): Promise<void>;
 	getTimezone(): Promise<string>;
@@ -113,15 +111,6 @@ export function createSystemAPI(): ISystemAPI {
 
 		async turnScreenOn() {
 			await execApiCommand('screen', 'on', [], { asRoot: true });
-		},
-
-		async getScreenRotation(): Promise<number> {
-			const result = await execApiCommand('screen', 'get_rotation');
-			return parseInt(result.trim());
-		},
-
-		async rotateScreen(angle: number) {
-			await execApiCommand('screen', 'rotate', [angle.toString()], { asRoot: true });
 		},
 
 		async getDatetime() {

@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import IServerVideo from '../../../../src/Driver/Video/IServerVideo';
 import { IVideoArguments } from '../../../../src/Driver/Video/ServerVideo';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 
 enum State {
@@ -36,6 +37,7 @@ class MockServerVideo implements IServerVideo {
 		y: number,
 		width: number,
 		height: number,
+		_orientation: Orientation,
 		_isStream: boolean,
 	): Promise<void> {
 		this.videoArguments = { uri, x, y, width, height };

@@ -25,6 +25,7 @@ import * as NetworkAPI from '../API/NetworkAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
 import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
+import ISystemSettings from '../SystemSettings/ISystemSettings';
 import Resolution from '@signageos/front-display/es6/NativeDevice/Resolution';
 import IDisplay from '../Driver/Display/IDisplay';
 
@@ -37,6 +38,7 @@ export default async function handleMessage(
 	fileDetailsProvider: IFileDetailsProvider,
 	nativeDriver: IBasicDriver & IManagementDriver,
 	getDisplay: () => Promise<IDisplay>,
+	systemSettings: ISystemSettings,
 	overlayRenderer: OverlayRenderer,
 	systemAPI: ISystemAPI,
 	message:
@@ -44,6 +46,7 @@ export default async function handleMessage(
 		GetDeviceUid |
 		GetModel |
 		GetSerialNumber |
+		ScreenMessages.GetOrientation |
 		NetworkGetInfo |
 		GetCurrentTimeWithTimezone |
 		SetManualTimeWithTimezone |
@@ -129,6 +132,10 @@ export default async function handleMessage(
 		case ResetSettings:
 			await nativeDriver.resetSettings();
 			return {};
+
+		case ScreenMessages.GetOrientation:
+			const orientation = await systemSettings.getScreenOrientation();
+			return { orientation };
 
 		case ScreenMessages.SetOrientation:
 			// TODO front display should not accept unused parameters when are not necessary

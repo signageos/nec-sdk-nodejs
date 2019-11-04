@@ -15,12 +15,14 @@ import { IFilePath } from '@signageos/front-display/es6/NativeDevice/fileSystem'
 import { ISystemAPI } from '../API/SystemAPI';
 import * as NetworkAPI from '../API/NetworkAPI';
 import IInternalFileSystem from '../FileSystem/IFileSystem';
+import ISystemSettings from '../SystemSettings/ISystemSettings';
 import ManagementFileSystem from './ManagementFileSystem';
 import IBrightness from '@signageos/front-display/es6/NativeDevice/IBrightness';
 import IServerVideoPlayer from './Video/IServerVideoPlayer';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import Resolution from '@signageos/front-display/es6/NativeDevice/Resolution';
+import PrivateOrientation from './Orientation';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
 import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver';
@@ -33,7 +35,6 @@ import DisplayCapability from './Display/DisplayCapability';
 import { resolveCurrentBrightness } from '@signageos/front-display/es6/NativeDevice/Screen/screenHelper';
 import { now } from '@signageos/lib/dist/DateTime/dateTimeFactory';
 import ISensors, { SensorCapability } from './Sensors/ISensors';
-import { convertScreenOrientationToAngle } from './screenOrientationHelper';
 
 export default class ManagementDriver implements IBasicDriver, IManagementDriver, ICacheDriver {
 
@@ -46,6 +47,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		fileSystemUrl: string,
 		private cache: ICache,
 		private internalFileSystem: IInternalFileSystem,
+		private systemSettings: ISystemSettings,
 		private videoPlayer: IServerVideoPlayer,
 		private overlayRenderer: OverlayRenderer,
 		fileDetailsProvider: IFileDetailsProvider,
@@ -303,9 +305,9 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		_currentVersion: string,
 		_videoOrientation?: Orientation,
 	): Promise<() => Promise<void> | Promise<void>> {
-		const angle = convertScreenOrientationToAngle(orientation);
-		await this.systemAPI.rotateScreen(angle);
-		return () => this.systemReboot();
+		const privateOrientation = Orientation[orientation] as PrivateOrientation;
+		await this.systemSettings.setScreenOrientation(privateOrientation);
+		return () => this.appRestart();
 	}
 
 	public async getTimers() {

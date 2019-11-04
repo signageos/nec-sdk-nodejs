@@ -10,6 +10,7 @@ import handleMessage from './handleMessage';
 import * as Debug from 'debug';
 import { MessageType } from './BridgeClient';
 import { ISystemAPI } from '../API/SystemAPI';
+import ISystemSettings from '../SystemSettings/ISystemSettings';
 const debug = Debug('@signageos/display-linux:Bridge:socketHandleMessage');
 
 export default function socketHandleMessage(
@@ -18,6 +19,7 @@ export default function socketHandleMessage(
 	fileDetailsProvider: IFileDetailsProvider,
 	nativeDriver: IBasicDriver & IManagementDriver,
 	getDisplay: () => Promise<IDisplay>,
+	systemSettings: ISystemSettings,
 	overlayRenderer: OverlayRenderer,
 	systemAPI: ISystemAPI,
 ) {
@@ -28,6 +30,7 @@ export default function socketHandleMessage(
 				fileDetailsProvider,
 				nativeDriver,
 				getDisplay,
+				systemSettings,
 				overlayRenderer,
 				systemAPI,
 				message.message,

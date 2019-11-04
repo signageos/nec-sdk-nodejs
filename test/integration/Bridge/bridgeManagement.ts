@@ -39,6 +39,7 @@ export async function createBridgeAndItsDependencies() {
 		fileDetailsProvider as any,
 		nativeDriver as any,
 		display as any,
+		systemSettings as any,
 		videoPlayer as any,
 		overlayRenderer as any,
 		cecListener as any,

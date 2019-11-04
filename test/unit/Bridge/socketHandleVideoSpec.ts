@@ -9,6 +9,7 @@ import {
 import socketHandleVideo from '../../../src/Bridge/socketHandleVideo';
 import { EventEmitter } from 'events';
 import IBridgeMessage from '../../../src/Bridge/IBridgeMessage';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 
 function createMockSocket() {
 	return {
@@ -36,11 +37,20 @@ describe('Bridge.socketHandleVideo', function () {
 				async bindMessage(_event: string, callback: (message: IBridgeMessage<any>) => Promise<void>) {
 					await callback({
 						invocationUid: 'message1',
-						message: { type: PrepareVideo, uri: 'video1', x: 1, y: 2, width: 1280, height: 720, isStream: false },
+						message: {
+							type: PrepareVideo,
+							uri: 'video1',
+							x: 1,
+							y: 2,
+							width: 1280,
+							height: 720,
+							orientation: Orientation.LANDSCAPE,
+							isStream: false,
+						},
 					});
 					videoPlayer.prepare.callCount.should.equal(1);
 					videoPlayer.prepare.getCall(0).args.should.deepEqual([
-						'video1', 1, 2, 1280, 720, false,
+						'video1', 1, 2, 1280, 720, Orientation.LANDSCAPE, false,
 					]);
 					sendMessage.callCount.should.equal(1);
 					sendMessage.getCall(0).args.should.deepEqual(['message1', { success: true, response: {} }]);
@@ -62,11 +72,20 @@ describe('Bridge.socketHandleVideo', function () {
 				async bindMessage(_event: string, callback: (message: IBridgeMessage<any>) => Promise<void>) {
 					await callback({
 						invocationUid: 'message2',
-						message: { type: PrepareVideo, uri: 'video2', x: 0, y: 5, width: 1920, height: 1080, isStream: false },
+						message: {
+							type: PrepareVideo,
+							uri: 'video2',
+							x: 0,
+							y: 5,
+							width: 1920,
+							height: 1080,
+							orientation: Orientation.LANDSCAPE,
+							isStream: false,
+						},
 					});
 					videoPlayer.prepare.callCount.should.equal(1);
 					videoPlayer.prepare.getCall(0).args.should.deepEqual([
-						'video2', 0, 5, 1920, 1080, false,
+						'video2', 0, 5, 1920, 1080, Orientation.LANDSCAPE, false,
 					]);
 					sendMessage.callCount.should.equal(1);
 					sendMessage.getCall(0).args.should.deepEqual(['message2', { success: false }]);
@@ -91,11 +110,20 @@ describe('Bridge.socketHandleVideo', function () {
 				async bindMessage(_event: string, callback: (message: IBridgeMessage<any>) => Promise<void>) {
 					await callback({
 						invocationUid: 'message3',
-						message: { type: PlayVideo, uri: 'video3', x: 10, y: 15, width: 1280, height: 720, isStream: false },
+						message: {
+							type: PlayVideo,
+							uri: 'video3',
+							x: 10,
+							y: 15,
+							width: 1280,
+							height: 720,
+							orientation: Orientation.LANDSCAPE,
+							isStream: false,
+						},
 					});
 					videoPlayer.play.callCount.should.equal(1);
 					videoPlayer.play.getCall(0).args.should.deepEqual([
-						'video3', 10, 15, 1280, 720, false,
+						'video3', 10, 15, 1280, 720, Orientation.LANDSCAPE, false,
 					]);
 					sendMessage.callCount.should.equal(1);
 					sendMessage.getCall(0).args.should.deepEqual(['message3', { success: true, response: {} }]);
@@ -117,11 +145,20 @@ describe('Bridge.socketHandleVideo', function () {
 				async bindMessage(_event: string, callback: (message: IBridgeMessage<any>) => Promise<void>) {
 					await callback({
 						invocationUid: 'message4',
-						message: { type: PlayVideo, uri: 'video4', x: 20, y: 20, width: 1920, height: 1080, isStream: false },
+						message: {
+							type: PlayVideo,
+							uri: 'video4',
+							x: 20,
+							y: 20,
+							width: 1920,
+							height: 1080,
+							orientation: Orientation.LANDSCAPE,
+							isStream: false,
+						},
 					});
 					videoPlayer.play.callCount.should.equal(1);
 					videoPlayer.play.getCall(0).args.should.deepEqual([
-						'video4', 20, 20, 1920, 1080, false,
+						'video4', 20, 20, 1920, 1080, Orientation.LANDSCAPE, false,
 					]);
 					sendMessage.callCount.should.equal(1);
 					sendMessage.getCall(0).args.should.deepEqual(['message4', { success: false }]);

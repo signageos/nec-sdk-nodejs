@@ -18,6 +18,7 @@ import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
 import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 import ICECListener from '../CEC/ICECListener';
+import ISystemSettings from '../SystemSettings/ISystemSettings';
 import IDisplay from '../Driver/Display/IDisplay';
 import { ISystemAPI } from '../API/SystemAPI';
 
@@ -33,6 +34,7 @@ export default class BridgeServer {
 		private fileDetailsProvider: IFileDetailsProvider,
 		private nativeDriver: IBasicDriver & IManagementDriver,
 		private getDisplay: () => Promise<IDisplay>,
+		private systemSettings: ISystemSettings,
 		private videoPlayer: IServerVideoPlayer,
 		private overlayRenderer: OverlayRenderer,
 		private cecListener: ICECListener,
@@ -163,6 +165,7 @@ export default class BridgeServer {
 				this.fileDetailsProvider,
 				this.nativeDriver,
 				this.getDisplay,
+				this.systemSettings,
 				this.overlayRenderer,
 				this.systemAPI,
 			);
