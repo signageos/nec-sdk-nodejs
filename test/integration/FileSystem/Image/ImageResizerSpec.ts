@@ -1,5 +1,6 @@
 import * as should from 'should';
 import * as express from 'express';
+import * as os from 'os';
 import fetch from 'node-fetch';
 import * as http from 'http';
 import * as fs from 'fs-extra';
@@ -18,11 +19,11 @@ describe('FileSystem.Image.ImageResizer', function () {
 
 	const TEST_PORT = 6666;
 	const FILE_SYSTEM_URL = `http://localhost:${TEST_PORT}`;
-	const FILE_SYSTEM_BASE_PATH = '/base/directory';
+	const FILE_SYSTEM_BASE_PATH = parameters.paths.rootPath + '/test_fs/base/directory';
 	const FIXTURES_BASE_PATH = parameters.paths.rootPath + '/test/integration/FileSystem/Image/fixtures';
 	const INTERNAL_BASE_PATH = `${FILE_SYSTEM_BASE_PATH}/internal`;
 	const EXTERNAL_BASE_PATH = `${FILE_SYSTEM_BASE_PATH}/external`;
-	const TMP_BASE_PATH = '/tmp/tests';
+	const TMP_BASE_PATH = os.tmpdir() + '/tests';
 
 	describe('routeResizing', function () {
 

@@ -16,7 +16,11 @@ export default class CECListener implements ICECListener {
 	private cecListenerChildProcess: ChildProcess | null = null;
 	private eventEmitter: EventEmitter;
 
-	constructor(private display: IDisplay, socketRootPath: string, private systemAPI: ISystemAPI) {
+	constructor(
+		private getDisplay: () => Promise<IDisplay>,
+		socketRootPath: string,
+		private systemAPI: ISystemAPI,
+	) {
 		this.unixSocketPath = path.join(socketRootPath, SOCKET_FILE_NAME);
 		this.unixSocketEventListener = new UnixSocketEventListener(this.unixSocketPath);
 		this.eventEmitter = new EventEmitter();
@@ -26,7 +30,8 @@ export default class CECListener implements ICECListener {
 	public async listen() {
 		await this.unixSocketEventListener.listen();
 		this.startCecListenerChildProcess();
-		await this.display.initCEC();
+		const display = await this.getDisplay();
+		await display.initCEC();
 	}
 
 	public async close() {

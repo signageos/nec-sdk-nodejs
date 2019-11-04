@@ -4,16 +4,14 @@ name=$RC_SVCNAME
 description="WPE Webkit"
 
 depend() {
-    need net localmount loopback nginx signageos-display-linux-server
+    need net localmount loopback nginx docker signageos-display-linux-server
 }
 
 start() {
     ebegin "starting signageOS WPE Webkit"
-    einfo "waiting for server to start accepting connections"
-    while ! /usr/bin/signageos application is_ready; do
-        sleep 1
-    done
-    einfo "server is ready, starting now"
+    einfo "wait for docker to start"
+    while ! docker info > /dev/null 2>&1; do sleep 0.01; done # if try to connect to docker too fast, it's not ready yet so gotta wait until it's ready
+    einfo "starting the container now"
     docker start wpewebkit
     eend $? "failed to start WPE Webkit"
 }

@@ -26,12 +26,12 @@ if (parameters.raven.enabled) {
 }
 
 (async () => {
-	const socketClient = await new Promise((resolve: (socket: ISocket) => void, reject: (error: Error) => void) => {
+	const socketClient = await new Promise((resolve: (socket: ISocket) => void) => {
 		const socket = createAutoReconnectingSocket(
 			parameters.server.bridge_url,
 			() => resolve(socket),
 			() => console.log('Bridge socket disconnected'),
-			(error: any) => reject(error),
+			(error: any) => console.error(error),
 		);
 	});
 	const bridge = new BridgeClient(parameters.server.bridge_url, socketClient);
