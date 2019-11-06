@@ -89,7 +89,7 @@ build:alpine:
   before_script: []
   script:
     - rm -rf ~/packages
-    - VERSION=`cat ./VERSION`
+    - export VERSION=`cat ./VERSION`
     - npx @signageos/lib@just-tools version-upgrade $VERSION
     - export VERSION=`echo $VERSION | sed -r 's/-[^.]+//g'` # omit branch version
     - make apk
