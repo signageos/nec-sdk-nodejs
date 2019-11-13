@@ -1,5 +1,4 @@
 import { EventEmitter } from 'events';
-import * as moment from 'moment';
 import * as sinon from 'sinon';
 import BridgeClient from '../../../src/Bridge/BridgeClient';
 import { createBridgeAndItsDependencies } from '../Bridge/bridgeManagement';
@@ -41,9 +40,9 @@ describe('Driver.FrontManagementDriver', function () {
 			const frontManagementDriver = createFrontManagementDriver(this.bridge.bridgeClient);
 			this.bridge.nativeDriver.setManualTimeWithTimezone = sinon.stub().resolves();
 			const expectedDatetime = new Date(2019, 7, 8, 10, 20);
-			await frontManagementDriver.setManualTimeWithTimezone(moment(expectedDatetime), 'Europe/Paris');
+			await frontManagementDriver.setManualTimeWithTimezone(expectedDatetime.valueOf(), 'Europe/Paris');
 			this.bridge.nativeDriver.setManualTimeWithTimezone.callCount.should.equal(1);
-			this.bridge.nativeDriver.setManualTimeWithTimezone.getCall(0).args[0].toISOString().should.equal(expectedDatetime.toISOString());
+			this.bridge.nativeDriver.setManualTimeWithTimezone.getCall(0).args[0].should.equal(expectedDatetime.valueOf());
 			this.bridge.nativeDriver.setManualTimeWithTimezone.getCall(0).args[1].should.equal('Europe/Paris');
 		});
 	});
