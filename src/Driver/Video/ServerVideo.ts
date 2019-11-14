@@ -10,6 +10,8 @@ import IUnixSocketEventListener from '../../UnixSocket/IUnixSocketEventListener'
 import IFileSystem from '../../FileSystem/IFileSystem';
 import IServerVideo from './IServerVideo';
 import ISystemSettings from '../../SystemSettings/ISystemSettings';
+import * as Debug from 'debug';
+const debug = Debug('@signageos/display-linux:Driver:Video:ServerVideo');
 
 export enum State {
 	IDLE,
@@ -175,16 +177,21 @@ export default class ServerVideo implements IServerVideo {
 		const volume = await this.systemSettings.getVolume();
 		let videoProcess: ChildProcess;
 		if (isStream) {
+			debug(`prepare stream, uri: ${uri}, x: ${x}, y: ${y}, width: ${width}, height: ${height}`);
 			videoProcess = this.videoAPI.prepareStream(uri, x, y, width, height, orientation, socketPath, volume);
+			debug(`stream prepared, uri: ${uri}, pid: ${videoProcess.pid}`);
 		} else {
+			debug(`prepare video, uri: ${uri}, x: ${x}, y: ${y}, width: ${width}, height: ${height}`);
 			const filePath = await this.fileSystem.convertRelativePathToFilePath(uri);
 			const fileAbsolutePath = this.fileSystem.getAbsolutePath(filePath);
 			videoProcess = this.videoAPI.prepareVideo(fileAbsolutePath, x, y, width, height, orientation, socketPath, volume);
+			debug(`video prepared, uri: ${uri}, pid: ${videoProcess.pid}`);
 		}
 
 		const videoEventSrcArgs = { uri, x, y, width, height };
 
 		videoProcess.once('close', (code: number, signal: string | null) => {
+			debug(`video process closed, uri: ${uri}, code: ${code}, signal: ${signal}`);
 			this.state = State.IDLE;
 			this.finished = true;
 			if (signal !== null) {
@@ -205,6 +212,7 @@ export default class ServerVideo implements IServerVideo {
 		});
 
 		this.videoEventListener.on('ended', () => {
+			debug(`video ended, uri: ${uri}`);
 			this.eventEmitter.emit('ended', { type: 'ended', srcArguments: videoEventSrcArgs });
 		});
 

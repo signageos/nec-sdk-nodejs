@@ -14,6 +14,8 @@ import {
 import IServerVideoPlayer from '../Driver/Video/IServerVideoPlayer';
 import { MessageType } from './BridgeClient';
 import IBridgeMessage from './IBridgeMessage';
+import * as Debug from 'debug';
+const debug = Debug('@signageos/display-linux:Bridge:socketHandleVideo');
 
 export default function socketHandleVideo(
 	socket: ISocket,
@@ -25,10 +27,13 @@ export default function socketHandleVideo(
 
 function bindVideoMessages(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	socket.bindMessage('message.' + MessageType.VIDEO, async (message: IBridgeMessage<any>) => {
+		debug('video message received', message);
 		try {
 			await handleVideoMessage(videoPlayer, message.message);
+			debug('video message success', message);
 			await socket.sendMessage(message.invocationUid, { success: true, response: {} });
 		} catch (error) {
+			debug('video message error', message);
 			await socket.sendMessage(message.invocationUid, { success: false });
 		}
 	});
@@ -64,12 +69,15 @@ async function handleVideoMessage(
 
 function forwardVideoEventsToClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	const onEnded = async (event: IVideoEvent) => {
+		debug('video ended', event);
 		await socket.sendMessage(VideoEnded, { ...event.srcArguments });
 	};
 	const onStopped = async (event: IVideoEvent) => {
+		debug('video stopped', event);
 		await socket.sendMessage(VideoStopped, { ...event.srcArguments });
 	};
 	const onError = async (event: IVideoEvent) => {
+		debug('video error', event);
 		await socket.sendMessage(VideoError, {
 			...event.srcArguments,
 			data: event.data,
