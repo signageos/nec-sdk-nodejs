@@ -62,13 +62,17 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 		throw new Error('Videos can only be played from local storage. Supply full URI.');
 	}
 
+	private prependUriWithFileSystemRoot(uri: string) {
+		return this.fileSystemUrl + '/' + encodeURI(uri);
+	}
+
 	private convertEventEmitterWithRelativeUriToAbsoluteUri(videoEmitter: IVideo) {
 		const convertedVideoEmitter = new EventEmitter();
 		const convertEvent = (event: IVideoEvent) => ({
 			...event,
 			srcArguments: {
 				...event.srcArguments,
-				uri: this.fileSystemUrl + '/' + event.srcArguments.uri,
+				uri: this.prependUriWithFileSystemRoot(event.srcArguments.uri),
 			},
 		});
 
