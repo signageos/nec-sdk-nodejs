@@ -13,6 +13,16 @@ const cecKeyMap: { [key: number]: KeyCode } = {
 	[Key.PLAY]: KeyCode.PLAY,
 	[Key.STOP]: KeyCode.STOP,
 	[Key.PAUSE]: KeyCode.PAUSE,
+	[Key.NUM_0]: KeyCode.NUM_0,
+	[Key.NUM_1]: KeyCode.NUM_1,
+	[Key.NUM_2]: KeyCode.NUM_2,
+	[Key.NUM_3]: KeyCode.NUM_3,
+	[Key.NUM_4]: KeyCode.NUM_4,
+	[Key.NUM_5]: KeyCode.NUM_5,
+	[Key.NUM_6]: KeyCode.NUM_6,
+	[Key.NUM_7]: KeyCode.NUM_7,
+	[Key.NUM_8]: KeyCode.NUM_8,
+	[Key.NUM_9]: KeyCode.NUM_9,
 };
 
 export default cecKeyMap;

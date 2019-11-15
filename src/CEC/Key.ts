@@ -10,6 +10,16 @@ enum Key {
 	PLAY = 0x44,
 	STOP = 0x45,
 	PAUSE = 0x46,
+	NUM_0 = 0x20,
+	NUM_1 = 0x21,
+	NUM_2 = 0x22,
+	NUM_3 = 0x23,
+	NUM_4 = 0x24,
+	NUM_5 = 0x25,
+	NUM_6 = 0x26,
+	NUM_7 = 0x27,
+	NUM_8 = 0x28,
+	NUM_9 = 0x29,
 }
 
 export default Key;
