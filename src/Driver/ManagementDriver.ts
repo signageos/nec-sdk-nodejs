@@ -35,6 +35,7 @@ import DisplayCapability from './Display/DisplayCapability';
 import { resolveCurrentBrightness } from '@signageos/front-display/es6/NativeDevice/Screen/screenHelper';
 import { now } from '@signageos/lib/dist/DateTime/dateTimeFactory';
 import ISensors, { SensorCapability } from './Sensors/ISensors';
+import IMonitors from '@signageos/front-display/es6/NativeDevice/IMonitors';
 
 export default class ManagementDriver implements IBasicDriver, IManagementDriver, ICacheDriver {
 
@@ -53,6 +54,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		fileDetailsProvider: IFileDetailsProvider,
 		private getDisplay: () => Promise<IDisplay>,
 		public readonly sensors: ISensors,
+		public readonly monitors: IMonitors,
 		private systemAPI: ISystemAPI,
 	) {
 		this.fileSystem = new ManagementFileSystem(fileSystemUrl, internalFileSystem, fileDetailsProvider);

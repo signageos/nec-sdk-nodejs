@@ -19,6 +19,7 @@ import * as ScreenMessages from './bridgeScreenMessages';
 import * as PowerMessages from './bridgePowerMessages';
 import * as AudioMessages from './bridgeAudioMessages';
 import * as VideoMessages from './bridgeVideoMessages';
+import * as MonitorsMessages from './bridgeMonitorsMessages';
 import { ISystemAPI } from '../API/SystemAPI';
 import * as NetworkAPI from '../API/NetworkAPI';
 import IFileSystem from '../FileSystem/IFileSystem';
@@ -76,6 +77,7 @@ export default async function handleMessage(
 		NetworkMessages.GetWifiCountryCode |
 		NetworkMessages.SetWifiCountryCode |
 		NetworkMessages.ScanWifiDevices |
+		MonitorsMessages.GetMonitorsList |
 		FSMessages.ListFiles |
 		FSMessages.FileExists |
 		FSMessages.DownloadFile |
@@ -248,6 +250,10 @@ export default async function handleMessage(
 		case NetworkMessages.ScanWifiDevices:
 			const devices = await NetworkAPI.scanWifiDevices();
 			return { devices };
+
+		case MonitorsMessages.GetMonitorsList:
+			const monitors = await nativeDriver.monitors.getList();
+			return { monitors };
 
 		case FSMessages.ListFiles:
 			const files = await fileSystem.listFiles(message.directoryPath);
