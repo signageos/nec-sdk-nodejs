@@ -11,6 +11,7 @@ import IFileSystem from '../../FileSystem/IFileSystem';
 import IServerVideo from './IServerVideo';
 import ISystemSettings from '../../SystemSettings/ISystemSettings';
 import * as Debug from 'debug';
+import { IOptions } from '@signageos/front-display/es6/Video/IVideoPlayer';
 const debug = Debug('@signageos/display-linux:Driver:Video:ServerVideo');
 
 export enum State {
@@ -62,7 +63,16 @@ export default class ServerVideo implements IServerVideo {
 		return this.videoArguments;
 	}
 
-	public async prepare(uri: string, x: number, y: number, width: number, height: number, orientation: Orientation, isStream: boolean) {
+	public async prepare(
+		uri: string,
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		orientation: Orientation,
+		isStream: boolean,
+		options: IOptions = {},
+	) {
 		if (this.childProcess) {
 			await this.stop();
 		}
@@ -71,7 +81,7 @@ export default class ServerVideo implements IServerVideo {
 			this.videoEventListener.once('ready', resolve);
 		});
 
-		this.childProcess = await this.prepareVideoChildProcess(uri, x, y, width, height, orientation, isStream);
+		this.childProcess = await this.prepareVideoChildProcess(uri, x, y, width, height, orientation, isStream, options);
 		this.videoArguments = { uri, x, y, width, height };
 		this.isStream = isStream;
 
@@ -172,9 +182,10 @@ export default class ServerVideo implements IServerVideo {
 		height: number,
 		orientation: Orientation,
 		isStream: boolean,
+		options: IOptions,
 	) {
 		const socketPath = this.videoEventListener.getSocketPath();
-		const volume = await this.systemSettings.getVolume();
+		const volume = await this.getAbsoluteVolume(options);
 		let videoProcess: ChildProcess;
 		if (isStream) {
 			debug(`prepare stream, uri: ${uri}, x: ${x}, y: ${y}, width: ${width}, height: ${height}`);
@@ -217,5 +228,14 @@ export default class ServerVideo implements IServerVideo {
 		});
 
 		return videoProcess;
+	}
+
+	private async getAbsoluteVolume(options: IOptions) {
+		const systemVolume = await this.systemSettings.getVolume();
+		if (typeof options.volume === 'undefined') {
+			return systemVolume;
+		}
+		const absoluteVolume = (options.volume / 100) * systemVolume;
+		return Math.trunc(absoluteVolume);
 	}
 }

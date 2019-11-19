@@ -3,6 +3,7 @@ import IServerVideoPlayer from './IServerVideoPlayer';
 import IServerVideo from './IServerVideo';
 import { EventEmitter } from "events";
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
+import { IOptions } from '@signageos/front-display/es6/Video/IVideoPlayer';
 
 export default class ServerVideoPlayer implements IServerVideoPlayer {
 
@@ -44,9 +45,10 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		height: number,
 		orientation: Orientation,
 		isStream: boolean,
+		options: IOptions = {},
 	): Promise<void> {
 		const idleVideo = this.getIdleVideoOrThrowException();
-		await idleVideo.prepare(uri, x, y, width, height, orientation, isStream);
+		await idleVideo.prepare(uri, x, y, width, height, orientation, isStream, options);
 	}
 
 	public async play(
@@ -63,7 +65,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 			video = this.getVideoByArgumentsOrThrowException(uri, x, y, width, height);
 		} catch (error) {
 			video = this.getIdleVideoOrThrowException();
-			await video.prepare(uri, x, y, width, height, orientation, isStream);
+			await video.prepare(uri, x, y, width, height, orientation, isStream, {});
 		}
 
 		await video.play();

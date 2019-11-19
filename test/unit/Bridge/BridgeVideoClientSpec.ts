@@ -35,6 +35,7 @@ describe('Bridge.BridgeVideoClient', function () {
 						height: 1080,
 						orientation: Orientation.LANDSCAPE,
 						isStream: false,
+						options: {},
 					},
 				);
 			});

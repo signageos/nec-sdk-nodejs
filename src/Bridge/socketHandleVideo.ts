@@ -45,7 +45,16 @@ async function handleVideoMessage(
 ) {
 	switch (message.type) {
 		case PrepareVideo:
-			await videoPlayer.prepare(message.uri, message.x, message.y, message.width, message.height, message.orientation, message.isStream);
+			await videoPlayer.prepare(
+				message.uri,
+				message.x,
+				message.y,
+				message.width,
+				message.height,
+				message.orientation,
+				message.isStream,
+				message.options,
+			);
 			break;
 		case PlayVideo:
 			await videoPlayer.play(message.uri, message.x, message.y, message.width, message.height, message.orientation, message.isStream);

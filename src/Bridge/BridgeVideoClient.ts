@@ -22,6 +22,7 @@ import {
 	Coordinates,
 } from '../Driver/Video/helper';
 import BridgeClient, { MessageType } from './BridgeClient';
+import { IOptions } from '@signageos/front-display/es6/Video/IVideoPlayer';
 
 export default class BridgeVideoClient {
 
@@ -43,11 +44,12 @@ export default class BridgeVideoClient {
 		width: number,
 		height: number,
 		isStream: boolean,
+		options: IOptions = {},
 	) {
 		const coordinates = await this.convertCoordinatesForOrientation(x, y, width, height);
 		const orientation = await this.getOrientation();
 		await this.bridge.invoke<PrepareVideo, {}>(
-			{ type: PrepareVideo, uri, ...coordinates, orientation, isStream },
+			{ type: PrepareVideo, uri, ...coordinates, orientation, isStream, options },
 			MessageType.VIDEO,
 		);
 	}
