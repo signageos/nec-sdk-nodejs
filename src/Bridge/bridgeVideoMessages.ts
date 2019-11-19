@@ -1,4 +1,5 @@
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import { IOptions } from '@signageos/front-display/es6/Video/IVideoPlayer';
 import { VideoInput } from '../Driver/Display/IDisplay';
 
 export const PrepareVideo = 'Video.PrepareVideo';
@@ -11,6 +12,7 @@ export interface PrepareVideo {
 	height: number;
 	orientation: Orientation;
 	isStream: boolean;
+	options: IOptions;
 }
 
 export const PlayVideo = 'Video.PlayVideo';

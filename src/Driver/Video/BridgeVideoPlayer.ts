@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import IVideoPlayer from '@signageos/front-display/es6/Video/IVideoPlayer';
+import IVideoPlayer, { IOptions } from '@signageos/front-display/es6/Video/IVideoPlayer';
 import IVideo from '@signageos/front-display/es6/Video/IVideo';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
@@ -18,9 +18,9 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 	}
 
 	@locked('video')
-	public async prepare(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
+	public async prepare(uri: string, x: number, y: number, width: number, height: number, options: IOptions = {}): Promise<void> {
 		const uriRelative = this.stripFileSystemRootFromUri(uri);
-		await this.bridgeVideoClient.prepareVideo(uriRelative, x, y, width, height, false);
+		await this.bridgeVideoClient.prepareVideo(uriRelative, x, y, width, height, false, options);
 	}
 
 	@locked('video')

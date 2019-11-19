@@ -46,11 +46,12 @@ describe('Bridge.socketHandleVideo', function () {
 							height: 720,
 							orientation: Orientation.LANDSCAPE,
 							isStream: false,
+							options: {},
 						},
 					});
 					videoPlayer.prepare.callCount.should.equal(1);
 					videoPlayer.prepare.getCall(0).args.should.deepEqual([
-						'video1', 1, 2, 1280, 720, Orientation.LANDSCAPE, false,
+						'video1', 1, 2, 1280, 720, Orientation.LANDSCAPE, false, {},
 					]);
 					sendMessage.callCount.should.equal(1);
 					sendMessage.getCall(0).args.should.deepEqual(['message1', { success: true, response: {} }]);
@@ -81,11 +82,12 @@ describe('Bridge.socketHandleVideo', function () {
 							height: 1080,
 							orientation: Orientation.LANDSCAPE,
 							isStream: false,
+							options: {},
 						},
 					});
 					videoPlayer.prepare.callCount.should.equal(1);
 					videoPlayer.prepare.getCall(0).args.should.deepEqual([
-						'video2', 0, 5, 1920, 1080, Orientation.LANDSCAPE, false,
+						'video2', 0, 5, 1920, 1080, Orientation.LANDSCAPE, false, {},
 					]);
 					sendMessage.callCount.should.equal(1);
 					sendMessage.getCall(0).args.should.deepEqual(['message2', { success: false }]);
