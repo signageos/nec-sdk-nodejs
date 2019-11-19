@@ -44,8 +44,8 @@ export class NECAPI implements INECAPI {
 	@locked('necapi')
 	public async isNEC() {
 		if (this.isNECCached === null) {
-			const result = await execNECDisplayCommand('misc', 'is_nec');
-			this.isNECCached = result === '1';
+			const result = await execApiCommand('nec', 'is_nec', [], { asRoot: true });
+			this.isNECCached = result.trim() === '1';
 		}
 		return this.isNECCached;
 	}
