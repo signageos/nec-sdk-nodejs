@@ -1,3 +1,5 @@
+import { INECAPI } from './API/NECAPI';
+
 const parameters = require('../config/parameters');
 
 export function getAutoVerification(): { organizationUid: string } | undefined {
@@ -12,4 +14,12 @@ export function getAutoVerification(): { organizationUid: string } | undefined {
 	}
 
 	return undefined;
+}
+
+let isNEC: boolean | null = null;
+export async function isNECDisplay(necAPI: INECAPI): Promise<boolean> {
+	if (isNEC === null) {
+		isNEC = await necAPI.isNEC();
+	}
+	return isNEC;
 }
