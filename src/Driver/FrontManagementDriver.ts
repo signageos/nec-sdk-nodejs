@@ -1,4 +1,3 @@
-import * as moment from 'moment';
 import INetworkInfo from '@signageos/front-display/es6/Management/Device/Network/INetworkInfo';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
@@ -238,14 +237,14 @@ export default class FrontManagementDriver implements IManagementDriver {
 		};
 	}
 
-	public async setManualTime(_currentDate: moment.Moment): Promise<void> {
+	public async setManualTime(_datetime: Date): Promise<void> {
 		throw new Error('not implemented');
 	}
 
-	public async setManualTimeWithTimezone(currentDate: moment.Moment, timezone: string): Promise<void> {
+	public async setManualTimeWithTimezone(timestampMs: number, timezone: string): Promise<void> {
 		await this.bridge.invoke<SetManualTimeWithTimezone, {}>({
 			type: SetManualTimeWithTimezone,
-			timestampMs: currentDate.valueOf(),
+			timestampMs,
 			timezone,
 		});
 	}

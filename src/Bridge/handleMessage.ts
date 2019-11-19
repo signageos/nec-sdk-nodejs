@@ -1,4 +1,3 @@
-import * as moment from 'moment';
 import IBasicDriver from '@signageos/front-display/es6/NativeDevice/IBasicDriver';
 import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Management/IManagementDriver';
 import {
@@ -121,8 +120,7 @@ export default async function handleMessage(
 			};
 
 		case SetManualTimeWithTimezone:
-			const datetime = moment(message.timestampMs);
-			await nativeDriver.setManualTimeWithTimezone(datetime, message.timezone);
+			await nativeDriver.setManualTimeWithTimezone(message.timestampMs, message.timezone);
 			return {};
 
 		case SetNTPTimeWithTimezone:

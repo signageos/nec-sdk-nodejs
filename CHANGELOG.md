@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Didn't report it's current firmware version
 - Fixed crash when trying to stop same stream multiple times 
 
+### Changed
+- Updated setting of device DateTime according to changed interface
+
 ## [0.4.0] - 2019-06-10
 ### Added
 - File System API supports copyFile, writeFile

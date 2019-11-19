@@ -348,12 +348,12 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		}
 	}
 
-	public async setManualTime(_currentDate: moment.Moment): Promise<void> {
+	public async setManualTime(_datetime: Date): Promise<void> {
 		throw new Error('Not implemented');
 	}
 
-	public async setManualTimeWithTimezone(currentDate: moment.Moment, timezone: string): Promise<void> {
-		const datetimeString = currentDate.clone().utc().format('YYYY-MM-DD HH:mm:ss');
+	public async setManualTimeWithTimezone(timestampMs: number, timezone: string): Promise<void> {
+		const datetimeString = moment.unix(timestampMs).format('YYYY-MM-DD HH:mm:ss');
 		await this.systemAPI.setDatetime(datetimeString);
 		await this.systemAPI.setTimezone(timezone);
 	}
