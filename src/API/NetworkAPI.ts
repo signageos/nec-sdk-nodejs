@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import { resolve4 as resolveDns } from 'dns';
 import { networkInterfaces as osGetNetworkInterfaces } from 'os';
 import { execApiCommand } from './apiCommand';
+import { INetworkOptions, NetworkInterface } from '@signageos/front-display/es6/Management/Device/Network/INetworkInfo';
 
 export enum NetworkInterfaceType {
 	WIFI,
@@ -16,12 +17,17 @@ export interface INetworkInterface {
 	netmask: string;
 }
 
+const IFACE_PREFIX_MAP: { [K in NetworkInterface]: string } = {
+	['ethernet']: 'eth',
+	['wifi']: 'wlan',
+};
+
 export async function getEthernet(): Promise<INetworkInterface | null> {
 	const networkInterfaces = osGetNetworkInterfaces();
 
 	for (let name of Object.keys(networkInterfaces)) {
 		const networkInterface = networkInterfaces[name][0];
-		if (name.startsWith('eth')) {
+		if (name.startsWith(IFACE_PREFIX_MAP.ethernet)) {
 			return {
 				type: NetworkInterfaceType.ETHERNET,
 				name,
@@ -40,7 +46,7 @@ export async function getWifi(): Promise<INetworkInterface | null> {
 
 	for (let name of Object.keys(networkInterfaces)) {
 		const networkInterface = networkInterfaces[name][0];
-		if (name.startsWith('wlan')) {
+		if (name.startsWith(IFACE_PREFIX_MAP.wifi)) {
 			return {
 				type: NetworkInterfaceType.WIFI,
 				name,
@@ -64,6 +70,48 @@ export function isConnectedToInternet(domainToContact: string) {
 			}
 		});
 	});
+}
+
+export async function setManual(options: INetworkOptions) {
+	const networkInterfaces = osGetNetworkInterfaces();
+	const networkInterfaceName = Object.keys(networkInterfaces).find((name: string) => name.startsWith(IFACE_PREFIX_MAP[options.interface]));
+	if (!networkInterfaceName) {
+		throw new Error(`Cannot find available interface ${options.interface}`);
+	}
+	return await execApiCommand(
+		'network',
+		'set_manual',
+		[
+			'--address',
+			options.localAddress,
+			'--gateway',
+			options.gateway,
+			'--netmask',
+			options.netmask,
+			'--dns',
+			options.dns.join(','),
+			'--iface',
+			networkInterfaceName,
+		],
+		{ asRoot: true },
+	);
+}
+
+export async function setDHCP(networkInterface: NetworkInterface) {
+	const networkInterfaces = osGetNetworkInterfaces();
+	const networkInterfaceName = Object.keys(networkInterfaces).find((name: string) => name.startsWith(IFACE_PREFIX_MAP[networkInterface]));
+	if (!networkInterfaceName) {
+		throw new Error(`Cannot find available interface ${networkInterface}`);
+	}
+	return await execApiCommand(
+		'network',
+		'set_dhcp',
+		[
+			'--iface',
+			networkInterfaceName,
+		],
+		{ asRoot: true },
+	);
 }
 
 export async function getDefaultGateway() {

@@ -20,11 +20,6 @@ export interface GetSerialNumber {
 	type: typeof GetSerialNumber;
 }
 
-export const NetworkGetInfo = 'Network.GetInfo';
-export interface NetworkGetInfo {
-	type: typeof NetworkGetInfo;
-}
-
 export const Supports = 'System.Supports';
 export interface Supports {
 	type: typeof Supports;
