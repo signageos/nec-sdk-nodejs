@@ -67,12 +67,13 @@ export function isConnectedToInternet(domainToContact: string) {
 }
 
 export async function getDefaultGateway() {
-	return await execApiCommand('network', 'gateway');
+	const result = await execApiCommand('network', 'gateway');
+	return result.trim();
 }
 
 export async function getDNSSettings() {
 	const dnsSettings = await execApiCommand('network', 'dns');
-	return dnsSettings.split("\n");
+	return dnsSettings.trim().split("\n");
 }
 
 export async function isWifiSupported() {
