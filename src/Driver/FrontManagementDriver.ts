@@ -1,4 +1,5 @@
-import INetworkInfo from '@signageos/front-display/es6/Management/Device/Network/INetworkInfo';
+import INetwork from '@signageos/front-display/es6/NativeDevice/Network/INetwork';
+import FrontNetwork from './FrontNetwork';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import { APPLICATION_TYPE } from './constants';
@@ -6,7 +7,6 @@ import BridgeClient from '../Bridge/BridgeClient';
 import {
 	GetModel,
 	GetSerialNumber,
-	NetworkGetInfo,
 	Supports,
 	AppUpgrade,
 	GetTemperature,
@@ -45,6 +45,7 @@ export default class FrontManagementDriver implements IManagementDriver {
 	public readonly fileSystem: IFileSystem;
 	public readonly sensors: ISensors;
 	public readonly monitors: IMonitors;
+	public readonly network: INetwork;
 
 	constructor(
 		private bridge: BridgeClient,
@@ -54,6 +55,7 @@ export default class FrontManagementDriver implements IManagementDriver {
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);
 		this.sensors = createFrontSensors(this.socketClient);
 		this.monitors = new FrontMonitors(this.bridge);
+		this.network = new FrontNetwork(this.bridge);
 	}
 
 	public async initialize(_staticBaseUrl: string) {
@@ -280,13 +282,6 @@ export default class FrontManagementDriver implements IManagementDriver {
 			orientation,
 		});
 		return () => this.systemReboot();
-	}
-
-	public async getNetworkInfo(): Promise<INetworkInfo> {
-		const { networkInfo } = await this.bridge.invoke<NetworkGetInfo, { networkInfo: INetworkInfo }>({
-			type: NetworkGetInfo,
-		});
-		return networkInfo;
 	}
 
 	public async getSerialNumber(): Promise<string> {

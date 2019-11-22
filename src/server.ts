@@ -38,6 +38,7 @@ import { getAutoVerification } from './helper';
 import { manageCpuFan } from './CPUFanManager/cpuFanManager';
 import ImageResizer from './FileSystem/Image/ImageResizer';
 import { createMonitors } from './Driver/Monitors/monitorsFactory';
+import Network from './Network/Network';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -69,6 +70,7 @@ if (parameters.raven.enabled) {
 	const necAPI = new NECAPI();
 	const sensors = await createSensors(necAPI);
 	const monitors = await createMonitors(necAPI);
+	const network = new Network();
 
 	const getDisplayInstance = () => getDisplay(necAPI, systemSettings, systemAPI);
 
@@ -91,6 +93,7 @@ if (parameters.raven.enabled) {
 		getDisplayInstance,
 		sensors,
 		monitors,
+		network,
 		systemAPI,
 	);
 

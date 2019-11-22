@@ -1,3 +1,5 @@
+import { INetworkOptions, NetworkInterface } from "@signageos/front-display/es6/Management/Device/Network/INetworkInfo";
+
 export const IsWifiSupported = 'Network.IsWifiSupported';
 export interface IsWifiSupported {
 	type: typeof IsWifiSupported;
@@ -49,4 +51,21 @@ export interface SetWifiCountryCode {
 export const ScanWifiDevices = 'Network.ScanWifiDevices';
 export interface ScanWifiDevices {
 	type: typeof ScanWifiDevices;
+}
+
+export const GetActiveInfo = 'Network.GetActiveInfo';
+export interface GetActiveInfo {
+	type: typeof GetActiveInfo;
+}
+
+export const SetManual = 'Network.SetManual';
+export interface SetManual {
+	type: typeof SetManual;
+	options: INetworkOptions;
+}
+
+export const SetDHCP = 'Network.SetDHCP';
+export interface SetDHCP {
+	type: typeof SetDHCP;
+	networkInterface: NetworkInterface;
 }

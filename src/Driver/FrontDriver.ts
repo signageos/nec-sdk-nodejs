@@ -1,6 +1,5 @@
 import IFrontDriver, { Hardware } from '@signageos/front-display/es6/NativeDevice/Front/IFrontDriver';
 import FrontCapability from '@signageos/front-display/es6/NativeDevice/Front/FrontCapability';
-import INetworkInfo from '@signageos/front-display/es6/Management/Device/Network/INetworkInfo';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import IKeyUpEvent from '@signageos/front-display/es6/NativeDevice/Input/IKeyUpEvent';
 import ProprietaryCache from '@signageos/front-display/es6/Cache/ProprietaryCache';
@@ -17,7 +16,6 @@ import {
 	GetDeviceUid,
 	GetModel,
 	GetSerialNumber,
-	NetworkGetInfo,
 	RemoteControlSetEnabled,
 	RemoteControlIsEnabled,
 	ControlSetPin,
@@ -115,13 +113,6 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	public stop() {
 		console.info('Stopped Linux front driver');
-	}
-
-	public async getNetworkInfo(): Promise<INetworkInfo> {
-		const { networkInfo } = await this.bridge.invoke<NetworkGetInfo, { networkInfo: INetworkInfo }>({
-			type: NetworkGetInfo,
-		});
-		return networkInfo;
 	}
 
 	public async getSerialNumber(): Promise<string> {

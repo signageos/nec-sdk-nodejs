@@ -7,7 +7,6 @@ import ManagementCapability from '@signageos/front-display/es6/NativeDevice/Mana
 import Capability from '@signageos/front-display/es6/NativeDevice/Management/ManagementCapability';
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import IServletRunner from '@signageos/front-display/es6/Servlet/IServletRunner';
-import INetworkInfo from '@signageos/front-display/es6/Management/Device/Network/INetworkInfo';
 import IBatteryStatus from '@signageos/front-display/es6/NativeDevice/Battery/IBatteryStatus';
 import { APPLICATION_TYPE } from './constants';
 import IBasicDriver from '../../node_modules/@signageos/front-display/es6/NativeDevice/IBasicDriver';
@@ -36,6 +35,7 @@ import { resolveCurrentBrightness } from '@signageos/front-display/es6/NativeDev
 import { now } from '@signageos/lib/dist/DateTime/dateTimeFactory';
 import ISensors, { SensorCapability } from './Sensors/ISensors';
 import IMonitors from '@signageos/front-display/es6/NativeDevice/IMonitors';
+import INetwork from '@signageos/front-display/es6/NativeDevice/Network/INetwork';
 
 export default class ManagementDriver implements IBasicDriver, IManagementDriver, ICacheDriver {
 
@@ -55,6 +55,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		private getDisplay: () => Promise<IDisplay>,
 		public readonly sensors: ISensors,
 		public readonly monitors: IMonitors,
+		public readonly network: INetwork,
 		private systemAPI: ISystemAPI,
 	) {
 		this.fileSystem = new ManagementFileSystem(fileSystemUrl, internalFileSystem, fileDetailsProvider);
@@ -114,37 +115,6 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 
 	public async getCurrentTemperature(): Promise<number> {
 		return await this.systemAPI.getCpuTemperature();
-	}
-
-	public async getNetworkInfo(): Promise<INetworkInfo> {
-		const ethernet = await NetworkAPI.getEthernet();
-		const wifi = await NetworkAPI.getWifi();
-		const gateway = await NetworkAPI.getDefaultGateway();
-		const dns = await NetworkAPI.getDNSSettings();
-
-		let localAddress: string | undefined = undefined;
-		let activeInterface: string | undefined = undefined;
-		let netmask: string | undefined = undefined;
-
-		if (ethernet) {
-			localAddress = ethernet.ip;
-			activeInterface = 'ethernet';
-			netmask = ethernet.netmask;
-		} else if (wifi) {
-			localAddress = wifi.ip;
-			activeInterface = 'wifi';
-			netmask = wifi.netmask;
-		}
-
-		return {
-			localAddress,
-			ethernetMacAddress: ethernet ? ethernet.mac : undefined,
-			wifiMacAddress: wifi ? wifi.mac : undefined,
-			activeInterface,
-			gateway: gateway || undefined,
-			netmask,
-			dns,
-		} as INetworkInfo;
 	}
 
 	public async getSerialNumber(): Promise<string> {

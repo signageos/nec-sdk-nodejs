@@ -4,7 +4,6 @@ import {
 	GetDeviceUid,
 	GetModel,
 	GetSerialNumber,
-	NetworkGetInfo,
 	Supports,
 	GetCurrentTimeWithTimezone,
 	SetManualTimeWithTimezone,
@@ -47,7 +46,6 @@ export default async function handleMessage(
 		GetModel |
 		GetSerialNumber |
 		ScreenMessages.GetOrientation |
-		NetworkGetInfo |
 		GetCurrentTimeWithTimezone |
 		SetManualTimeWithTimezone |
 		SetNTPTimeWithTimezone |
@@ -77,6 +75,9 @@ export default async function handleMessage(
 		NetworkMessages.GetWifiCountryCode |
 		NetworkMessages.SetWifiCountryCode |
 		NetworkMessages.ScanWifiDevices |
+		NetworkMessages.GetActiveInfo |
+		NetworkMessages.SetManual |
+		NetworkMessages.SetDHCP |
 		MonitorsMessages.GetMonitorsList |
 		FSMessages.ListFiles |
 		FSMessages.FileExists |
@@ -167,9 +168,17 @@ export default async function handleMessage(
 			const uploadedUri = await nativeDriver.screenshotUpload(message.uploadBaseUrl);
 			return { uploadedUri };
 
-		case NetworkGetInfo:
-			const networkInfo = await nativeDriver.getNetworkInfo();
+		case NetworkMessages.GetActiveInfo:
+			const networkInfo = await nativeDriver.network.getActiveInfo();
 			return { networkInfo };
+
+		case NetworkMessages.SetManual:
+			await nativeDriver.network.setManual(message.options);
+			return {};
+
+		case NetworkMessages.SetDHCP:
+			await nativeDriver.network.setDHCP(message.networkInterface);
+			return {};
 
 		case FirmwareMessages.GetVersion:
 			const version = await nativeDriver.firmwareGetVersion();
