@@ -97,10 +97,9 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		return await this.systemAPI.getFirmwareVersion();
 	}
 
-	public async firmwareUpgrade(baseUrl: string, version: string, onProgress: (progress: number) => void) {
+	public async firmwareUpgrade(_baseUrl: string, version: string, onProgress: (progress: number) => void) {
 		onProgress(0);
-		const fullUrl = baseUrl + '/linux/firmware/armhf/upgrade/upgrade_' + version + '.tar.gz';
-		await this.systemAPI.upgradeFirmware(fullUrl);
+		await this.systemAPI.upgradeFirmware(version);
 		onProgress(100);
 		return () => this.systemReboot();
 	}
