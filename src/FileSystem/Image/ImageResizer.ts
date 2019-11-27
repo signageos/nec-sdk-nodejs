@@ -26,6 +26,15 @@ export default class ImageResizer {
 		this.routeResizing();
 	}
 
+	public getSupportedMimeTypes() {
+		return [
+			'image/jpeg',
+			'image/png',
+			'image/webp',
+			'image/tiff',
+		];
+	}
+
 	public getImageThumbnailUriTemplate(filePath: IFilePath, lastModifiedAt: number) {
 		const WIDTH_PLACEHOLDER = '{width}';
 		const HEIGHT_PLACEHOLDER = '{height}';

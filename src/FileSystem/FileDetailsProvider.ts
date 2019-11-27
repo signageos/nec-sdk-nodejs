@@ -72,10 +72,12 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 			} as IVideoFileDetails;
 		} else
 		if (this.isImage(mimeType)) {
-			const imageThumbnailUriTemplate = await this.imageResizer.getImageThumbnailUriTemplate(filePath, lastModifiedAt);
-			return {
-				imageThumbnailUriTemplate,
-			} as IImageFileDetails;
+			if (this.imageResizer.getSupportedMimeTypes().indexOf(mimeType) !== -1) {
+				const imageThumbnailUriTemplate = await this.imageResizer.getImageThumbnailUriTemplate(filePath, lastModifiedAt);
+				return {
+					imageThumbnailUriTemplate,
+				} as IImageFileDetails;
+			}
 		}
 
 		return null;
