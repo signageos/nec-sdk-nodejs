@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Internal client-server communication re-implemented using websocket instead of HTTP requests
 - Manage compute module fan based on cpu temperature in NEC displays
 - Support Network set manual & DHCP
+- Support open browser window with an optional whitelist/blacklist of domains
 
 ### Fixed
 - Casually not loading of applet after restart app
