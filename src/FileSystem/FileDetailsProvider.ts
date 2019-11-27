@@ -5,6 +5,7 @@ import { IVideoAPI } from '../API/VideoAPI';
 import IFileDetailsProvider from './IFileDetailsProvider';
 import IFileMetadataCache from './IFileMetadataCache';
 import ImageResizer from './Image/ImageResizer';
+import VideoThumbnailExtractor from './Video/VideoThumbnailExtractor';
 
 export default class FileDetailsProvider implements IFileDetailsProvider {
 
@@ -13,6 +14,7 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 		private videoAPI: IVideoAPI,
 		private metadataCache: IFileMetadataCache,
 		private imageResizer: ImageResizer,
+		private videoThumbnailExtractor: VideoThumbnailExtractor,
 	) {}
 
 	public async getFileDetails(filePath: IFilePath): Promise<IFileDetails & IExtendedFileDetails> {
@@ -89,6 +91,12 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 			} catch (error) {
 				console.warn('Get extended file details videoCodec failed', error);
 			}
+
+			const videoThumbnailUriTemplate = await this.videoThumbnailExtractor.getVideoThumbnailUriTemplate(filePath, lastModifiedAt);
+			if (videoThumbnailUriTemplate) {
+				extendedFileDetails.videoThumbnailUriTemplate = videoThumbnailUriTemplate;
+			}
+
 			return extendedFileDetails;
 		} else
 		if (this.isImage(mimeType)) {

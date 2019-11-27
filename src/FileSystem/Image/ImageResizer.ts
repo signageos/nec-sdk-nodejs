@@ -25,7 +25,7 @@ export default class ImageResizer {
 		return this.thumbnailRequestHandler.getThumbnailUriTemplate(FILE_TYPE, filePath, lastModifiedAt);
 	}
 
-	private generateImageThumbnail = async (
+	public generateImageThumbnail = async (
 		originalAbsolutePath: string,
 		thumbnailAbsolutePath: string,
 		resolutions: IThumbnailProperties,

@@ -38,6 +38,7 @@ import { getAutoVerification } from './helper';
 import { manageCpuFan } from './CPUFanManager/cpuFanManager';
 import ThumbnailRequestHandler from './FileSystem/Thumbnail/ThumbnailRequestHandler';
 import ImageResizer from './FileSystem/Image/ImageResizer';
+import VideoThumbnailExtractor from './FileSystem/Video/VideoThumbnailExtractor';
 import { createMonitors } from './Driver/Monitors/monitorsFactory';
 import Network from './Network/Network';
 const parameters = require('../config/parameters');
@@ -64,7 +65,8 @@ if (parameters.raven.enabled) {
 	const fileMetadataCache = new FileMetadataCache(fileSystem);
 	const thumbnailRequestHandler = new ThumbnailRequestHandler(parameters.server.file_system_url, bridgeExpressApp, fileSystem);
 	const imageResizer = new ImageResizer(thumbnailRequestHandler);
-	const fileDetailsProvider = new FileDetailsProvider(fileSystem, videoAPI, fileMetadataCache, imageResizer);
+	const videoThumbnailExtractor = new VideoThumbnailExtractor(thumbnailRequestHandler, imageResizer, videoAPI);
+	const fileDetailsProvider = new FileDetailsProvider(fileSystem, videoAPI, fileMetadataCache, imageResizer, videoThumbnailExtractor);
 	const cache = new FileSystemCache(fileSystem);
 	await cache.initialize();
 	const systemSettings = new FSSystemSettings(parameters.fileSystem.system);
