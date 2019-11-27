@@ -89,8 +89,8 @@ export function createSystemAPI(): ISystemAPI {
 			return await execGetApiVersion();
 		},
 
-		async upgradeFirmware(sourceUrl: string) {
-			await execApiCommand('firmware', 'upgrade', [sourceUrl], { asRoot: true, verbose: true });
+		async upgradeFirmware(version: string) {
+			await execApiCommand('firmware', 'upgrade', [version], { asRoot: true, verbose: true });
 		},
 
 		async overwriteFirmware(imgUrl: string) {
