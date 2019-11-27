@@ -11,6 +11,7 @@ import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 import { promisify } from 'util';
 import { IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { ISystemAPI } from '../../../../src/API/SystemAPI';
+import ThumbnailRequestHandler from '../../../../src/FileSystem/Thumbnail/ThumbnailRequestHandler';
 const parameters = require('../../../../config/parameters');
 
 describe('FileSystem.Image.ImageResizer', function () {
@@ -44,7 +45,8 @@ describe('FileSystem.Image.ImageResizer', function () {
 			},
 		} as ISystemAPI;
 		const fileSystem = new FileSystem(FILE_SYSTEM_BASE_PATH, TMP_BASE_PATH, '/app', 'SIGUSR2', systemAPI);
-		const imageResizer = new ImageResizer(FILE_SYSTEM_URL, expressApp, fileSystem);
+		const thumbnailRequestHandler = new ThumbnailRequestHandler(FILE_SYSTEM_URL, expressApp, fileSystem);
+		const imageResizer = new ImageResizer(thumbnailRequestHandler);
 
 		before((done: Function) => {
 			httpServer.listen(TEST_PORT, done);

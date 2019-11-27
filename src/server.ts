@@ -36,6 +36,7 @@ import { getDisplay } from './Driver/Display/displayFactory';
 import { createSensors } from './Driver/Sensors/sensorsFactory';
 import { getAutoVerification } from './helper';
 import { manageCpuFan } from './CPUFanManager/cpuFanManager';
+import ThumbnailRequestHandler from './FileSystem/Thumbnail/ThumbnailRequestHandler';
 import ImageResizer from './FileSystem/Image/ImageResizer';
 import { createMonitors } from './Driver/Monitors/monitorsFactory';
 import Network from './Network/Network';
@@ -61,7 +62,8 @@ if (parameters.raven.enabled) {
 	);
 	const videoAPI = createVideoAPI();
 	const fileMetadataCache = new FileMetadataCache(fileSystem);
-	const imageResizer = new ImageResizer(parameters.server.file_system_url, bridgeExpressApp, fileSystem);
+	const thumbnailRequestHandler = new ThumbnailRequestHandler(parameters.server.file_system_url, bridgeExpressApp, fileSystem);
+	const imageResizer = new ImageResizer(thumbnailRequestHandler);
 	const fileDetailsProvider = new FileDetailsProvider(fileSystem, videoAPI, fileMetadataCache, imageResizer);
 	const cache = new FileSystemCache(fileSystem);
 	await cache.initialize();
