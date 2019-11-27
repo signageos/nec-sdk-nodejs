@@ -17,6 +17,7 @@ describe('FileSystem.Image.ImageResizer', function () {
 
 	const getChecksum = promisify<string, checksum.ChecksumOptions, string>(checksum.file);
 
+	const lastModifiedAt = 1574858888870;
 	const TEST_PORT = 6666;
 	const FILE_SYSTEM_URL = `http://localhost:${TEST_PORT}`;
 	const FILE_SYSTEM_BASE_PATH = parameters.paths.rootPath + '/test_fs/base/directory';
@@ -71,10 +72,13 @@ describe('FileSystem.Image.ImageResizer', function () {
 				`${INTERNAL_BASE_PATH}/originalFile.png`,
 			);
 			const storageUnit = { type: 'internal' } as IStorageUnit;
-			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-				storageUnit,
-				filePath: 'originalFile.png',
-			});
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				{
+					storageUnit,
+					filePath: 'originalFile.png',
+				},
+				lastModifiedAt,
+			);
 			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
 
 			const thumbnailResponse = await fetch(thumbnailUri);
@@ -99,10 +103,13 @@ describe('FileSystem.Image.ImageResizer', function () {
 				`${EXTERNAL_BASE_PATH}/usb1/originalFile.png`,
 			);
 			const storageUnit = { type: 'usb1', removable: true } as IStorageUnit;
-			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-				storageUnit,
-				filePath: 'originalFile.png',
-			});
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				{
+					storageUnit,
+					filePath: 'originalFile.png',
+				},
+				lastModifiedAt,
+			);
 			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
 
 			const thumbnailResponse = await fetch(thumbnailUri);
@@ -139,10 +146,13 @@ describe('FileSystem.Image.ImageResizer', function () {
 					`${INTERNAL_BASE_PATH}/${curiousFileName}/originalFile.png`,
 				);
 				const storageUnit = { type: 'internal' } as IStorageUnit;
-				const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-					storageUnit,
-					filePath: `${curiousFileName}/originalFile.png`,
-				});
+				const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+					{
+						storageUnit,
+						filePath: `${curiousFileName}/originalFile.png`,
+					},
+					lastModifiedAt,
+				);
 				const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
 
 				const thumbnailResponse = await fetch(thumbnailUri);
@@ -156,10 +166,13 @@ describe('FileSystem.Image.ImageResizer', function () {
 
 		it('should return 400 when original does not exist', async function () {
 			const storageUnit = { type: 'internal' } as IStorageUnit;
-			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-				storageUnit,
-				filePath: 'originalFile.png',
-			});
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				{
+					storageUnit,
+					filePath: 'originalFile.png',
+				},
+				lastModifiedAt,
+			);
 			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
 
 			const thumbnailResponse = await fetch(thumbnailUri);
@@ -172,30 +185,36 @@ describe('FileSystem.Image.ImageResizer', function () {
 				`${INTERNAL_BASE_PATH}/originalFile.png`,
 			);
 			const storageUnit = { type: 'typohere', removable: true } as IStorageUnit;
-			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-				storageUnit,
-				filePath: 'originalFile.png',
-			});
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				{
+					storageUnit,
+					filePath: 'originalFile.png',
+				},
+				lastModifiedAt,
+			);
 			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
 
 			const thumbnailResponse = await fetch(thumbnailUri);
 			should(thumbnailResponse.status).equal(400);
 		});
 
-		it('should return 400 when thumbnail uri is not valid', async function () {
+		it('should return 404 when thumbnail uri is not valid', async function () {
 			await fs.copy(
 				`${FIXTURES_BASE_PATH}/originalFile.png`,
 				`${INTERNAL_BASE_PATH}/originalFile.png`,
 			);
 			const storageUnit = { type: 'internal', removable: true } as IStorageUnit;
-			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-				storageUnit,
-				filePath: 'originalFile.png',
-			});
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				{
+					storageUnit,
+					filePath: 'originalFile.png',
+				},
+				lastModifiedAt,
+			);
 			const thumbnailUri = thumbnailUriTemplate.replace('{width}', 'typo').replace('{height}', (360).toString());
 
 			const thumbnailResponse = await fetch(thumbnailUri);
-			should(thumbnailResponse.status).equal(400);
+			should(thumbnailResponse.status).equal(404);
 		});
 	});
 });

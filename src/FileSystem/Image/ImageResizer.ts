@@ -2,15 +2,19 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as express from 'express';
 import * as sharp from 'sharp';
+import * as crypto from "crypto";
 import { IFilePath, IStorageUnit } from "@signageos/front-display/es6/NativeDevice/fileSystem";
 import { EXTERNAL_STORAGE_UNITS_PATH, INTERNAL_STORAGE_UNIT } from '../IFileSystem';
 import IInternalFileSystem from '../../FileSystem/IFileSystem';
 import { getFileUriPath } from '../../Driver/fileSystemHelpers';
 
+// tslint:disable:max-line-length
 const THUMBNAIL_SUBDIR = '.thumbnails';
-const THUMBNAIL_EXTERNAL_ROUTE_REGEX = new RegExp(`^/${EXTERNAL_STORAGE_UNITS_PATH}/(\\w+)/(.+)$`);
-const THUMBNAIL_INTERNAL_ROUTE_REGEX = new RegExp(`^/(${INTERNAL_STORAGE_UNIT})/(.+)$`);
-const THUMBNAIL_FILE_NAME_REGEX = /([^\/]+)_(\d+)x(\d+)/;
+const THUMBNAIL_FILE_NAME_REGEX_RAW = `([^/]+)_image_(\\d+)x(\\d+)_(\\w+)`;
+const THUMBNAIL_FILE_NAME_REGEX = new RegExp(THUMBNAIL_FILE_NAME_REGEX_RAW);
+const THUMBNAIL_EXTERNAL_ROUTE_REGEX = new RegExp(`^/${EXTERNAL_STORAGE_UNITS_PATH}/(\\w+)/(.*/?${THUMBNAIL_SUBDIR}/${THUMBNAIL_FILE_NAME_REGEX_RAW})$`);
+const THUMBNAIL_INTERNAL_ROUTE_REGEX = new RegExp(`^/(${INTERNAL_STORAGE_UNIT})/(.*/?${THUMBNAIL_SUBDIR}/${THUMBNAIL_FILE_NAME_REGEX_RAW})$`);
+// tslint:enable
 
 export default class ImageResizer {
 
@@ -22,10 +26,10 @@ export default class ImageResizer {
 		this.routeResizing();
 	}
 
-	public getImageThumbnailUriTemplate(filePath: IFilePath) {
+	public getImageThumbnailUriTemplate(filePath: IFilePath, lastModifiedAt: number) {
 		const WIDTH_PLACEHOLDER = '{width}';
 		const HEIGHT_PLACEHOLDER = '{height}';
-		const thumbnailFilePath = this.getThumbnailFilePath(filePath, WIDTH_PLACEHOLDER, HEIGHT_PLACEHOLDER);
+		const thumbnailFilePath = this.getThumbnailFilePath(filePath, WIDTH_PLACEHOLDER, HEIGHT_PLACEHOLDER, lastModifiedAt);
 		let filePathname = getFileUriPath(thumbnailFilePath);
 		filePathname = filePathname.replace(encodeURI(WIDTH_PLACEHOLDER), WIDTH_PLACEHOLDER);
 		filePathname = filePathname.replace(encodeURI(HEIGHT_PLACEHOLDER), HEIGHT_PLACEHOLDER);
@@ -77,6 +81,7 @@ export default class ImageResizer {
 		const originalFileName = thumbnailFileMatches[1];
 		const width = parseInt(thumbnailFileMatches[2]);
 		const height = parseInt(thumbnailFileMatches[3]);
+		// const originalFilePathChecksum = parseInt(thumbnailFileMatches[4]); // currently only for detection of original filePath changed
 		const originalFilePath: IFilePath = {
 			storageUnit,
 			filePath: path.join(originalParentDirectoryPath, originalFileName),
@@ -126,9 +131,10 @@ export default class ImageResizer {
 		}
 	}
 
-	private getThumbnailFilePath(filePath: IFilePath, width: string | number, height: string | number) {
+	private getThumbnailFilePath(filePath: IFilePath, width: string | number, height: string | number, lastModifiedAt: number) {
 		const parentDirectoryPath = path.dirname(filePath.filePath);
-		const thumbnailFileName = this.getThumbnailFileName(filePath, width, height);
+		const filePathChecksum = this.getFilePathChecksum(filePath, lastModifiedAt);
+		const thumbnailFileName = this.getThumbnailFileName(filePath, width, height, filePathChecksum);
 		const thumbnailFilePath = path.join(parentDirectoryPath, THUMBNAIL_SUBDIR, thumbnailFileName);
 		return {
 			...filePath,
@@ -136,8 +142,13 @@ export default class ImageResizer {
 		};
 	}
 
-	private getThumbnailFileName(filePath: IFilePath, width: string | number, height: string | number) {
-		const fileName = `${path.basename(filePath.filePath)}_${width}x${height}`;
+	private getThumbnailFileName(filePath: IFilePath, width: string | number, height: string | number, filePathChecksum: string) {
+		const fileName = `${path.basename(filePath.filePath)}_image_${width}x${height}_${filePathChecksum}`;
 		return fileName;
+	}
+
+	private getFilePathChecksum(filePath: IFilePath, lastModifiedAt: number) {
+		const fileName = path.basename(filePath.filePath) + '_' + lastModifiedAt;
+		return crypto.createHash('md5').update(fileName).digest('hex');
 	}
 }

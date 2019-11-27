@@ -42,7 +42,7 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 		try {
 			return await this.metadataCache.getFileMetadata(filePath, lastModifiedAt);
 		} catch (error) {
-			const metadata = await this.getExtendedFileDetailsByMimeType(filePath, mimeType);
+			const metadata = await this.getExtendedFileDetailsByMimeType(filePath, lastModifiedAt, mimeType);
 			if (metadata === null) {
 				return null;
 			}
@@ -51,7 +51,11 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 		}
 	}
 
-	private async getExtendedFileDetailsByMimeType(filePath: IFilePath, mimeType: string): Promise<IExtendedFileDetails | null> {
+	private async getExtendedFileDetailsByMimeType(
+		filePath: IFilePath,
+		lastModifiedAt: number,
+		mimeType: string,
+	): Promise<IExtendedFileDetails | null> {
 		if (this.isVideo(mimeType)) {
 			const fileAbsolutePath = this.fileSystem.getAbsolutePath(filePath);
 			const videoDurationMs = await this.videoAPI.getVideoDurationMs(fileAbsolutePath);
@@ -68,7 +72,7 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 			} as IVideoFileDetails;
 		} else
 		if (this.isImage(mimeType)) {
-			const imageThumbnailUriTemplate = await this.imageResizer.getImageThumbnailUriTemplate(filePath);
+			const imageThumbnailUriTemplate = await this.imageResizer.getImageThumbnailUriTemplate(filePath, lastModifiedAt);
 			return {
 				imageThumbnailUriTemplate,
 			} as IImageFileDetails;
