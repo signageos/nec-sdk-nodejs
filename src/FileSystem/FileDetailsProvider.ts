@@ -57,19 +57,39 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 		mimeType: string,
 	): Promise<IExtendedFileDetails | null> {
 		if (this.isVideo(mimeType)) {
+			const extendedFileDetails: IVideoFileDetails = {};
 			const fileAbsolutePath = this.fileSystem.getAbsolutePath(filePath);
-			const videoDurationMs = await this.videoAPI.getVideoDurationMs(fileAbsolutePath);
-			const videoResolution = await this.videoAPI.getVideoResolution(fileAbsolutePath);
-			const videoFramerate = await this.videoAPI.getVideoFramerate(fileAbsolutePath);
-			const videoBitrate = await this.videoAPI.getVideoBitrate(fileAbsolutePath);
-			const videoCodec = await this.videoAPI.getVideoCodec(fileAbsolutePath);
-			return {
-				videoDurationMs,
-				videoResolution,
-				videoFramerate,
-				videoBitrate,
-				videoCodec,
-			} as IVideoFileDetails;
+			try {
+				const videoDurationMs = await this.videoAPI.getVideoDurationMs(fileAbsolutePath);
+				extendedFileDetails.videoDurationMs = videoDurationMs;
+			} catch (error) {
+				console.warn('Get extended file details videoDurationMs failed', error);
+			}
+			try {
+				const videoResolution = await this.videoAPI.getVideoResolution(fileAbsolutePath);
+				extendedFileDetails.videoResolution = videoResolution;
+			} catch (error) {
+				console.warn('Get extended file details videoResolution failed', error);
+			}
+			try {
+				const videoFramerate = await this.videoAPI.getVideoFramerate(fileAbsolutePath);
+				extendedFileDetails.videoFramerate = videoFramerate;
+			} catch (error) {
+				console.warn('Get extended file details videoFramerate failed', error);
+			}
+			try {
+				const videoBitrate = await this.videoAPI.getVideoBitrate(fileAbsolutePath);
+				extendedFileDetails.videoBitrate = videoBitrate;
+			} catch (error) {
+				console.warn('Get extended file details videoBitrate failed', error);
+			}
+			try {
+				const videoCodec = await this.videoAPI.getVideoCodec(fileAbsolutePath);
+				extendedFileDetails.videoCodec = videoCodec;
+			} catch (error) {
+				console.warn('Get extended file details videoCodec failed', error);
+			}
+			return extendedFileDetails;
 		} else
 		if (this.isImage(mimeType)) {
 			if (this.imageResizer.getSupportedMimeTypes().indexOf(mimeType) !== -1) {
