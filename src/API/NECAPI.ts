@@ -18,6 +18,7 @@ export interface INECAPI {
 	isNEC(): Promise<boolean>;
 	getModel(): Promise<string>;
 	getSerialNumber(): Promise<string>;
+	getFirmwareVersion(): Promise<string>;
 	isDisplayOn(): Promise<boolean>;
 	powerOn(): Promise<void>;
 	powerOff(): Promise<void>;
@@ -60,6 +61,11 @@ export class NECAPI implements INECAPI {
 	@locked('necapi')
 	public async getSerialNumber(): Promise<string> {
 		return await execNECDisplayCommand('misc', 'get_serial_number');
+	}
+
+	@locked('necapi')
+	public async getFirmwareVersion(): Promise<string> {
+		return await execNECDisplayCommand('misc', 'get_firmware_version');
 	}
 
 	@locked('necapi')

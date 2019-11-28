@@ -9,10 +9,11 @@ export default class NECMonitors implements IMonitors {
 
 	public async getList(): Promise<IMonitor[]> {
 		const manufacturer = 'NEC';
-		const [model, serial] = await Promise.all([
+		const [model, serial, firmware] = await Promise.all([
 			this.necAPI.getModel(),
 			this.necAPI.getSerialNumber(),
+			this.necAPI.getFirmwareVersion(),
 		]);
-		return [{ manufacturer, model, serial }];
+		return [{ manufacturer, model, serial, firmware }];
 	}
 }
