@@ -9,6 +9,7 @@ import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver
 import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheStorageInfo';
 import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
+import IBrowser from '@signageos/front-display/es6/NativeDevice/IBrowser';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
 import BridgeVideoClient from '../Bridge/BridgeVideoClient';
@@ -19,7 +20,6 @@ import {
 	RemoteControlSetEnabled,
 	RemoteControlIsEnabled,
 	ControlSetPin,
-	BrowserOpenLink,
 } from '../Bridge/bridgeSystemMessages';
 import {
 	IsWifiSupported,
@@ -36,6 +36,7 @@ import keyboardKeyMap from './Input/keyboardKeyMap';
 import Key from '../CEC/Key';
 import Led from './Hardware/Led';
 import FrontWifi from './Hardware/FrontWifi';
+import Browser from './Browser';
 
 export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
@@ -43,6 +44,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	public readonly video: BridgeVideoPlayer;
 	public readonly stream: IStreamPlayer;
 	public readonly fileSystem: IFileSystem;
+	public readonly browser: IBrowser;
 
 	private deviceUid: string;
 	private cache: ICache;
@@ -65,6 +67,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridgeVideoClient, maxVideoCount);
 		this.stream = new BridgeStreamPlayer(this.window, this.bridge, this.bridgeVideoClient);
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);
+		this.browser = new Browser(this.window, this.bridge);
 		this.overlay = new OverlayHandler(this.window, this.frontAppletPrefix, this.bridge);
 		this.hardware = {
 			led: new Led(),
@@ -192,6 +195,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		await Promise.all([
 			this.bridgeVideoClient.clearAll(),
 			this.overlay.clearAll(),
+			this.browser.close(),
 		]);
 	}
 
@@ -216,11 +220,8 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		});
 	}
 
-	public async browserOpenLink(uri: string): Promise<void> {
-		await this.bridge.invoke<BrowserOpenLink, void>({
-			type: BrowserOpenLink,
-			uri,
-		});
+	public async browserOpenLink(_uri: string): Promise<void> {
+		throw new Error('not implemented');
 	}
 
 	public async getCurrentSignature(): Promise<ISignature | null> {

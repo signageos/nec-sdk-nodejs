@@ -9,6 +9,7 @@ import IManagementDriver from '@signageos/front-display/es6/NativeDevice/Managem
 import { ISocketServerWrapper, ISocket } from '@signageos/lib/dist/WebSocket/socketServer';
 import socketHandleMessage from './socketHandleMessage';
 import socketHandleVideo from './socketHandleVideo';
+import socketHandleBrowser from './socketHandleBrowser';
 import socketHandleCEC from './socketHandleCEC';
 import socketHandleApplication from './socketHandleApplication';
 import socketHandleStorageUnitsChanged from './socketHandleStorageUnitsChanged';
@@ -170,6 +171,7 @@ export default class BridgeServer {
 				this.systemAPI,
 			);
 			socketHandleVideo(socket, this.videoPlayer);
+			socketHandleBrowser(socket, this.systemAPI);
 			socketHandleCEC(socket, this.cecListener);
 			socketHandleApplication(socket, this.systemAPI);
 			socketHandleStorageUnitsChanged(socket, this.fileSystem);

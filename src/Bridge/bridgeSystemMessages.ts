@@ -98,9 +98,3 @@ export interface ControlSetPin {
 	type: typeof ControlSetPin;
 	pin: string;
 }
-
-export const BrowserOpenLink = 'Browser.OpenLink';
-export interface BrowserOpenLink {
-	type: typeof BrowserOpenLink;
-	uri: string;
-}

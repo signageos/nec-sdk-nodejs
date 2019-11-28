@@ -27,6 +27,9 @@ export interface ISystemAPI {
 	takeScreenshot(destination: string): Promise<void>;
 	listenToCECKeypresses(socketPath: string): ChildProcess;
 	getFileMimeType(filePath: string): Promise<string>;
+	setWebACLWhitelist(acl: string[]): Promise<void>;
+	setWebACLBlacklist(acl: string[]): Promise<void>;
+	clearWebACL(): Promise<void>;
 }
 
 export interface IStorageUnit {
@@ -150,6 +153,18 @@ export function createSystemAPI(): ISystemAPI {
 		async getFileMimeType(filePath: string) {
 			const mimeType = await execApiCommand('file', 'mime_type', [filePath]);
 			return mimeType.trim();
+		},
+
+		async setWebACLWhitelist(acl: string[]): Promise<void> {
+			await execApiCommand('web', 'set_acl_whitelist', acl, { asRoot: true });
+		},
+
+		async setWebACLBlacklist(acl: string[]): Promise<void> {
+			await execApiCommand('web', 'set_acl_blacklist', acl, { asRoot: true });
+		},
+
+		async clearWebACL(): Promise<void> {
+			await execApiCommand('web', 'clear_acl', [], { asRoot: true });
 		},
 	};
 }

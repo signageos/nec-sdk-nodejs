@@ -6,6 +6,7 @@ import { IBridgeServerResponse } from './IBridgeServerResponse';
 export enum MessageType {
 	GENERIC = 'generic',
 	VIDEO = 'video',
+	BROWSER = 'browser',
 	// TODO create other types to remove messages from generic
 }
 
