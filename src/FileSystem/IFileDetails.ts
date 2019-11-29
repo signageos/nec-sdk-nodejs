@@ -14,6 +14,7 @@ export interface IVideoFileDetails {
 	videoFramerate?: number;
 	videoBitrate?: number;
 	videoCodec?: string;
+	videoThumbnailUriTemplate?: string;
 }
 
 export interface IImageFileDetails {

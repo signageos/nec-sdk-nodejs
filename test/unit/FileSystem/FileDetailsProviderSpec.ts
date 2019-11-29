@@ -7,6 +7,10 @@ describe('FileSystem.FileDetailsProvider', function () {
 
 	describe('getFileDetails', function () {
 
+		const videoThumbnailExtractor = {
+			getVideoThumbnailUriTemplate: sinon.spy(),
+		} as any;
+
 		it('should return basic details for a file without a mime type', async function () {
 			const fileSystem = {
 				async getFileDetails() {
@@ -17,7 +21,7 @@ describe('FileSystem.FileDetailsProvider', function () {
 					};
 				},
 			};
-			const fileDetailsProvider = new FileDetailsProvider(fileSystem as any, {} as any, {} as any, {} as any);
+			const fileDetailsProvider = new FileDetailsProvider(fileSystem as any, {} as any, {} as any, {} as any, videoThumbnailExtractor);
 			const fileDetails = await fileDetailsProvider.getFileDetails(getFilePath('file1'));
 			fileDetails.should.deepEqual({
 				createdAt: new Date(2018, 20, 11, 15).valueOf(),
@@ -37,7 +41,7 @@ describe('FileSystem.FileDetailsProvider', function () {
 					};
 				},
 			};
-			const fileDetailsProvider = new FileDetailsProvider(fileSystem as any, {} as any, {} as any, {} as any);
+			const fileDetailsProvider = new FileDetailsProvider(fileSystem as any, {} as any, {} as any, {} as any, videoThumbnailExtractor);
 			const fileDetails = await fileDetailsProvider.getFileDetails(getFilePath('file1'));
 			fileDetails.should.deepEqual({
 				createdAt: new Date(2018, 20, 11, 15).valueOf(),
@@ -84,7 +88,13 @@ describe('FileSystem.FileDetailsProvider', function () {
 					getFileMetadata: sinon.stub().rejects(),
 					saveFileMetadata: sinon.stub().resolves(),
 				};
-				const fileDetailsProvider = new FileDetailsProvider(fileSystem as any, videoApi as any, fileMetadataCache as any, {} as any);
+				const fileDetailsProvider = new FileDetailsProvider(
+					fileSystem as any,
+					videoApi as any,
+					fileMetadataCache as any,
+					{} as any,
+					videoThumbnailExtractor,
+				);
 				const fileDetails = await fileDetailsProvider.getFileDetails(getFilePath('file1'));
 				fileDetails.should.deepEqual({
 					createdAt: new Date(2018, 20, 11, 15).valueOf(),
@@ -149,7 +159,13 @@ describe('FileSystem.FileDetailsProvider', function () {
 					getFileMetadata: sinon.stub().rejects(),
 					saveFileMetadata: sinon.stub().rejects(),
 				};
-				const fileDetailsProvider = new FileDetailsProvider(fileSystem as any, videoApi as any, fileMetadataCache as any, {} as any);
+				const fileDetailsProvider = new FileDetailsProvider(
+					fileSystem as any,
+					videoApi as any,
+					fileMetadataCache as any,
+					{} as any,
+					videoThumbnailExtractor,
+				);
 				const fileDetails = await fileDetailsProvider.getFileDetails(getFilePath('file1'));
 				fileDetails.should.deepEqual({
 					createdAt: new Date(2018, 20, 11, 15).valueOf(),
@@ -202,7 +218,13 @@ describe('FileSystem.FileDetailsProvider', function () {
 						videoCodec: 'h264',
 					}),
 				};
-				const fileDetailsProvider = new FileDetailsProvider(fileSystem as any, {} as any, fileMetadataCache as any, {} as any);
+				const fileDetailsProvider = new FileDetailsProvider(
+					fileSystem as any,
+					{} as any,
+					fileMetadataCache as any,
+					{} as any,
+					videoThumbnailExtractor,
+				);
 				const fileDetails = await fileDetailsProvider.getFileDetails(getFilePath('file1'));
 				fileDetails.should.deepEqual({
 					createdAt: new Date(2018, 20, 11, 15).valueOf(),

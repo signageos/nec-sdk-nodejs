@@ -122,7 +122,7 @@ export default class FileSystem implements IFileSystem {
 
 		return {
 			createdAt: fileStats.birthtime.valueOf(),
-			lastModifiedAt: fileStats.birthtime.valueOf(),
+			lastModifiedAt: fileStats.mtime.valueOf(),
 			sizeBytes: fileStats.size,
 			mimeType,
 		};

@@ -11,12 +11,14 @@ import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 import { promisify } from 'util';
 import { IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { ISystemAPI } from '../../../../src/API/SystemAPI';
+import ThumbnailRequestHandler from '../../../../src/FileSystem/Thumbnail/ThumbnailRequestHandler';
 const parameters = require('../../../../config/parameters');
 
 describe('FileSystem.Image.ImageResizer', function () {
 
 	const getChecksum = promisify<string, checksum.ChecksumOptions, string>(checksum.file);
 
+	const lastModifiedAt = 1574858888870;
 	const TEST_PORT = 6666;
 	const FILE_SYSTEM_URL = `http://localhost:${TEST_PORT}`;
 	const FILE_SYSTEM_BASE_PATH = parameters.paths.rootPath + '/test_fs/base/directory';
@@ -41,9 +43,13 @@ describe('FileSystem.Image.ImageResizer', function () {
 					},
 				];
 			},
+			async getFileMimeType(_filePath: string) {
+				return 'image/png';
+			},
 		} as ISystemAPI;
 		const fileSystem = new FileSystem(FILE_SYSTEM_BASE_PATH, TMP_BASE_PATH, '/app', 'SIGUSR2', systemAPI);
-		const imageResizer = new ImageResizer(FILE_SYSTEM_URL, expressApp, fileSystem);
+		const thumbnailRequestHandler = new ThumbnailRequestHandler(FILE_SYSTEM_URL, expressApp, fileSystem);
+		const imageResizer = new ImageResizer(thumbnailRequestHandler);
 
 		before((done: Function) => {
 			httpServer.listen(TEST_PORT, done);
@@ -70,11 +76,15 @@ describe('FileSystem.Image.ImageResizer', function () {
 				`${FIXTURES_BASE_PATH}/originalFile.png`,
 				`${INTERNAL_BASE_PATH}/originalFile.png`,
 			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.png`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 			const storageUnit = { type: 'internal' } as IStorageUnit;
-			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-				storageUnit,
-				filePath: 'originalFile.png',
-			});
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				{
+					storageUnit,
+					filePath: 'originalFile.png',
+				},
+				lastModifiedAt,
+			);
 			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
 
 			const thumbnailResponse = await fetch(thumbnailUri);
@@ -93,16 +103,108 @@ describe('FileSystem.Image.ImageResizer', function () {
 			should(await getChecksum(tmpResizedFilePathFromCache, { algorithm: 'md5' })).equal('e08b5ac6c73b09b0d4ef359df54ffcc6');
 		});
 
+		it('should serve thumbnail of video of zero second differently when touched', async function () {
+			await fs.copy(
+				`${FIXTURES_BASE_PATH}/originalFile.png`,
+				`${INTERNAL_BASE_PATH}/originalFile.png`,
+			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.png`, new Date(lastModifiedAt), new Date(lastModifiedAt));
+			const storageUnit = { type: 'internal' } as IStorageUnit;
+			const originalFilePath = {
+				storageUnit,
+				filePath: 'originalFile.png',
+			};
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				originalFilePath,
+				lastModifiedAt,
+			);
+			should(thumbnailUriTemplate).equal(
+				'http://localhost:6666/internal/.thumbnails/originalFile.png_image_{width}x{height}_fcdbfd23710eba6ca6d732748e941c35',
+			);
+			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
+
+			const thumbnailResponse = await fetch(thumbnailUri);
+			should(thumbnailResponse.status).equal(200);
+			const thumbnailBuffer = await thumbnailResponse.buffer();
+			const tmpResizedFilePath = `${TMP_BASE_PATH}/${generateUniqueHash()}`;
+			await fs.writeFile(tmpResizedFilePath, thumbnailBuffer);
+			should(await getChecksum(tmpResizedFilePath, { algorithm: 'md5' })).equal('e08b5ac6c73b09b0d4ef359df54ffcc6');
+
+			should(await fs.pathExists(`${INTERNAL_BASE_PATH}/.thumbnails/originalFile.png_image_360x360_fcdbfd23710eba6ca6d732748e941c35`)).true();
+
+			// Serve changed file
+			const newLastModifiedTime = 1574888888888;
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.png`, new Date(newLastModifiedTime), new Date(newLastModifiedTime));
+
+			const thumbnailUriTemplate2 = imageResizer.getImageThumbnailUriTemplate(
+				originalFilePath,
+				newLastModifiedTime,
+			);
+			should(thumbnailUriTemplate2).equal(
+				'http://localhost:6666/internal/.thumbnails/originalFile.png_image_{width}x{height}_fee8faf4efac43ae5e02f51058ea76de',
+			);
+			const thumbnailUri2 = thumbnailUriTemplate2.replace('{width}', (360).toString()).replace('{height}', (360).toString());
+
+			const thumbnailResponse2 = await fetch(thumbnailUri2);
+			should(thumbnailResponse2.status).equal(200);
+			const thumbnailBuffer2 = await thumbnailResponse2.buffer();
+			const tmpResizedFilePath2 = `${TMP_BASE_PATH}/${generateUniqueHash()}`;
+			await fs.writeFile(tmpResizedFilePath2, thumbnailBuffer2);
+			should(await getChecksum(tmpResizedFilePath2, { algorithm: 'md5' })).equal('e08b5ac6c73b09b0d4ef359df54ffcc6');
+
+			should(await fs.pathExists(`${INTERNAL_BASE_PATH}/.thumbnails/originalFile.png_image_360x360_fcdbfd23710eba6ca6d732748e941c35`)).false();
+			should(await fs.pathExists(`${INTERNAL_BASE_PATH}/.thumbnails/originalFile.png_image_360x360_fee8faf4efac43ae5e02f51058ea76de`)).true();
+		});
+
+		it('should redirect to right thumbnail url when file was modified', async function () {
+			await fs.copy(
+				`${FIXTURES_BASE_PATH}/originalFile.png`,
+				`${INTERNAL_BASE_PATH}/originalFile.png`,
+			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.png`, new Date(lastModifiedAt), new Date(lastModifiedAt));
+			const storageUnit = { type: 'internal' } as IStorageUnit;
+			const originalFilePath = {
+				storageUnit,
+				filePath: 'originalFile.png',
+			};
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				originalFilePath,
+				lastModifiedAt,
+			);
+			should(thumbnailUriTemplate).equal(
+				'http://localhost:6666/internal/.thumbnails/originalFile.png_image_{width}x{height}_fcdbfd23710eba6ca6d732748e941c35',
+			);
+			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
+
+			// Serve changed file
+			const newLastModifiedTime = 1574888888888;
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.png`, new Date(newLastModifiedTime), new Date(newLastModifiedTime));
+
+			const thumbnailResponse = await fetch(thumbnailUri);
+			should(thumbnailResponse.status).equal(200); // redirected
+			const thumbnailBuffer = await thumbnailResponse.buffer();
+			const tmpResizedFilePath = `${TMP_BASE_PATH}/${generateUniqueHash()}`;
+			await fs.writeFile(tmpResizedFilePath, thumbnailBuffer);
+			should(await getChecksum(tmpResizedFilePath, { algorithm: 'md5' })).equal('e08b5ac6c73b09b0d4ef359df54ffcc6');
+
+			should(await fs.pathExists(`${INTERNAL_BASE_PATH}/.thumbnails/originalFile.png_image_360x360_fcdbfd23710eba6ca6d732748e941c35`)).false();
+			should(await fs.pathExists(`${INTERNAL_BASE_PATH}/.thumbnails/originalFile.png_image_360x360_fee8faf4efac43ae5e02f51058ea76de`)).true();
+		});
+
 		it('should serve resized image from removable storage', async function () {
 			await fs.copy(
 				`${FIXTURES_BASE_PATH}/originalFile.png`,
 				`${EXTERNAL_BASE_PATH}/usb1/originalFile.png`,
 			);
+			await fs.utimes(`${EXTERNAL_BASE_PATH}/usb1/originalFile.png`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 			const storageUnit = { type: 'usb1', removable: true } as IStorageUnit;
-			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-				storageUnit,
-				filePath: 'originalFile.png',
-			});
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				{
+					storageUnit,
+					filePath: 'originalFile.png',
+				},
+				lastModifiedAt,
+			);
 			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
 
 			const thumbnailResponse = await fetch(thumbnailUri);
@@ -138,11 +240,15 @@ describe('FileSystem.Image.ImageResizer', function () {
 					`${FIXTURES_BASE_PATH}/originalFile.png`,
 					`${INTERNAL_BASE_PATH}/${curiousFileName}/originalFile.png`,
 				);
+				await fs.utimes(`${INTERNAL_BASE_PATH}/${curiousFileName}/originalFile.png`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 				const storageUnit = { type: 'internal' } as IStorageUnit;
-				const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-					storageUnit,
-					filePath: `${curiousFileName}/originalFile.png`,
-				});
+				const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+					{
+						storageUnit,
+						filePath: `${curiousFileName}/originalFile.png`,
+					},
+					lastModifiedAt,
+				);
 				const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
 
 				const thumbnailResponse = await fetch(thumbnailUri);
@@ -156,10 +262,13 @@ describe('FileSystem.Image.ImageResizer', function () {
 
 		it('should return 400 when original does not exist', async function () {
 			const storageUnit = { type: 'internal' } as IStorageUnit;
-			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-				storageUnit,
-				filePath: 'originalFile.png',
-			});
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				{
+					storageUnit,
+					filePath: 'originalFile.png',
+				},
+				lastModifiedAt,
+			);
 			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
 
 			const thumbnailResponse = await fetch(thumbnailUri);
@@ -171,31 +280,39 @@ describe('FileSystem.Image.ImageResizer', function () {
 				`${FIXTURES_BASE_PATH}/originalFile.png`,
 				`${INTERNAL_BASE_PATH}/originalFile.png`,
 			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.png`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 			const storageUnit = { type: 'typohere', removable: true } as IStorageUnit;
-			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-				storageUnit,
-				filePath: 'originalFile.png',
-			});
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				{
+					storageUnit,
+					filePath: 'originalFile.png',
+				},
+				lastModifiedAt,
+			);
 			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
 
 			const thumbnailResponse = await fetch(thumbnailUri);
 			should(thumbnailResponse.status).equal(400);
 		});
 
-		it('should return 400 when thumbnail uri is not valid', async function () {
+		it('should return 404 when thumbnail uri is not valid', async function () {
 			await fs.copy(
 				`${FIXTURES_BASE_PATH}/originalFile.png`,
 				`${INTERNAL_BASE_PATH}/originalFile.png`,
 			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.png`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 			const storageUnit = { type: 'internal', removable: true } as IStorageUnit;
-			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate({
-				storageUnit,
-				filePath: 'originalFile.png',
-			});
+			const thumbnailUriTemplate = imageResizer.getImageThumbnailUriTemplate(
+				{
+					storageUnit,
+					filePath: 'originalFile.png',
+				},
+				lastModifiedAt,
+			);
 			const thumbnailUri = thumbnailUriTemplate.replace('{width}', 'typo').replace('{height}', (360).toString());
 
 			const thumbnailResponse = await fetch(thumbnailUri);
-			should(thumbnailResponse.status).equal(400);
+			should(thumbnailResponse.status).equal(404);
 		});
 	});
 });
