@@ -49,6 +49,9 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 					},
 				];
 			},
+			async getFileMimeType(_filePath: string) {
+				return 'video/mp4';
+			},
 		} as ISystemAPI;
 		const videoAPI = {
 			getVideoDurationMs: async (_filePath: string) => mockVideoDurationMs,
@@ -85,6 +88,7 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 				`${FIXTURES_BASE_PATH}/originalFile.mp4`,
 				`${INTERNAL_BASE_PATH}/originalFile.mp4`,
 			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.mp4`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 			const storageUnit = { type: 'internal' } as IStorageUnit;
 			const thumbnailUriTemplate = videoThumbnailExtractor.getVideoThumbnailUriTemplate(
 				{
@@ -111,6 +115,94 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 			should(await getChecksum(tmpResizedFilePathFromCache, { algorithm: 'md5' })).equal('0821c5b4185e079e2912447e98ccfa94');
 		});
 
+		it('should serve thumbnail of video of zero second differently when touched', async function () {
+			await fs.copy(
+				`${FIXTURES_BASE_PATH}/originalFile.mp4`,
+				`${INTERNAL_BASE_PATH}/originalFile.mp4`,
+			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.mp4`, new Date(lastModifiedAt), new Date(lastModifiedAt));
+			const storageUnit = { type: 'internal' } as IStorageUnit;
+			const originalFilePath = {
+				storageUnit,
+				filePath: 'originalFile.mp4',
+			};
+			const thumbnailUriTemplate = videoThumbnailExtractor.getVideoThumbnailUriTemplate(
+				originalFilePath,
+				lastModifiedAt,
+			);
+			should(thumbnailUriTemplate).equal(
+				'http://localhost:6666/internal/.thumbnails/originalFile.mp4_video_{width}x{height}_ad50edfc35612b0217f1819c119db408',
+			);
+			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
+
+			const thumbnailResponse = await fetch(thumbnailUri);
+			should(thumbnailResponse.status).equal(200);
+			const thumbnailBuffer = await thumbnailResponse.buffer();
+			const tmpResizedFilePath = `${TMP_BASE_PATH}/${generateUniqueHash()}`;
+			await fs.writeFile(tmpResizedFilePath, thumbnailBuffer);
+			should(await getChecksum(tmpResizedFilePath, { algorithm: 'md5' })).equal('0821c5b4185e079e2912447e98ccfa94');
+
+			should(await fs.pathExists(`${INTERNAL_BASE_PATH}/.thumbnails/originalFile.mp4_video_360x360_ad50edfc35612b0217f1819c119db408`)).true();
+
+			// Serve changed file
+			const newLastModifiedTime = 1574888888888;
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.mp4`, new Date(newLastModifiedTime), new Date(newLastModifiedTime));
+
+			const thumbnailUriTemplate2 = videoThumbnailExtractor.getVideoThumbnailUriTemplate(
+				originalFilePath,
+				newLastModifiedTime,
+			);
+			should(thumbnailUriTemplate2).equal(
+				'http://localhost:6666/internal/.thumbnails/originalFile.mp4_video_{width}x{height}_752214467e0ce9d9f564a7283177fde6',
+			);
+			const thumbnailUri2 = thumbnailUriTemplate2.replace('{width}', (360).toString()).replace('{height}', (360).toString());
+
+			const thumbnailResponse2 = await fetch(thumbnailUri2);
+			should(thumbnailResponse2.status).equal(200);
+			const thumbnailBuffer2 = await thumbnailResponse2.buffer();
+			const tmpResizedFilePath2 = `${TMP_BASE_PATH}/${generateUniqueHash()}`;
+			await fs.writeFile(tmpResizedFilePath2, thumbnailBuffer2);
+			should(await getChecksum(tmpResizedFilePath2, { algorithm: 'md5' })).equal('0821c5b4185e079e2912447e98ccfa94');
+
+			should(await fs.pathExists(`${INTERNAL_BASE_PATH}/.thumbnails/originalFile.mp4_video_360x360_ad50edfc35612b0217f1819c119db408`)).false();
+			should(await fs.pathExists(`${INTERNAL_BASE_PATH}/.thumbnails/originalFile.mp4_video_360x360_752214467e0ce9d9f564a7283177fde6`)).true();
+		});
+
+		it('should redirect to right thumbnail url when file was modified', async function () {
+			await fs.copy(
+				`${FIXTURES_BASE_PATH}/originalFile.mp4`,
+				`${INTERNAL_BASE_PATH}/originalFile.mp4`,
+			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.mp4`, new Date(lastModifiedAt), new Date(lastModifiedAt));
+			const storageUnit = { type: 'internal' } as IStorageUnit;
+			const originalFilePath = {
+				storageUnit,
+				filePath: 'originalFile.mp4',
+			};
+			const thumbnailUriTemplate = videoThumbnailExtractor.getVideoThumbnailUriTemplate(
+				originalFilePath,
+				lastModifiedAt,
+			);
+			should(thumbnailUriTemplate).equal(
+				'http://localhost:6666/internal/.thumbnails/originalFile.mp4_video_{width}x{height}_ad50edfc35612b0217f1819c119db408',
+			);
+			const thumbnailUri = thumbnailUriTemplate.replace('{width}', (360).toString()).replace('{height}', (360).toString());
+
+			// Serve changed file
+			const newLastModifiedTime = 1574888888888;
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.mp4`, new Date(newLastModifiedTime), new Date(newLastModifiedTime));
+
+			const thumbnailResponse = await fetch(thumbnailUri);
+			should(thumbnailResponse.status).equal(200); // redirected
+			const thumbnailBuffer = await thumbnailResponse.buffer();
+			const tmpResizedFilePath = `${TMP_BASE_PATH}/${generateUniqueHash()}`;
+			await fs.writeFile(tmpResizedFilePath, thumbnailBuffer);
+			should(await getChecksum(tmpResizedFilePath, { algorithm: 'md5' })).equal('0821c5b4185e079e2912447e98ccfa94');
+
+			should(await fs.pathExists(`${INTERNAL_BASE_PATH}/.thumbnails/originalFile.mp4_video_360x360_ad50edfc35612b0217f1819c119db408`)).false();
+			should(await fs.pathExists(`${INTERNAL_BASE_PATH}/.thumbnails/originalFile.mp4_video_360x360_752214467e0ce9d9f564a7283177fde6`)).true();
+		});
+
 		it('should serve thumbnail of video of zero second from cached extracted frame', async function () {
 			const frameFilePath = path.join(VIDEO_FRAMES_DIR_PATH, checksumString(`${INTERNAL_BASE_PATH}/originalFile.mp4`) + '.jpg');
 			await fs.copy(
@@ -121,6 +213,7 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 				`${FIXTURES_BASE_PATH}/originalFile.mp4`,
 				`${INTERNAL_BASE_PATH}/originalFile.mp4`,
 			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.mp4`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 			const storageUnit = { type: 'internal' } as IStorageUnit;
 			const thumbnailUriTemplate = videoThumbnailExtractor.getVideoThumbnailUriTemplate(
 				{
@@ -153,6 +246,7 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 				`${FIXTURES_BASE_PATH}/originalFile.mp4`,
 				`${INTERNAL_BASE_PATH}/originalFile1.mp4`,
 			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile1.mp4`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 			const storageUnit = { type: 'internal' } as IStorageUnit;
 			const thumbnailUriTemplate = videoThumbnailExtractor.getVideoThumbnailUriTemplate(
 				{
@@ -184,6 +278,7 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 				`${FIXTURES_BASE_PATH}/originalFile.mp4`,
 				`${EXTERNAL_BASE_PATH}/usb1/originalFile.mp4`,
 			);
+			await fs.utimes(`${EXTERNAL_BASE_PATH}/usb1/originalFile.mp4`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 			const storageUnit = { type: 'usb1', removable: true } as IStorageUnit;
 			const thumbnailUriTemplate = videoThumbnailExtractor.getVideoThumbnailUriTemplate(
 				{
@@ -227,6 +322,7 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 					`${FIXTURES_BASE_PATH}/originalFile.mp4`,
 					`${INTERNAL_BASE_PATH}/${curiousFileName}/originalFile.mp4`,
 				);
+				await fs.utimes(`${INTERNAL_BASE_PATH}/${curiousFileName}/originalFile.mp4`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 				const storageUnit = { type: 'internal' } as IStorageUnit;
 				const thumbnailUriTemplate = videoThumbnailExtractor.getVideoThumbnailUriTemplate(
 					{
@@ -266,6 +362,7 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 				`${FIXTURES_BASE_PATH}/originalFile.mp4`,
 				`${INTERNAL_BASE_PATH}/originalFile.mp4`,
 			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.mp4`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 			const storageUnit = { type: 'typohere', removable: true } as IStorageUnit;
 			const thumbnailUriTemplate = videoThumbnailExtractor.getVideoThumbnailUriTemplate(
 				{
@@ -285,6 +382,7 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 				`${FIXTURES_BASE_PATH}/originalFile.mp4`,
 				`${INTERNAL_BASE_PATH}/originalFile.mp4`,
 			);
+			await fs.utimes(`${INTERNAL_BASE_PATH}/originalFile.mp4`, new Date(lastModifiedAt), new Date(lastModifiedAt));
 			const storageUnit = { type: 'internal', removable: true } as IStorageUnit;
 			const thumbnailUriTemplate = videoThumbnailExtractor.getVideoThumbnailUriTemplate(
 				{

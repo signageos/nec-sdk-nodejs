@@ -16,9 +16,29 @@ export type IThumbnailProperties = {
 const THUMBNAIL_SUBDIR = '.thumbnails';
 const getFileNameRegexRaw = (type: string) => `([^/]+)_${type}_(\\d+)x(\\d+)_(\\w+)`;
 const getFileNameRegex = (type: string) => new RegExp(getFileNameRegexRaw(type));
+const matchFileNameRegex = (type: string, fileName: string) => {
+	const regex = getFileNameRegex(type);
+	const matches = fileName.match(regex);
+	if (matches === null) {
+		return null;
+	}
+	const originalFileName = matches[1];
+	const width = parseInt(matches[2]);
+	const height = parseInt(matches[3]);
+	const originalFilePathChecksum = matches[4];
+	return {
+		originalFileName,
+		width,
+		height,
+		originalFilePathChecksum,
+	};
+};
 const getExternalRouteRegex = (type: string) => new RegExp(`^/${EXTERNAL_STORAGE_UNITS_PATH}/(\\w+)/(.*/?${THUMBNAIL_SUBDIR}/${getFileNameRegexRaw(type)})$`);
 const getInternalRouteRegex = (type: string) => new RegExp(`^/(${INTERNAL_STORAGE_UNIT})/(.*/?${THUMBNAIL_SUBDIR}/${getFileNameRegexRaw(type)})$`);
 // tslint:enable
+
+const WIDTH_PLACEHOLDER = '{width}';
+const HEIGHT_PLACEHOLDER = '{height}';
 
 export default class ThumbnailRequestHandler {
 
@@ -29,8 +49,6 @@ export default class ThumbnailRequestHandler {
 	) {}
 
 	public getThumbnailUriTemplate(type: string, filePath: IFilePath, lastModifiedAt: number) {
-		const WIDTH_PLACEHOLDER = '{width}';
-		const HEIGHT_PLACEHOLDER = '{height}';
 		const thumbnailFilePath = this.getThumbnailFilePath(
 			type,
 			filePath,
@@ -106,20 +124,16 @@ export default class ThumbnailRequestHandler {
 
 		const originalParentDirectoryPath = path.dirname(thumbnailsDirectoryPath);
 		const thumbnailFileName = path.basename(thumbnailFilePath.filePath);
-		const thumbnailFileMatches = thumbnailFileName.match(getFileNameRegex(type));
+		const thumbnailFileMatches = matchFileNameRegex(type, thumbnailFileName);
 
 		if (!thumbnailFileMatches) {
 			res.status(400).send(`Invalid thumbnail file name: ${thumbnailFileName}`);
 			return;
 		}
 
-		const originalFileName = thumbnailFileMatches[1];
-		const width = parseInt(thumbnailFileMatches[2]);
-		const height = parseInt(thumbnailFileMatches[3]);
-		// const originalFilePathChecksum = parseInt(thumbnailFileMatches[4]); // currently only for detection of original filePath changed
 		const originalFilePath: IFilePath = {
 			storageUnit,
-			filePath: path.join(originalParentDirectoryPath, originalFileName),
+			filePath: path.join(originalParentDirectoryPath, thumbnailFileMatches.originalFileName),
 		};
 		const originalAbsolutePath = this.fileSystem.getAbsolutePath(originalFilePath);
 
@@ -128,11 +142,41 @@ export default class ThumbnailRequestHandler {
 			return;
 		}
 
+		const originalFileDetails = await this.fileSystem.getFileDetails(originalFilePath);
+		const realOriginalFilePathChecksum = this.getFilePathChecksum(originalFilePath, originalFileDetails.lastModifiedAt);
+		if (realOriginalFilePathChecksum !== thumbnailFileMatches.originalFilePathChecksum) {
+			console.warn(`Trying to get old thumbnail of file ${originalFilePath.storageUnit.type}/${originalFilePath.filePath}`);
+			const newThumbnailUriTemplate = this.getThumbnailUriTemplate(type, originalFilePath, originalFileDetails.lastModifiedAt);
+			const newThumbnailUri = newThumbnailUriTemplate
+			.replace(WIDTH_PLACEHOLDER, thumbnailFileMatches.width.toString())
+			.replace(HEIGHT_PLACEHOLDER, thumbnailFileMatches.height.toString());
+			return res.redirect(301, newThumbnailUri);
+		}
+
 		try {
 			const thumbnailParentDirectoryPath = this.fileSystem.getParentDirectoryFilePath(thumbnailFilePath);
 			await this.fileSystem.ensureDirectory(thumbnailParentDirectoryPath);
 
-			await generateThumbnailCallback(originalAbsolutePath, thumbnailAbsolutePath, { width, height });
+			const allThumbnailFilePaths = await this.fileSystem.listFiles(thumbnailParentDirectoryPath);
+			await Promise.all(allThumbnailFilePaths.map(async (filePath: IFilePath) => {
+				const fileName = path.basename(filePath.filePath);
+				const fileMatches = matchFileNameRegex(type, fileName);
+				const isAnyThumbnailOfOriginal = fileMatches
+					&& fileMatches.originalFileName === thumbnailFileMatches.originalFileName
+					&& fileMatches.width === thumbnailFileMatches.width
+					&& fileMatches.height === thumbnailFileMatches.height;
+				const isOldThumbnailAnyResolutionOfOriginal = fileMatches
+					&& fileMatches.originalFileName === thumbnailFileMatches.originalFileName
+					&& fileMatches.originalFilePathChecksum !== thumbnailFileMatches.originalFilePathChecksum;
+				if (isAnyThumbnailOfOriginal || isOldThumbnailAnyResolutionOfOriginal) {
+					await this.fileSystem.deleteFile(filePath);
+				}
+			}));
+
+			await generateThumbnailCallback(originalAbsolutePath, thumbnailAbsolutePath, {
+				width: thumbnailFileMatches.width,
+				height: thumbnailFileMatches.height,
+			});
 		} catch (error) {
 			res.status(500).send();
 			throw error;
