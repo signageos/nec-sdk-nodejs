@@ -6,6 +6,7 @@ import { EXTERNAL_STORAGE_UNITS_PATH, INTERNAL_STORAGE_UNIT } from '../IFileSyst
 import IInternalFileSystem from '../../FileSystem/IFileSystem';
 import { getFileUriPath } from '../../Driver/fileSystemHelpers';
 import { pipeFileToResponse } from '../helper';
+import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 
 export type IThumbnailProperties = {
 	width: number;
@@ -83,7 +84,7 @@ export default class ThumbnailRequestHandler {
 		);
 	}
 
-	public handleThumbnailResponse = (
+	private handleThumbnailResponse = (
 		type: string,
 		routeRegex: RegExp,
 		generateThumbnailCallback: (
@@ -95,6 +96,21 @@ export default class ThumbnailRequestHandler {
 		req: express.Request,
 		res: express.Response,
 	) => {
+		await this.handleThumbnailResponseLocked(type, routeRegex, generateThumbnailCallback, req, res);
+	}
+
+	@locked('generatingThumbnail')
+	private async handleThumbnailResponseLocked(
+		type: string,
+		routeRegex: RegExp,
+		generateThumbnailCallback: (
+			originalFilePath: string,
+			thumbnailFilePath: string,
+			properties: IThumbnailProperties,
+		) => Promise<void>,
+		req: express.Request,
+		res: express.Response,
+	) {
 		const reqParams = req.path.match(routeRegex)!;
 		const storageUnitType: string = decodeURI(reqParams[1]) || INTERNAL_STORAGE_UNIT;
 		const storageUnits = await this.fileSystem.listStorageUnits();
@@ -185,7 +201,7 @@ export default class ThumbnailRequestHandler {
 		pipeFileToResponse(thumbnailAbsolutePath, res);
 	}
 
-	public getThumbnailFilePath(
+	private getThumbnailFilePath(
 		type: string,
 		filePath: IFilePath,
 		width: string | number,
