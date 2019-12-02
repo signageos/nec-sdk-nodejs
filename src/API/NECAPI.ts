@@ -14,6 +14,11 @@ export interface ISchedule {
 	days: number;
 }
 
+export enum OSDOrientation {
+	LANDSCAPE = 0,
+	PORTRAIT = 1,
+}
+
 export interface INECAPI {
 	isNEC(): Promise<boolean>;
 	getModel(): Promise<string>;
@@ -38,6 +43,7 @@ export interface INECAPI {
 	setFactorySettings(): Promise<void>;
 	fanOn(): Promise<void>;
 	fanOff(): Promise<void>;
+	setOSDOrientation(orientation: OSDOrientation): Promise<void>;
 }
 
 export class NECAPI implements INECAPI {
@@ -172,6 +178,11 @@ export class NECAPI implements INECAPI {
 	@locked('necapi')
 	public async fanOff() {
 		await execNECDisplayCommand('compute_module', 'fan_off');
+	}
+
+	@locked('necapi')
+	public async setOSDOrientation(orientation: OSDOrientation): Promise<void> {
+		await execNECDisplayCommand('osd', 'set_orientation', [orientation.toString()]);
 	}
 }
 

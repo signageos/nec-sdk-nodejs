@@ -4,7 +4,8 @@ import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
 import IDisplay, { VideoInput } from './IDisplay';
 import DisplayCapability from './DisplayCapability';
-import { INECAPI, ScheduleEvent, ISchedule } from '../../API/NECAPI';
+import { INECAPI, ScheduleEvent, ISchedule, OSDOrientation } from '../../API/NECAPI';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 
 const REFRESH_DISPLAY_TIME_INTERVAL = 5 * 60e3; // 5 minutes
 
@@ -110,6 +111,15 @@ export default class NECDisplay implements IDisplay {
 
 	public async cpuFanOff(): Promise<void> {
 		await this.necAPI.fanOff();
+	}
+
+	public async setOSDOrientation(orientation: Orientation): Promise<void> {
+		const orientationKey = OSDOrientation[orientation] as keyof typeof OSDOrientation;
+		let necOrientation = OSDOrientation[orientationKey];
+		if (typeof necOrientation === 'undefined') {
+			necOrientation = OSDOrientation.LANDSCAPE;
+		}
+		await this.necAPI.setOSDOrientation(necOrientation);
 	}
 
 	private getOnScheduleIndexFromTimerIndex(timerIndex: number) {

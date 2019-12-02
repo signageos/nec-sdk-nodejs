@@ -2,9 +2,10 @@ import * as should from 'should';
 import * as sinon from 'sinon';
 import NECDisplay from '../../../../src/Driver/Display/NECDisplay';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
-import { ScheduleEvent, ISchedule } from '../../../../src/API/NECAPI';
+import { ScheduleEvent, ISchedule, OSDOrientation } from '../../../../src/API/NECAPI';
 import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 
 function createMockNECAPI() {
 	return {
@@ -19,6 +20,7 @@ function createMockNECAPI() {
 		setSchedule: sinon.stub().resolves(),
 		disableSchedule: sinon.stub().resolves(),
 		setDisplayTimeFromSystemTime: sinon.stub().resolves(),
+		setOSDOrientation: sinon.stub().resolves(),
 	};
 }
 
@@ -346,5 +348,40 @@ describe('Driver.Display.NECDisplay', function () {
 				},
 			);
 		}
+	});
+
+	describe('setOSDOrientation', function () {
+
+		it('should set landscape orientation', async function () {
+			const necAPI = createMockNECAPI();
+			const display = new NECDisplay(necAPI as any);
+			await display.setOSDOrientation(Orientation.LANDSCAPE);
+			necAPI.setOSDOrientation.callCount.should.equal(1);
+			necAPI.setOSDOrientation.getCall(0).args[0].should.equal(OSDOrientation.LANDSCAPE);
+		});
+
+		it('should set portrait orientation', async function () {
+			const necAPI = createMockNECAPI();
+			const display = new NECDisplay(necAPI as any);
+			await display.setOSDOrientation(Orientation.PORTRAIT);
+			necAPI.setOSDOrientation.callCount.should.equal(1);
+			necAPI.setOSDOrientation.getCall(0).args[0].should.equal(OSDOrientation.PORTRAIT);
+		});
+
+		it('should set landscape orientation by default when unsupported landscape flipped orientation is given', async function () {
+			const necAPI = createMockNECAPI();
+			const display = new NECDisplay(necAPI as any);
+			await display.setOSDOrientation(Orientation.LANDSCAPE_FLIPPED);
+			necAPI.setOSDOrientation.callCount.should.equal(1);
+			necAPI.setOSDOrientation.getCall(0).args[0].should.equal(OSDOrientation.LANDSCAPE);
+		});
+
+		it('should set landscape orientation by default when unsupported portrait flipped orientation is given', async function () {
+			const necAPI = createMockNECAPI();
+			const display = new NECDisplay(necAPI as any);
+			await display.setOSDOrientation(Orientation.PORTRAIT_FLIPPED);
+			necAPI.setOSDOrientation.callCount.should.equal(1);
+			necAPI.setOSDOrientation.getCall(0).args[0].should.equal(OSDOrientation.LANDSCAPE);
+		});
 	});
 });

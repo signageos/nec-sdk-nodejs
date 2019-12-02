@@ -4,6 +4,7 @@ import { ISystemAPI } from '../../API/SystemAPI';
 import ISystemSettings from '../../SystemSettings/ISystemSettings';
 import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 
 export default class EmulatedDisplay implements IDisplay {
 
@@ -74,6 +75,10 @@ export default class EmulatedDisplay implements IDisplay {
 	}
 
 	public cpuFanOff(): Promise<void> {
+		throw new Error('Not implemented');
+	}
+
+	public setOSDOrientation(_orientation: Orientation): Promise<void> {
 		throw new Error('Not implemented');
 	}
 }

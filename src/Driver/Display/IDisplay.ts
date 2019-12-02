@@ -2,6 +2,7 @@ import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerW
 import DisplayCapability from './DisplayCapability';
 import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 
 export enum VideoInput {
 	HDMI1 = 'HDMI1',
@@ -30,6 +31,7 @@ interface IDisplay {
 	resetSettings(): Promise<void>;
 	cpuFanOn(): Promise<void>;
 	cpuFanOff(): Promise<void>;
+	setOSDOrientation(orientation: Orientation): Promise<void>;
 }
 
 export default IDisplay;

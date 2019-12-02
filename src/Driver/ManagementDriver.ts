@@ -277,7 +277,11 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		_videoOrientation?: Orientation,
 	): Promise<() => Promise<void> | Promise<void>> {
 		const privateOrientation = Orientation[orientation] as PrivateOrientation;
-		await this.systemSettings.setScreenOrientation(privateOrientation);
+		const display = await this.getDisplay();
+		await Promise.all([
+			this.systemSettings.setScreenOrientation(privateOrientation),
+			display.setOSDOrientation(orientation).catch((error: Error) => console.error('setOSDOrientation failed', error)),
+		]);
 		return () => this.appRestart();
 	}
 
