@@ -16,9 +16,9 @@ export function convertScreenOrientationToAngle(orientation: PublicOrientation) 
 		case PublicOrientation.LANDSCAPE_FLIPPED:
 			return 180;
 		case PublicOrientation.PORTRAIT:
-			return 90;
-		case PublicOrientation.PORTRAIT_FLIPPED:
 			return 270;
+		case PublicOrientation.PORTRAIT_FLIPPED:
+			return 90;
 		default:
 			throw new Error('Invalid orientation');
 	}
