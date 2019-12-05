@@ -6,6 +6,7 @@ import {
 	asciiDecodeValue,
 	writeCommand,
 } from './protocol';
+import { ScheduleEvent, VideoInput, ScheduleType } from './constants';
 
 function parseCommandReply (reply) {
 	return {
@@ -13,6 +14,14 @@ function parseCommandReply (reply) {
 		destinationAddress: reply.readInt8(1),
 		payload: reply.slice(2),
 	};
+}
+
+export interface IGetOrSetParameterResponse {
+	result: number;
+	opcode: number;
+	type: number;
+	maxValue: number;
+	currentValue: number;
 }
 
 export function convertMonitorIdToAddress (monitorId) {
@@ -131,6 +140,24 @@ export function setPowerStatus (port, address, getReply, powerStatus) {
 		}
 		return asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 4, 8));
 	});
+}
+
+export interface ISchedule {
+	index: number;
+	event: ScheduleEvent;
+	hour: number;
+	minute: number;
+	input: VideoInput;
+	week: number;
+	type: ScheduleType;
+	pictureMode: number;
+	year: number;
+	month: number;
+	day: number;
+	order: number;
+	extension1: number;
+	extension2: number;
+	extension3: number;
 }
 
 function parseScheduleReply (command, reply) {
@@ -280,7 +307,7 @@ export function setSchedule(port, address, getReply, schedule) {
 		throw new Error('invalid schedule extension 3 ' + schedule.extension3);
 	}
 	// send data
-	let sendData = [];
+	let sendData: number[] = [];
 	sendData = sendData.concat(asciiEncodeValue4Bytes(0xc23e));
 	sendData = sendData.concat(asciiEncodeValue2Bytes(schedule.index));
 	sendData = sendData.concat(asciiEncodeValue2Bytes(schedule.event));
@@ -309,7 +336,7 @@ export function setSchedule(port, address, getReply, schedule) {
 }
 
 export function enableDisableSchedule (port, address, getReply, index, enableDisable) {
-	let sendData = [];
+	let sendData: number[] = [];
 	sendData = sendData.concat(asciiEncodeValue4Bytes(0xc23f));
 	sendData = sendData.concat(asciiEncodeValue2Bytes(index));
 	sendData = sendData.concat(asciiEncodeValue2Bytes(enableDisable));
@@ -343,7 +370,7 @@ export function setComputeModuleSettingsLock(port, address, getReply, secureMode
 	if (password.length !== 4) {
 		throw new Error('password length must be 4');
 	}
-	let sendData = [];
+	let sendData: number[] = [];
 	sendData = sendData.concat(asciiEncodeValue4Bytes(0xca1b));
 	sendData = sendData.concat(asciiEncodeValue2Bytes(secureMode));
 	for (let char of password) {
@@ -403,7 +430,7 @@ export function setDateAndTime(port, address, getReply, date) {
 	const minute = date.getMinutes();
 	const daylightSavings = 0;
 
-	let sendData = [];
+	let sendData: number[] = [];
 	sendData = sendData.concat(asciiEncodeValue4Bytes(0xc212));
 	sendData = sendData.concat(asciiEncodeValue2Bytes(year));
 	sendData = sendData.concat(asciiEncodeValue2Bytes(month));
@@ -497,7 +524,7 @@ export function getFirmwareVersion(port, address, getReply, firmwareType) {
 	if (firmwareType < 0 || firmwareType > 4) {
 		throw new Error('invalid firmware type ' + firmwareType);
 	}
-	let sendData = [];
+	let sendData: number[] = [];
 	sendData = sendData.concat(asciiEncodeValue4Bytes(0xca02));
 	sendData = sendData.concat(asciiEncodeValue2Bytes(firmwareType));
 	writeCommand(port, sendData, address, 0x41);
@@ -515,7 +542,6 @@ export function getFirmwareVersion(port, address, getReply, firmwareType) {
 		if (asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 6)) !== firmwareType) {
 			throw new UnexpectedReplyError('unexpected reply received');
 		}
-		let offset = 8;
 		let firmwareVersion = '';
 		for (let i = 8; i < reply.payload.length; i++) {
 			const asciiValue = reply.payload.readInt8(i);

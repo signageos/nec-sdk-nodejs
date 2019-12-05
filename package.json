@@ -12,7 +12,7 @@
     "type": "git"
   },
   "scripts": {
-    "build": "tsc && cp src/*d.ts dist && cp src/*.js dist",
+    "build": "tsc",
     "lint": "tslint --config node_modules/hugport-codestyle/tslint.json {src,tests}/**/*.{ts,tsx}",
     "prebuild": "rm -rf dist/*",
     "prepublish": "npm run prebuild && npm run build",

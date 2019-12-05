@@ -3,7 +3,7 @@ export class NullMessageReplyError extends Error {}
 export class TimeoutError extends Error {}
 
 export function readInt8ListFromBuffer (buffer, bytesCount, index) {
-	const result = [];
+	const result: number[] = [];
 	for (let i = 0; i < bytesCount; i++) {
 		const byte = buffer.readInt8(index + i);
 		result.push(byte);
@@ -12,7 +12,7 @@ export function readInt8ListFromBuffer (buffer, bytesCount, index) {
 }
 
 export function asciiEncodeValue2Bytes (value) {
-	const outputData = [];
+	const outputData: number[] = [];
 	if (value < 0 || value > 0xff) {
 		throw new Error('invalid value');
 	}
@@ -61,7 +61,7 @@ export function asciiDecodeValue (data) {
 }
 
 export function writeCommand (port, data, address, messageType) {
-	let outputData = [];
+	let outputData: number[] = [];
 	// SOH
 	outputData.push(0x01);
 	// fixed
