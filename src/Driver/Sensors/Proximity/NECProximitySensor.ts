@@ -24,7 +24,7 @@ export default class NECProximitySensor implements IProximitySensor {
 	}
 
 	private pollStateChanges() {
-		const POLL_INTERVAL = 10e3;
+		const POLL_INTERVAL = 5e3;
 		setInterval(
 			async () => {
 				try {
