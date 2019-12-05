@@ -95,3 +95,7 @@ export const COMPUTE_MODULE_DEFAULT_SETTINGS_PASSWORD = '0000';
 export enum FirmwareType {
 	TYPE0 = 0,
 }
+
+export enum OSDInformation {
+	DISABLED = 0,
+}
