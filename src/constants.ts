@@ -99,3 +99,8 @@ export enum FirmwareType {
 export enum OSDInformation {
 	DISABLED = 0,
 }
+
+export enum OSDOrientation {
+	LANDSCAPE = 0,
+	PORTRAIT = 1,
+}
