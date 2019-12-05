@@ -32,7 +32,7 @@ import FileDetailsProvider from './FileSystem/FileDetailsProvider';
 import FileMetadataCache from './FileSystem/FileMetadataCache';
 import { createSystemAPI } from './API/SystemAPI';
 import FSSystemSettings from './SystemSettings/FSSystemSettings';
-import { getDisplay } from './Driver/Display/displayFactory';
+import { createDisplay } from './Driver/Display/displayFactory';
 import { createSensors } from './Driver/Sensors/sensorsFactory';
 import { getAutoVerification } from './helper';
 import { manageCpuFan } from './CPUFanManager/cpuFanManager';
@@ -72,11 +72,10 @@ if (parameters.raven.enabled) {
 	const systemSettings = new FSSystemSettings(parameters.fileSystem.system);
 	const overlayRenderer = new OverlayRenderer(fileSystem);
 	const necPD = new NECPD();
+	const display = await createDisplay(necPD, systemSettings, systemAPI);
 	const sensors = await createSensors(necPD);
 	const monitors = await createMonitors(necPD);
 	const network = new Network();
-
-	const getDisplayInstance = () => getDisplay(necPD, systemSettings, systemAPI);
 
 	const createVideo = (key: string) => {
 		const unixSocketPath = path.join(parameters.video.socket_root, key + '.sock');
@@ -94,7 +93,7 @@ if (parameters.raven.enabled) {
 		videoPlayer,
 		overlayRenderer,
 		fileDetailsProvider,
-		getDisplayInstance,
+		display,
 		sensors,
 		monitors,
 		network,
@@ -142,14 +141,14 @@ if (parameters.raven.enabled) {
 		autoVerification,
 	);
 
-	const cecListener = new CECListener(getDisplayInstance, parameters.video.socket_root, systemAPI);
+	const cecListener = new CECListener(display, parameters.video.socket_root, systemAPI);
 	const bridgeServer = new BridgeServer(
 		bridgeExpressApp,
 		parameters.server.bridge_url,
 		fileSystem,
 		fileDetailsProvider,
 		nativeDriver,
-		getDisplayInstance,
+		display,
 		systemSettings,
 		videoPlayer,
 		overlayRenderer,
@@ -159,6 +158,7 @@ if (parameters.raven.enabled) {
 	);
 	await bridgeServer.start();
 	await systemAPI.applicationReady();
+	await manageCpuFan(display, systemAPI);
 
 	async function stopApplication() {
 		console.log('stopping application');
@@ -173,6 +173,4 @@ if (parameters.raven.enabled) {
 
 	process.on('SIGINT', stopApplication);
 	process.on('SIGTERM', stopApplication);
-
-	await manageCpuFan(getDisplayInstance, systemAPI);
 })().catch((error: any) => console.error(error));

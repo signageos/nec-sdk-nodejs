@@ -36,7 +36,7 @@ export default async function handleMessage(
 	fileSystem: IFileSystem,
 	fileDetailsProvider: IFileDetailsProvider,
 	nativeDriver: IBasicDriver & IManagementDriver,
-	getDisplay: () => Promise<IDisplay>,
+	display: IDisplay,
 	systemSettings: ISystemSettings,
 	overlayRenderer: OverlayRenderer,
 	systemAPI: ISystemAPI,
@@ -96,7 +96,6 @@ export default async function handleMessage(
 		OverlayMessages.Hide |
 		OverlayMessages.HideAll,
 ): Promise<object> {
-	let display: IDisplay;
 	switch (message.type) {
 		case GetDeviceUid:
 			const deviceUid = await nativeDriver.getDeviceUid();
@@ -219,12 +218,10 @@ export default async function handleMessage(
 			return { volume };
 
 		case VideoMessages.OpenInternalVideoInput:
-			display = await getDisplay();
 			await display.openVideoInput(message.input);
 			return {};
 
 		case VideoMessages.CloseInternalVideoInput:
-			display = await getDisplay();
 			await display.closeVideoInput();
 			return {};
 

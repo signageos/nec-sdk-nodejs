@@ -6,9 +6,8 @@ import * as Debug from 'debug';
 import * as AsyncLock from 'async-lock';
 const debug = Debug('@signageos/display-linux:CPUFanManager');
 
-export async function manageCpuFan(getDisplay: () => Promise<IDisplay>, systemAPI: ISystemAPI) {
+export async function manageCpuFan(display: IDisplay, systemAPI: ISystemAPI) {
 	const INTERVAL = 5e3;
-	const display = await getDisplay();
 	if (display.supports(DisplayCapability.CPU_FAN)) {
 		setInterval(
 			() => checkCpuTemperatureAndSetFanOnOffLocked(display, systemAPI.getCpuTemperature),

@@ -6,16 +6,7 @@ import EmulatedDisplay from './EmulatedDisplay';
 import { ISystemAPI } from '../../API/SystemAPI';
 import { isNECDisplay } from '../../serverHelper';
 
-let display: IDisplay | null = null;
-
-export async function getDisplay(necPD: NECPD, systemSettings: ISystemSettings, systemAPI: ISystemAPI): Promise<IDisplay> {
-	if (display) {
-		return display;
-	}
-	return await createDisplay(necPD, systemSettings, systemAPI);
-}
-
-async function createDisplay(necPD: NECPD, systemSettings: ISystemSettings, systemAPI: ISystemAPI): Promise<IDisplay> {
+export async function createDisplay(necPD: NECPD, systemSettings: ISystemSettings, systemAPI: ISystemAPI): Promise<IDisplay> {
 	try {
 		if (await isNECDisplay(necPD)) {
 			return new NECDisplay(necPD);
