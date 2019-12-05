@@ -1,14 +1,16 @@
 import { EventEmitter } from 'events';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 import IProximitySensor from '@signageos/front-display/es6/NativeDevice/Sensors/IProximitySensor';
-import { INECAPI } from '../../../API/NECAPI';
+import NECPD from '@signageos/nec-sdk/dist/NECPD';
+import Opcode from '@signageos/nec-sdk/dist/Opcode';
+import { HumanSensorInstalledStatus, HumanSensorDetectionStatus } from '@signageos/nec-sdk/dist/constants';
 
 export default class NECProximitySensor implements IProximitySensor {
 
 	private eventEmitter: EventEmitter;
-	private lastDetected: boolean = false;
+	private lastStatus: HumanSensorDetectionStatus = HumanSensorDetectionStatus.NOT_DETECTED;
 
-	constructor(private necAPI: INECAPI) {
+	constructor(private necPD: NECPD) {
 		this.eventEmitter = new EventEmitter();
 		this.pollStateChanges();
 	}
@@ -37,10 +39,14 @@ export default class NECProximitySensor implements IProximitySensor {
 
 	@locked('proximity_sensor', { maxPending: 1 }) // only allow one at a time to prevent infinite stacking of tasks
 	private async executePollStateChanges() {
-		const detected = await this.necAPI.isHumanDetected();
-		if (detected !== this.lastDetected) {
-			this.eventEmitter.emit('change', detected);
-			this.lastDetected = detected;
+		const sensorInstalled = await this.necPD.getParameter(Opcode.HUMAN_SENSOR_ATTACHMENT_STATUS);
+		if (sensorInstalled === HumanSensorInstalledStatus.INSTALLED) {
+			const status = await this.necPD.getParameter(Opcode.HUMAN_SENSOR_STATUS);
+			if (status !== this.lastStatus) {
+				const detected = status === HumanSensorDetectionStatus.DETECTED;
+				this.eventEmitter.emit('change', detected);
+				this.lastStatus = status;
+			}
 		}
 	}
 }

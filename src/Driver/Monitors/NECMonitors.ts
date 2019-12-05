@@ -1,19 +1,15 @@
 import IMonitors, { IMonitor } from '@signageos/front-display/es6/NativeDevice/IMonitors';
-import { INECAPI } from '../../API/NECAPI';
+import NECPD from '@signageos/nec-sdk/dist/NECPD';
 
 export default class NECMonitors implements IMonitors {
 
-	constructor(
-		private necAPI: INECAPI,
-	) {}
+	constructor(private necPD: NECPD) {}
 
 	public async getList(): Promise<IMonitor[]> {
 		const manufacturer = 'NEC';
-		const [model, serial, firmware] = await Promise.all([
-			this.necAPI.getModel(),
-			this.necAPI.getSerialNumber(),
-			this.necAPI.getFirmwareVersion(),
-		]);
+		const model = await this.necPD.getModelName();
+		const serial = await this.necPD.getSerialNumber();
+		const firmware = await this.necPD.getFirmwareVersion();
 		return [{ manufacturer, model, serial, firmware }];
 	}
 }

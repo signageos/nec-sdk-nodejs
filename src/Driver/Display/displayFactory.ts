@@ -1,25 +1,24 @@
+import NECPD from '@signageos/nec-sdk/dist/NECPD';
 import IDisplay from './IDisplay';
 import ISystemSettings from '../../SystemSettings/ISystemSettings';
 import NECDisplay from './NECDisplay';
 import EmulatedDisplay from './EmulatedDisplay';
-import { INECAPI } from '../../API/NECAPI';
 import { ISystemAPI } from '../../API/SystemAPI';
-import { isNECDisplay } from '../../helper';
+import { isNECDisplay } from '../../serverHelper';
 
 let display: IDisplay | null = null;
 
-export async function getDisplay(necAPI: INECAPI, systemSettings: ISystemSettings, systemAPI: ISystemAPI): Promise<IDisplay> {
+export async function getDisplay(necPD: NECPD, systemSettings: ISystemSettings, systemAPI: ISystemAPI): Promise<IDisplay> {
 	if (display) {
 		return display;
 	}
-	display = await createDisplay(necAPI, systemSettings, systemAPI);
-	return display;
+	return await createDisplay(necPD, systemSettings, systemAPI);
 }
 
-async function createDisplay(necAPI: INECAPI, systemSettings: ISystemSettings, systemAPI: ISystemAPI): Promise<IDisplay> {
+async function createDisplay(necPD: NECPD, systemSettings: ISystemSettings, systemAPI: ISystemAPI): Promise<IDisplay> {
 	try {
-		if (await isNECDisplay(necAPI)) {
-			return new NECDisplay(necAPI);
+		if (await isNECDisplay(necPD)) {
+			return new NECDisplay(necPD);
 		}
 		return new EmulatedDisplay(systemSettings, systemAPI);
 	} catch (error) {

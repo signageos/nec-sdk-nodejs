@@ -22,11 +22,11 @@ import { useRavenLogging } from '@signageos/lib/dist/Logging/logger';
 import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { createWsSocketServer } from '@signageos/lib/dist/WebSocket/wsServerFactory';
 import { createSameThreadWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
+import NECPD from '@signageos/nec-sdk/dist/NECPD';
 import FileSystem from './FileSystem/FileSystem';
 import FileSystemCache from './Cache/FileSystemCache';
 import { fetch } from './WebWorker/serverFetch';
 import OverlayRenderer from './Overlay/OverlayRenderer';
-import { NECAPI } from './API/NECAPI';
 import CECListener from './CEC/CECListener';
 import FileDetailsProvider from './FileSystem/FileDetailsProvider';
 import FileMetadataCache from './FileSystem/FileMetadataCache';
@@ -71,12 +71,12 @@ if (parameters.raven.enabled) {
 	await cache.initialize();
 	const systemSettings = new FSSystemSettings(parameters.fileSystem.system);
 	const overlayRenderer = new OverlayRenderer(fileSystem);
-	const necAPI = new NECAPI();
-	const sensors = await createSensors(necAPI);
-	const monitors = await createMonitors(necAPI);
+	const necPD = new NECPD();
+	const sensors = await createSensors(necPD);
+	const monitors = await createMonitors(necPD);
 	const network = new Network();
 
-	const getDisplayInstance = () => getDisplay(necAPI, systemSettings, systemAPI);
+	const getDisplayInstance = () => getDisplay(necPD, systemSettings, systemAPI);
 
 	const createVideo = (key: string) => {
 		const unixSocketPath = path.join(parameters.video.socket_root, key + '.sock');
