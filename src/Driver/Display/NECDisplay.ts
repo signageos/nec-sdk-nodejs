@@ -15,6 +15,7 @@ import {
 	ScheduleEvent,
 	MAX_SCHEDULE_INDEX,
 	OSDOrientation,
+	OSDInformation,
 } from '@signageos/nec-sdk/dist/constants';
 import { ISchedule } from '@signageos/nec-sdk/dist/facade';
 import IDisplay, { VideoInput } from './IDisplay';
@@ -131,6 +132,7 @@ export default class NECDisplay implements IDisplay {
 		if (typeof videoInputValue === 'undefined') {
 			throw new Error('invalid video input ' + videoInput);
 		}
+		await this.necPD.setParameter(Opcode.OSD_INFORMATION, OSDInformation.DISABLED);
 		await this.necPD.setParameter(Opcode.INPUT_CHANGE, InputChangeType.SUPER_QUICK);
 		await this.necPD.setParameter(Opcode.INPUT_CHANGE_SUPER_INPUT_1, NECVideoInput.COMPUTE_MODULE);
 		await this.necPD.setParameter(Opcode.INPUT_CHANGE_SUPER_INPUT_2, videoInputValue);
