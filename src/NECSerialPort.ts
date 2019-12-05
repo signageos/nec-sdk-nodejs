@@ -12,6 +12,7 @@ import {
 	setSchedule,
 	enableDisableSchedule,
 	setComputeModuleSettingsLock,
+	getDateAndTime,
 	setDateAndTime,
 	getModelName,
 	getSerialNumber,
@@ -107,6 +108,13 @@ export default class NECSerialPort {
 				ComputeModuleLockMode.UNLOCKED,
 				COMPUTE_MODULE_DEFAULT_SETTINGS_PASSWORD,
 			);
+		});
+	}
+
+	public async getDateAndTime(monitorId: string | number): Promise<Date> {
+		return await this.sendRetriableRequest(async (serialPort: SerialPort, getReply: () => Promise<number[]>) => {
+			const address = convertMonitorIdToAddress(monitorId);
+			await getDateAndTime(serialPort, address, getReply);
 		});
 	}
 

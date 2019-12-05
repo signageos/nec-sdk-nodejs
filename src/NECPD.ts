@@ -73,6 +73,12 @@ export default class NECPD {
 		return await this.necSerialPort.unlockComputeModuleSettings(monitorId);
 	}
 
+	public async getDisplayTime() {
+		console.log('nec getDisplayTime');
+		const monitorId = await this.getMonitorId();
+		return await this.necSerialPort.getDateAndTime(monitorId);
+	}
+
 	public async setDisplayTimeFromSystem() {
 		console.log('nec setDisplayTimeFromSystem');
 		const monitorId = await this.getMonitorId();

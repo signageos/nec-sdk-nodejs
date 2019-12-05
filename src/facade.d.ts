@@ -88,6 +88,12 @@ export declare function setComputeModuleSettingsLock(
 	password: string,
 ): Promise<void>;
 
+export declare function getDateAndTime(
+	port: SerialPort,
+	address: number,
+	getReply: () => Promise<number[]>,
+): Promise<Date>;
+
 export declare function setDateAndTime(
 	port: SerialPort,
 	address: number,

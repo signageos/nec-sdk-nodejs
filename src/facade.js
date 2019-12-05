@@ -371,6 +371,29 @@ export function setComputeModuleSettingsLock(port, address, getReply, secureMode
 	});
 }
 
+export function getDateAndTime(port, address, getReply) {
+	const sendData = asciiEncodeValue4Bytes(0xc211);
+	writeCommand(port, sendData, address, 0x41);
+	return getReply(true).then(function(replyBuffer) {
+		const reply = parseCommandReply(replyBuffer);
+		if (reply.payload.length !== 18) {
+			throw new Error(`unexpected reply length: ${reply.payload.length} but expected 18`);
+		}
+		if (reply.type !== 0x42) {
+			throw new Error(`unexpected reply type: 0x${reply.type.toString(16)} but expected 0x42`);
+		}
+		if (asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 4, 0)) !== 0xc311) {
+			throw new UnexpectedReplyError('unexpected reply received');
+		}
+		const year = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 4));
+		const month = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 6));
+		const day = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 8));
+		const hour = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 12));
+		const minute = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 14));
+		return new Date(year + 2000, month - 1, day, hour, minute);
+	});
+}
+
 export function setDateAndTime(port, address, getReply, date) {
 	const year = date.getFullYear() - 2000;
 	const month = date.getMonth() + 1;
