@@ -114,7 +114,7 @@ export default class NECSerialPort {
 	public async getDateAndTime(monitorId: string | number): Promise<Date> {
 		return await this.sendRetriableRequest(async (serialPort: SerialPort, getReply: () => Promise<number[]>) => {
 			const address = convertMonitorIdToAddress(monitorId);
-			await getDateAndTime(serialPort, address, getReply);
+			return await getDateAndTime(serialPort, address, getReply);
 		});
 	}
 
