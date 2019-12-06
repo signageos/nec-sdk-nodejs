@@ -52,7 +52,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		private videoPlayer: IServerVideoPlayer,
 		private overlayRenderer: OverlayRenderer,
 		fileDetailsProvider: IFileDetailsProvider,
-		private getDisplay: () => Promise<IDisplay>,
+		private display: IDisplay,
 		public readonly sensors: ISensors,
 		public readonly monitors: IMonitors,
 		public readonly network: INetwork,
@@ -192,10 +192,10 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 				return true;
 
 			case Capability.SET_BRIGHTNESS:
-				return (await this.getDisplay()).supports(DisplayCapability.BRIGHTNESS);
+				return this.display.supports(DisplayCapability.BRIGHTNESS);
 
 			case Capability.TIMERS_NATIVE:
-				return (await this.getDisplay()).supports(DisplayCapability.SCHEDULE);
+				return this.display.supports(DisplayCapability.SCHEDULE);
 
 			case Capability.PROXIMITY_SENSOR:
 				return this.sensors.supports(SensorCapability.PROXIMITY);
@@ -209,19 +209,16 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		return null; // use default
 	}
 
-	public async getVolume(): Promise<number> {
-		const display = await this.getDisplay();
-		return await display.getVolume();
+	public getVolume(): Promise<number> {
+		return this.display.getVolume();
 	}
 
-	public async setVolume(volume: number): Promise<void> {
-		const display = await this.getDisplay();
-		await display.setVolume(volume);
+	public setVolume(volume: number): Promise<void> {
+		return this.display.setVolume(volume);
 	}
 
 	public async screenGetBrightness(): Promise<IBrightness> {
-		const display = await this.getDisplay();
-		const brightness = await display.getBrightness();
+		const brightness = await this.display.getBrightness();
 		return {
 			brightness1: brightness,
 			brightness2: brightness,
@@ -230,12 +227,11 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		};
 	}
 
-	public async screenSetBrightness(timeFrom1: string, brightness1: number, timeFrom2: string, brightness2: number): Promise<void> {
+	public screenSetBrightness(timeFrom1: string, brightness1: number, timeFrom2: string, brightness2: number): Promise<void> {
 		let brightness = brightness1 === brightness2 ?
 			brightness1 :
 			resolveCurrentBrightness(timeFrom1, brightness1, timeFrom2, brightness2, now().toDate());
-		const display = await this.getDisplay();
-		await display.setBrightness(brightness);
+		return this.display.setBrightness(brightness);
 	}
 
 	public async packageInstall(_baseUrl: string, _packageName: string, _version: string, _build: string | null): Promise<void> {
@@ -254,19 +250,16 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		]);
 	}
 
-	public async displayIsPowerOn(): Promise<boolean> {
-		const display = await this.getDisplay();
-		return await display.isPowerOn();
+	public displayIsPowerOn(): Promise<boolean> {
+		return this.display.isPowerOn();
 	}
 
-	public async displayPowerOn(): Promise<void> {
-		const display = await this.getDisplay();
-		await display.powerOn();
+	public displayPowerOn(): Promise<void> {
+		return this.display.powerOn();
 	}
 
-	public async displayPowerOff(): Promise<void> {
-		const display = await this.getDisplay();
-		await display.powerOff();
+	public displayPowerOff(): Promise<void> {
+		return this.display.powerOff();
 	}
 
 	public async screenResize(
@@ -277,28 +270,25 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		_videoOrientation?: Orientation,
 	): Promise<() => Promise<void> | Promise<void>> {
 		const privateOrientation = Orientation[orientation] as PrivateOrientation;
-		const display = await this.getDisplay();
 		await Promise.all([
 			this.systemSettings.setScreenOrientation(privateOrientation),
-			display.setOSDOrientation(orientation).catch((error: Error) => console.error('setOSDOrientation failed', error)),
+			this.display.setOSDOrientation(orientation).catch((error: Error) => console.error('setOSDOrientation failed', error)),
 		]);
 		return () => this.appRestart();
 	}
 
-	public async getTimers() {
-		const display = await this.getDisplay();
-		return display.getTimers();
+	public getTimers() {
+		return this.display.getTimers();
 	}
 
-	public async setTimer(
+	public setTimer(
 		type: TimerType,
 		timeOn: string | null,
 		timeOff: string | null,
 		weekdays: TimerWeekday[],
 		_volume: number,
 	): Promise<void> {
-		const display = await this.getDisplay();
-		return display.setTimer(type, timeOn, timeOff, weekdays);
+		return this.display.setTimer(type, timeOn, timeOff, weekdays);
 	}
 
 	public async remoteControlIsEnabled(): Promise<boolean> {
@@ -370,8 +360,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		return this.cache.getStorageInfo();
 	}
 
-	public async resetSettings(): Promise<void> {
-		const display = await this.getDisplay();
-		return display.resetSettings();
+	public resetSettings(): Promise<void> {
+		return this.display.resetSettings();
 	}
 }

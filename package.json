@@ -16,9 +16,9 @@
     "build": "webpack",
     "build-client": "webpack --config-name=client",
     "build-server": "webpack --config-name=server",
-    "prebuild": "make dist && npm rebuild node-sass",
+    "prebuild": "make dist && npm rebuild node-sass serialport",
     "clean": "rm -rf dist",
-    "develop": "npm rebuild node-sass && webpack --watch --config=webpack.config.js",
+    "develop": "npm rebuild node-sass serialport && webpack --watch --config=webpack.config.js",
     "pack": "node tools/npm-pack.js",
     "lint": "tslint --config node_modules/hugport-codestyle/tslint.json --project tsconfig.json {src,test}/**/*.{ts,tsx}",
     "test": "NODE_ENV=test mocha-webpack --opts mocha.opts"
@@ -28,6 +28,7 @@
     "@signageos/front-display": "7.0.0-beta.6-master.3406",
     "@signageos/front-osd": "^0.1.0",
     "@signageos/lib": "2.5.0",
+    "@signageos/nec-sdk": "0.0.0-master.21",
     "@types/async-lock": "0.0.19",
     "@types/checksum": "^0.1.30",
     "@types/cors": "^2.8.4",
@@ -102,6 +103,7 @@
     "express": "^4.16.3",
     "node-fetch": "^2.3.0",
     "raven": "^1.2.1",
+    "serialport": "^8.0.5",
     "sharp": "0.23.2",
     "ws": "^6.0.0"
   }

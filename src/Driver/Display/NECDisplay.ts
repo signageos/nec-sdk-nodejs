@@ -2,18 +2,41 @@ import * as moment from 'moment-timezone';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
 import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
+import NECPD from '@signageos/nec-sdk/dist/NECPD';
+import Opcode from '@signageos/nec-sdk/dist/Opcode';
+import {
+	AudioMutedStatus,
+	InputChangeType,
+	VideoInput as NECVideoInput,
+	CECMode,
+	CECSearchDevice,
+	ComputeModuleFanMode,
+	PowerStatus,
+	ScheduleEvent,
+	MAX_SCHEDULE_INDEX,
+	OSDOrientation,
+	OSDInformation,
+} from '@signageos/nec-sdk/dist/constants';
+import { ISchedule } from '@signageos/nec-sdk/dist/facade';
 import IDisplay, { VideoInput } from './IDisplay';
 import DisplayCapability from './DisplayCapability';
-import { INECAPI, ScheduleEvent, ISchedule, OSDOrientation } from '../../API/NECAPI';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import {
+	convertSchedulesToTimers,
+	getOnScheduleIndexFromTimerIndex,
+	getOffScheduleIndexFromTimerIndex,
+	convertDaysListToByteValue,
+	createSchedule,
+	isScheduleEnabled,
+} from '../../NEC/scheduleHelpers';
 
 const REFRESH_DISPLAY_TIME_INTERVAL = 5 * 60e3; // 5 minutes
 
 export default class NECDisplay implements IDisplay {
 
-	constructor(private necAPI: INECAPI) {
+	constructor(private necPD: NECPD) {
 		setInterval(
-			() => this.necAPI.setDisplayTimeFromSystemTime(),
+			() => this.necPD.setDisplayTimeFromSystem(),
 			REFRESH_DISPLAY_TIME_INTERVAL,
 		);
 	}
@@ -30,191 +53,124 @@ export default class NECDisplay implements IDisplay {
 		}
 	}
 
-	public isPowerOn(): Promise<boolean> {
-		return this.necAPI.isDisplayOn();
+	public async isPowerOn(): Promise<boolean> {
+		const powerStatus = await this.necPD.getPowerStatus();
+		return powerStatus === PowerStatus.ON;
 	}
 
 	public powerOff(): Promise<void> {
-		return this.necAPI.powerOff();
+		return this.necPD.setPowerStatus(PowerStatus.OFF);
 	}
 
 	public powerOn(): Promise<void> {
-		return this.necAPI.powerOn();
+		return this.necPD.setPowerStatus(PowerStatus.ON);
 	}
 
 	public getBrightness(): Promise<number> {
-		return this.necAPI.getBrightness();
+		return this.necPD.getParameter(Opcode.SCREEN_BRIGHTNESS);
 	}
 
 	public setBrightness(brightness: number): Promise<void> {
-		return this.necAPI.setBrightness(brightness);
+		return this.necPD.setParameter(Opcode.SCREEN_BRIGHTNESS, brightness);
 	}
 
-	public getVolume(): Promise<number> {
-		return this.necAPI.getVolume();
+	public async getVolume(): Promise<number> {
+		const mutedStatus = await this.necPD.getParameter(Opcode.AUDIO_MUTE);
+		if (mutedStatus === AudioMutedStatus.MUTED) {
+			return 0;
+		} else {
+			return await this.necPD.getParameter(Opcode.AUDIO_VOLUME);
+		}
 	}
 
-	public setVolume(volume: number): Promise<void> {
-		return this.necAPI.setVolume(volume);
+	public async setVolume(volume: number): Promise<void> {
+		await this.necPD.setParameter(Opcode.AUDIO_VOLUME, volume);
+		if (volume > 0) {
+			await this.necPD.setParameter(Opcode.AUDIO_MUTE, AudioMutedStatus.UNMUTED);
+		}
 	}
 
 	public async getTimers(): Promise<ITimer[]> {
-		const schedules = await this.necAPI.getSchedules();
-		return this.convertSchedulesToTimers(schedules);
+		const schedules: ISchedule[] = [];
+		for (let i = 0; i < MAX_SCHEDULE_INDEX; i++) {
+			const schedule = await this.necPD.getSchedule(i);
+			if (isScheduleEnabled(schedule)) {
+				schedules.push(schedule);
+			}
+		}
+		return convertSchedulesToTimers(schedules);
 	}
 
 	public async setTimer(type: TimerType, timeOn: string | null, timeOff: string | null, days: TimerWeekday[]): Promise<void> {
-		const onIndex = this.getOnScheduleIndexFromTimerIndex(type);
-		const offIndex = this.getOffScheduleIndexFromTimerIndex(type);
-		const daysByteValue = this.convertDaysListToByteValue(days);
+		const onIndex = getOnScheduleIndexFromTimerIndex(type);
+		const offIndex = getOffScheduleIndexFromTimerIndex(type);
+		const daysByteValue = convertDaysListToByteValue(days);
 
 		if (timeOn) {
 			const onMoment = moment(timeOn!, 'HH:mm:ss');
 			const onHour = onMoment.hour();
 			const onMinute = onMoment.minute();
-			await this.necAPI.setSchedule(onIndex, ScheduleEvent.ON, onHour, onMinute, daysByteValue);
+			const onSchedule = createSchedule(onIndex, ScheduleEvent.ON, onHour, onMinute, daysByteValue);
+			await this.necPD.setSchedule(onSchedule);
 		} else {
-			await this.necAPI.disableSchedule(onIndex);
+			await this.necPD.disableSchedule(onIndex);
 		}
 
 		if (timeOff) {
 			const offMoment = moment(timeOff!, 'HH:mm:ss');
 			const offHour = offMoment.hour();
 			const offMinute = offMoment.minute();
-			await this.necAPI.setSchedule(offIndex, ScheduleEvent.OFF, offHour, offMinute, daysByteValue);
+			const offSchedule = createSchedule(offIndex, ScheduleEvent.OFF, offHour, offMinute, daysByteValue);
+			await this.necPD.setSchedule(offSchedule);
 		} else {
-			await this.necAPI.disableSchedule(offIndex);
+			await this.necPD.disableSchedule(offIndex);
 		}
 	}
 
 	public async openVideoInput(videoInput: VideoInput): Promise<void> {
-		await this.necAPI.prepareQuickVideoInputSwitch(VideoInput.COMPUTE_MODULE, videoInput);
-		await this.necAPI.switchVideoInput(videoInput);
+		const videoInputValue = NECVideoInput[VideoInput[videoInput] as keyof typeof NECVideoInput];
+		if (typeof videoInputValue === 'undefined') {
+			throw new Error('invalid video input ' + videoInput);
+		}
+		await this.necPD.setParameter(Opcode.OSD_INFORMATION, OSDInformation.DISABLED);
+		await this.necPD.setParameter(Opcode.INPUT_CHANGE, InputChangeType.SUPER_QUICK);
+		await this.necPD.setParameter(Opcode.INPUT_CHANGE_SUPER_INPUT_1, NECVideoInput.COMPUTE_MODULE);
+		await this.necPD.setParameter(Opcode.INPUT_CHANGE_SUPER_INPUT_2, videoInputValue);
+		await this.necPD.setParameter(Opcode.INPUT, videoInputValue);
 	}
 
-	public async closeVideoInput(): Promise<void> {
-		await this.necAPI.switchVideoInput(VideoInput.COMPUTE_MODULE);
+	public closeVideoInput(): Promise<void> {
+		return this.necPD.setParameter(Opcode.INPUT, NECVideoInput.COMPUTE_MODULE);
 	}
 
 	public async initCEC() {
-		await this.necAPI.enableCEC();
-		await this.necAPI.searchCECDevice();
+		const maxValueSupported = await this.necPD.getMaxValue(Opcode.CEC);
+		if (maxValueSupported === CECMode.MODE2) {
+			await this.necPD.setParameter(Opcode.CEC, CECMode.MODE2);
+		} else {
+			await this.necPD.setParameter(Opcode.CEC, CECMode.MODE1);
+		}
+		await this.necPD.setParameter(Opcode.CEC_SEARCH_DEVICE, CECSearchDevice.YES);
 	}
 
 	public async resetSettings(): Promise<void> {
-		await this.necAPI.setFactorySettings();
+		throw new Error('not implemented'); // TODO implement
 	}
 
-	public async cpuFanOn(): Promise<void> {
-		await this.necAPI.fanOn();
+	public cpuFanOn(): Promise<void> {
+		return this.necPD.setParameter(Opcode.COMPUTE_MODULE_FAN_POWER_MODE, ComputeModuleFanMode.ON);
 	}
 
 	public async cpuFanOff(): Promise<void> {
-		await this.necAPI.fanOff();
+		return this.necPD.setParameter(Opcode.COMPUTE_MODULE_FAN_POWER_MODE, ComputeModuleFanMode.OFF);
 	}
 
 	public async setOSDOrientation(orientation: Orientation): Promise<void> {
 		const orientationKey = OSDOrientation[orientation] as keyof typeof OSDOrientation;
-		let necOrientation = OSDOrientation[orientationKey];
-		if (typeof necOrientation === 'undefined') {
-			necOrientation = OSDOrientation.LANDSCAPE;
+		let osdOrientation = OSDOrientation[orientationKey];
+		if (typeof osdOrientation === 'undefined') {
+			osdOrientation = OSDOrientation.LANDSCAPE;
 		}
-		await this.necAPI.setOSDOrientation(necOrientation);
-	}
-
-	private getOnScheduleIndexFromTimerIndex(timerIndex: number) {
-		return timerIndex * 2;
-	}
-
-	private getOffScheduleIndexFromTimerIndex(timerIndex: number) {
-		return (timerIndex * 2) + 1;
-	}
-
-	private getTimerIndexFromScheduleIndex(scheduleIndex: number) {
-		return Math.floor(scheduleIndex / 2);
-	}
-
-	private convertSchedulesToTimers(schedules: ISchedule[]): ITimer[] {
-		const schedulesTimerTypeMap: { [timerType: number]: ISchedule[] } = {};
-		for (let schedule of schedules) {
-			const timerType = this.getTimerIndexFromScheduleIndex(schedule.index) as TimerType;
-			if (!schedulesTimerTypeMap[timerType]) {
-				schedulesTimerTypeMap[timerType] = [];
-			}
-			schedulesTimerTypeMap[timerType].push(schedule);
-		}
-
-		const timers: ITimer[] = [];
-		for (let key of Object.keys(schedulesTimerTypeMap)) {
-			const timerType = parseInt(key) as TimerType;
-			const singleTimerSchedules = schedulesTimerTypeMap[timerType];
-			const timer = this.combineSchedulesIntoTimer(timerType as TimerType, singleTimerSchedules);
-			timers.push(timer);
-		}
-		return timers;
-	}
-
-	private combineSchedulesIntoTimer(timerType: TimerType, schedules: ISchedule[]): ITimer {
-		if (schedules.length === 0) {
-			throw new Error('Can\'t combine empty schedule list into a timer');
-		}
-		const MAX_VOLUME = 100;
-		const weekdays = this.convertByteValueToDaysList(schedules[0].days);
-		const timer: ITimer = {
-			type: timerType,
-			timeOn: null,
-			timeOff: null,
-			weekdays,
-			volume: MAX_VOLUME,
-		};
-		for (let schedule of schedules) {
-			switch (schedule.event) {
-				case ScheduleEvent.ON:
-					timer.timeOn = moment().hour(schedule.hour).minute(schedule.minute).second(0).format('HH:mm:ss');
-					break;
-				case ScheduleEvent.OFF:
-					timer.timeOff = moment().hour(schedule.hour).minute(schedule.minute).second(0).format('HH:mm:ss');
-					break;
-				default:
-					throw new Error('Schedule has invalid event type: ' + schedule.event);
-			}
-		}
-		return timer;
-	}
-
-	private convertDaysListToByteValue(days: TimerWeekday[]) {
-		const DAY_VALUES = {
-			[TimerWeekday.mon]: 1,
-			[TimerWeekday.tue]: 2,
-			[TimerWeekday.wed]: 4,
-			[TimerWeekday.thu]: 8,
-			[TimerWeekday.fri]: 16,
-			[TimerWeekday.sat]: 32,
-			[TimerWeekday.sun]: 64,
-		};
-		return days.reduce((total: number, day: TimerWeekday) => total + DAY_VALUES[day], 0);
-	}
-
-	private convertByteValueToDaysList(daysByteValue: number): TimerWeekday[] {
-		const DAY_VALUES: { [byteValue: number]: TimerWeekday } = {
-			1: TimerWeekday.mon,
-			2: TimerWeekday.tue,
-			4: TimerWeekday.wed,
-			8: TimerWeekday.thu,
-			16: TimerWeekday.fri,
-			32: TimerWeekday.sat,
-			64: TimerWeekday.sun,
-		};
-
-		const days: TimerWeekday[] = [];
-		for (let key of Object.keys(DAY_VALUES)) {
-			const singleDayByteValue = parseInt(key);
-			/* tslint:disable-next-line */// bitwise operation is not a typo, the days of the week are encoded as bits
-			if (daysByteValue & singleDayByteValue) {
-				const day = DAY_VALUES[singleDayByteValue];
-				days.push(day);
-			}
-		}
-		return days;
+		await this.necPD.setParameter(Opcode.OSD_ROTATION, osdOrientation);
 	}
 }
