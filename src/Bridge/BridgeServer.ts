@@ -67,24 +67,17 @@ export default class BridgeServer {
 					}
 				});
 		});
-
-		await Promise.all([
-			this.videoPlayer.initialize(),
-			this.socketServer.listen(),
-			this.cecListener.listen(),
-		]);
+		await this.socketServer.listen();
 	}
 
 	public async stop() {
 		console.log('stopping bridge server');
 		await Promise.all([
-			this.cecListener.close(),
 			this.socketServer.close(),
 		]);
 		await new Promise<void>((resolve: () => void) => {
 			this.httpServer.close(resolve);
 		});
-		await this.videoPlayer.close();
 	}
 
 	private defineHttpRoutes() {
