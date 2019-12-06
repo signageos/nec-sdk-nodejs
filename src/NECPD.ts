@@ -11,6 +11,15 @@ export default class NECPD {
 		this.necSerialPort = new NECSerialPort();
 	}
 
+	public async isAlive(): Promise<boolean> {
+		try {
+			await this.getMonitorId();
+			return true;
+		} catch (error) {
+			return false;
+		}
+	}
+
 	public async getMaxValue(opcode: Opcode): Promise<number> {
 		const { maxValue } = await this.getOrSetParameter(opcode);
 		return maxValue;
