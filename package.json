@@ -28,7 +28,7 @@
     "@signageos/front-display": "7.0.0-beta.6-master.3406",
     "@signageos/front-osd": "^0.1.0",
     "@signageos/lib": "2.5.0",
-    "@signageos/nec-sdk": "0.0.0-master.21",
+    "@signageos/nec-sdk": "0.0.0-master.22",
     "@types/async-lock": "0.0.19",
     "@types/checksum": "^0.1.30",
     "@types/cors": "^2.8.4",
