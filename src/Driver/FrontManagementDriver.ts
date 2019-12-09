@@ -19,6 +19,7 @@ import {
 	RemoteControlSetEnabled,
 	RemoteControlIsEnabled,
 	ResetSettings,
+	FactoryReset,
 } from '../Bridge/bridgeSystemMessages';
 import * as ScreenMessages from '../Bridge/bridgeScreenMessages';
 import * as PowerMessages from '../Bridge/bridgePowerMessages';
@@ -307,5 +308,9 @@ export default class FrontManagementDriver implements IManagementDriver {
 
 	public async resetSettings(): Promise<void> {
 		await this.bridge.invoke<ResetSettings, {}>({ type: ResetSettings });
+	}
+
+	public async factoryReset(): Promise<void> {
+		await this.bridge.invoke<FactoryReset, {}>({ type: FactoryReset });
 	}
 }

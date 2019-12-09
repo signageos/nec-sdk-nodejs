@@ -82,6 +82,11 @@ export interface ResetSettings {
 	type: typeof ResetSettings;
 }
 
+export const FactoryReset = 'System.FactoryReset';
+export interface FactoryReset {
+	type: typeof FactoryReset;
+}
+
 export const RemoteControlSetEnabled = 'RemoteControl.SetEnabled';
 export interface RemoteControlSetEnabled {
 	type: typeof RemoteControlSetEnabled;
