@@ -363,4 +363,8 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	public resetSettings(): Promise<void> {
 		return this.display.resetSettings();
 	}
+
+	public factoryReset(): Promise<void> {
+		return this.systemAPI.factoryReset();
+	}
 }

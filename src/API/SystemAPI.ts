@@ -14,6 +14,7 @@ export interface ISystemAPI {
 	getFirmwareVersion(): Promise<string>;
 	upgradeFirmware(sourceUrl: string): Promise<void>;
 	overwriteFirmware(imgUrl: string): Promise<void>;
+	factoryReset(): Promise<void>;
 	enableNativeDebug(): Promise<void>;
 	disableNativeDebug(): Promise<void>;
 	turnScreenOff(): Promise<void>;
@@ -98,6 +99,10 @@ export function createSystemAPI(): ISystemAPI {
 
 		async overwriteFirmware(imgUrl: string) {
 			await execApiCommand('firmware', 'overwrite', [imgUrl], { asRoot: true, verbose: true });
+		},
+
+		async factoryReset(): Promise<void> {
+			await execApiCommand('system', 'factory_reset', [], { asRoot: true });
 		},
 
 		async enableNativeDebug() {

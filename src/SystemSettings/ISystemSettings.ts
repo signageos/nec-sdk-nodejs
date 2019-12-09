@@ -5,4 +5,6 @@ export default interface ISystemSettings {
 	setVolume(volume: number): Promise<void>;
 	getScreenOrientation(): Promise<Orientation>;
 	setScreenOrientation(orientation: Orientation): Promise<void>;
+	wasFactorySettingsPerformed(): Promise<boolean>;
+	setFactorySettingsPerformed(): Promise<void>;
 }

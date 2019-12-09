@@ -11,6 +11,7 @@ export default class FSSystemSettings implements ISystemSettings {
 	private settings: {
 		volume?: number;
 		screenOrientation?: Orientation;
+		factorySettingsPerformed?: boolean;
 	} = {};
 	private loadedFromFS: boolean = false;
 
@@ -42,6 +43,16 @@ export default class FSSystemSettings implements ISystemSettings {
 
 	public async setScreenOrientation(orientation: Orientation): Promise<void> {
 		this.settings.screenOrientation = orientation;
+		await this.saveToFileSystem();
+	}
+
+	public async wasFactorySettingsPerformed(): Promise<boolean> {
+		await this.loadFromFileSystemIfNotLoaded();
+		return this.settings.factorySettingsPerformed || false;
+	}
+
+	public async setFactorySettingsPerformed(): Promise<void> {
+		this.settings.factorySettingsPerformed = true;
 		await this.saveToFileSystem();
 	}
 
