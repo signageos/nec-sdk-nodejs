@@ -16,6 +16,11 @@ import {
 	MAX_SCHEDULE_INDEX,
 	OSDOrientation,
 	OSDInformation,
+	USBPCSource,
+	HDMISignal,
+	ComputeModuleAutoPowerOn,
+	ComputeModuleWatchdogStatus,
+	ComputeModuleShutdownSignalStatus,
 } from '@signageos/nec-sdk/dist/constants';
 import { ISchedule } from '@signageos/nec-sdk/dist/facade';
 import IDisplay, { VideoInput } from './IDisplay';
@@ -154,7 +159,58 @@ export default class NECDisplay implements IDisplay {
 	}
 
 	public async resetSettings(): Promise<void> {
-		throw new Error('not implemented'); // TODO implement
+		if (!(await this.necPD.isAlive())) {
+			throw new Error('communication with display failed');
+		}
+
+		try {
+			// switch to compute module
+			await this.necPD.setParameter(Opcode.INPUT, NECVideoInput.COMPUTE_MODULE);
+			console.log('switched video input to compute module');
+		} catch (error) {
+			console.error('failed to switch video input to compute module');
+		}
+		try {
+			// switch usb pc source to auto
+			await this.necPD.setParameter(Opcode.USB_PC_SOURCE, USBPCSource.AUTO);
+			console.log('USB PC source set to AUTO');
+		} catch (error) {
+			console.error('failed to set USB PC source to auto');
+		}
+		try {
+			// switch hdmi signal to raw
+			await this.necPD.setParameter(Opcode.HDMI_SIGNAL, HDMISignal.RAW);
+			console.log('HDMI signal set to raw');
+		} catch (error) {
+			console.error('failed to set HDMI signal to RAW');
+		}
+		try {
+			// enable compute module auto power on
+			await this.necPD.setParameter(Opcode.COMPUTE_MODULE_AUTO_POWER_ON, ComputeModuleAutoPowerOn.ENABLED);
+			console.log('compute module auto power on enabled');
+		} catch (error) {
+			console.error('failed to enable compute module auto power on');
+		}
+		try {
+			await this.necPD.unlockComputeModuleSettings();
+			try {
+				// disable compute module watchdog
+				await this.necPD.setParameter(Opcode.COMPUTE_MODULE_WATCHDOG_TIMER_ENABLE, ComputeModuleWatchdogStatus.DISABLED);
+				console.log('compute module watchdog disabled');
+			} catch (error) {
+				console.error('failed to disable compute module watchdog');
+			}
+			try {
+				// disable compute module shutdown signal
+				await this.necPD.setParameter(Opcode.COMPUTE_MODULE_SHUTDOWN_SIGNAL, ComputeModuleShutdownSignalStatus.DISABLED);
+				console.log('compute module shutdown signal disabled');
+			} catch (error) {
+				console.error('failed to disable compute module shutdown signal');
+			}
+			await this.necPD.lockComputeModuleSettings();
+		} catch (error) {
+			console.error('error while setting compute module settings protected by password');
+		}
 	}
 
 	public cpuFanOn(): Promise<void> {
