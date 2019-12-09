@@ -25,7 +25,7 @@
   },
   "author": "signageOS.io <dev@signageos.io>",
   "devDependencies": {
-    "@signageos/front-display": "7.0.0-beta.6-master.3406",
+    "@signageos/front-display": "7.0.0-alpha.3417",
     "@signageos/front-osd": "^0.1.0",
     "@signageos/lib": "2.5.0",
     "@signageos/nec-sdk": "0.0.0-master.22",
