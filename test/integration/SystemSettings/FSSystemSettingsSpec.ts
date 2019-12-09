@@ -98,4 +98,41 @@ describe('SystemSettings.FSSystemSettings', function () {
 			});
 		}
 	});
+
+	describe('wasFactorySettingsPerformed', function () {
+
+		it('should return false when there are no settings yet', async function () {
+			const fsSystemSettings = new FSSystemSettings(fileSystemRoot);
+			const wasFactorySettingsPerformed = await fsSystemSettings.wasFactorySettingsPerformed();
+			should(wasFactorySettingsPerformed).be.false();
+		});
+
+		it('should return value saved to file system previously', async function () {
+			const settings = { factorySettingsPerformed: true };
+			await fs.writeFile(systemSettingsFilePath, JSON.stringify(settings));
+			const fsSystemSettings = new FSSystemSettings(fileSystemRoot);
+			const wasFactorySettingsPerformed = await fsSystemSettings.wasFactorySettingsPerformed();
+			should(wasFactorySettingsPerformed).be.true();
+		});
+
+		it('should return true if setFactorySettingsPerformed() was called previously', async function () {
+			const fsSystemSettings = new FSSystemSettings(fileSystemRoot);
+			await fsSystemSettings.setFactorySettingsPerformed();
+			const wasFactorySettingsPerformed = await fsSystemSettings.wasFactorySettingsPerformed();
+			should(wasFactorySettingsPerformed).be.true();
+		});
+	});
+
+	describe('setFactorySettingsPerformed', function () {
+
+		it(`should save new factorySettingsPerformed setting to file system`, async function () {
+			const fsSystemSettings = new FSSystemSettings(fileSystemRoot);
+			await fsSystemSettings.setFactorySettingsPerformed();
+			const settingsBuffer = await fs.readFile(systemSettingsFilePath);
+			const settings = JSON.parse(settingsBuffer.toString());
+			should(settings).deepEqual({
+				factorySettingsPerformed: true,
+			});
+		});
+	});
 });

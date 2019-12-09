@@ -32,6 +32,7 @@ import FileDetailsProvider from './FileSystem/FileDetailsProvider';
 import FileMetadataCache from './FileSystem/FileMetadataCache';
 import { createSystemAPI } from './API/SystemAPI';
 import FSSystemSettings from './SystemSettings/FSSystemSettings';
+import { performFactorySettingsIfWasntPerformedYet } from './SystemSettings/factorySettings';
 import { createDisplay } from './Driver/Display/displayFactory';
 import { createSensors } from './Driver/Sensors/sensorsFactory';
 import { getAutoVerification } from './helper';
@@ -163,6 +164,7 @@ if (parameters.raven.enabled) {
 		videoPlayer.initialize(),
 		cecListener.listen(),
 		manageCpuFan(display, systemAPI),
+		performFactorySettingsIfWasntPerformedYet(display, systemSettings),
 	]);
 
 	async function stopApplication() {
