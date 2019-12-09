@@ -5,12 +5,7 @@ let isNECCached: boolean | null = null;
 export async function isNECDisplay(necPD: NECPD): Promise<boolean> {
 	if (isNECCached === null) {
 		if (await isNEC()) {
-			try {
-				await necPD.getModelName(); // only consider NEC if communicating
-				isNECCached = true;
-			} catch (error) {
-				isNECCached = false;
-			}
+			isNECCached = await necPD.isAlive(); // only consider NEC if communicating
 		} else {
 			isNECCached = false;
 		}

@@ -158,12 +158,19 @@ if (parameters.raven.enabled) {
 	);
 	await bridgeServer.start();
 	await systemAPI.applicationReady();
-	await manageCpuFan(display, systemAPI);
+
+	await Promise.all([
+		videoPlayer.initialize(),
+		cecListener.listen(),
+		manageCpuFan(display, systemAPI),
+	]);
 
 	async function stopApplication() {
 		console.log('stopping application');
+		await bridgeServer.stop();
 		await Promise.all([
-			bridgeServer.stop(),
+			videoPlayer.close(),
+			cecListener.close(),
 			nativeDriver.servletRunner.closeAll(),
 		]);
 		await systemAPI.applicationNotReady();
