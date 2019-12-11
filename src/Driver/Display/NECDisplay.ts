@@ -10,6 +10,7 @@ import {
 	VideoInput as NECVideoInput,
 	CECMode,
 	CECSearchDevice,
+	CECAutoTurnOff,
 	ComputeModuleFanMode,
 	PowerStatus,
 	ScheduleEvent,
@@ -156,6 +157,7 @@ export default class NECDisplay implements IDisplay {
 			await this.necPD.setParameter(Opcode.CEC, CECMode.MODE1);
 		}
 		await this.necPD.setParameter(Opcode.CEC_SEARCH_DEVICE, CECSearchDevice.YES);
+		await this.necPD.setParameter(Opcode.CEC_AUTO_TURN_OFF, CECAutoTurnOff.NO);
 	}
 
 	public async resetSettings(): Promise<void> {
