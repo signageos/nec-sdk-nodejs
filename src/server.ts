@@ -162,7 +162,7 @@ if (parameters.raven.enabled) {
 
 	await Promise.all([
 		videoPlayer.initialize(),
-		cecListener.listen(),
+		cecListener.listen().catch((error: Error) => console.error('CEC initialization failed', error)),
 		manageCpuFan(display, systemAPI),
 		performFactorySettingsIfWasntPerformedYet(display, systemSettings),
 	]);
