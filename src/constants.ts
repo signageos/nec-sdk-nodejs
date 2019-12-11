@@ -27,6 +27,11 @@ export enum CECSearchDevice {
 	YES = 2,
 }
 
+export enum CECAutoTurnOff {
+	NO = 1,
+	YES = 2,
+}
+
 export enum ComputeModuleFanMode {
 	OFF = 1,
 	ON = 2,
