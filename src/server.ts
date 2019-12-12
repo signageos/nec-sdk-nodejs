@@ -167,6 +167,8 @@ if (parameters.raven.enabled) {
 		performFactorySettingsIfWasntPerformedYet(display, systemSettings),
 	]);
 
+	await display.syncDatetimeWithSystem();
+
 	async function stopApplication() {
 		console.log('stopping application');
 		await bridgeServer.stop();

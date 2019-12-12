@@ -36,16 +36,9 @@ import {
 	isScheduleEnabled,
 } from '../../NEC/scheduleHelpers';
 
-const REFRESH_DISPLAY_TIME_INTERVAL = 5 * 60e3; // 5 minutes
-
 export default class NECDisplay implements IDisplay {
 
-	constructor(private necPD: NECPD) {
-		setInterval(
-			() => this.necPD.setDisplayTimeFromSystem(),
-			REFRESH_DISPLAY_TIME_INTERVAL,
-		);
-	}
+	constructor(private necPD: NECPD) {}
 
 	public supports(capability: DisplayCapability): boolean {
 		switch (capability) {
@@ -230,5 +223,9 @@ export default class NECDisplay implements IDisplay {
 			osdOrientation = OSDOrientation.LANDSCAPE;
 		}
 		await this.necPD.setParameter(Opcode.OSD_ROTATION, osdOrientation);
+	}
+
+	public syncDatetimeWithSystem(): Promise<void> {
+		return this.necPD.setDisplayTimeFromSystem();
 	}
 }

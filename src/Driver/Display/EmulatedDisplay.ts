@@ -81,4 +81,8 @@ export default class EmulatedDisplay implements IDisplay {
 	public setOSDOrientation(_orientation: Orientation): Promise<void> {
 		throw new Error('Not implemented');
 	}
+
+	public async syncDatetimeWithSystem(): Promise<void> {
+		// do nothing
+	}
 }

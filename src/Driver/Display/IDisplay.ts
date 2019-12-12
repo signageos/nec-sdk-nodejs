@@ -32,6 +32,7 @@ interface IDisplay {
 	cpuFanOn(): Promise<void>;
 	cpuFanOff(): Promise<void>;
 	setOSDOrientation(orientation: Orientation): Promise<void>;
+	syncDatetimeWithSystem(): Promise<void>;
 }
 
 export default IDisplay;

@@ -321,12 +321,14 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		const datetimeString = moment.unix(timestampMs).format('YYYY-MM-DD HH:mm:ss');
 		await this.systemAPI.setDatetime(datetimeString);
 		await this.systemAPI.setTimezone(timezone);
+		await this.display.syncDatetimeWithSystem();
 		setTimeout(() => this.systemAPI.restartServer(), 1e3);
 	}
 
 	public async setNTPTimeWithTimezone(ntpServer: string, timezone: string): Promise<void> {
 		await this.systemAPI.setNTPServer(ntpServer);
 		await this.systemAPI.setTimezone(timezone);
+		await this.display.syncDatetimeWithSystem();
 		setTimeout(() => this.systemAPI.restartServer(), 1e3);
 	}
 
