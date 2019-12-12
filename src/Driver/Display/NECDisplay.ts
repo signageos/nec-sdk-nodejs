@@ -1,4 +1,5 @@
 import * as moment from 'moment-timezone';
+import * as fs from 'fs-extra';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
 import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
@@ -142,14 +143,19 @@ export default class NECDisplay implements IDisplay {
 	}
 
 	public async initCEC() {
-		const maxValueSupported = await this.necPD.getMaxValue(Opcode.CEC);
-		if (maxValueSupported === CECMode.MODE2) {
-			await this.necPD.setParameter(Opcode.CEC, CECMode.MODE2);
-		} else {
-			await this.necPD.setParameter(Opcode.CEC, CECMode.MODE1);
+		const CEC_SET_FLAG_FILE = '/tmp/nec_cec_searched';
+		const isCECInitialized = await fs.pathExists(CEC_SET_FLAG_FILE);
+		if (!isCECInitialized) {
+			const maxValueSupported = await this.necPD.getMaxValue(Opcode.CEC);
+			if (maxValueSupported === CECMode.MODE2) {
+				await this.necPD.setParameter(Opcode.CEC, CECMode.MODE2);
+			} else {
+				await this.necPD.setParameter(Opcode.CEC, CECMode.MODE1);
+			}
+			await this.necPD.cecSearchDevice();
+			await this.necPD.setParameter(Opcode.CEC_AUTO_TURN_OFF, CECAutoTurnOff.NO);
+			await fs.writeFile(CEC_SET_FLAG_FILE, '1');
 		}
-		await this.necPD.cecSearchDevice();
-		await this.necPD.setParameter(Opcode.CEC_AUTO_TURN_OFF, CECAutoTurnOff.NO);
 	}
 
 	public async resetSettings(): Promise<void> {
