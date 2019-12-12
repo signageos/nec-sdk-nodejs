@@ -16,7 +16,7 @@ env_fs_system_path=/var/lib/signageos-display-linux/system
 env_fs_app_files_path=/usr/share/signageos-display-linux
 
 depend() {
-    need net localmount loopback logger
+    need localmount loopback logger
     use udev
 }
 

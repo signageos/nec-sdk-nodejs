@@ -4,7 +4,7 @@ name=$RC_SVCNAME
 description="WPE Webkit"
 
 depend() {
-    need net localmount loopback nginx docker signageos-display-linux-server
+    need localmount loopback nginx docker signageos-display-linux-server
 }
 
 start() {
