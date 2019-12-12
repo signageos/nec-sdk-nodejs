@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import { createServer, Server, Socket } from "net";
+import * as path from 'path';
 import * as fs from 'fs-extra';
 import IUnixSocketEventListener from './IUnixSocketEventListener';
 
@@ -16,8 +17,10 @@ class UnixSocketEventListener extends EventEmitter implements IUnixSocketEventLi
 		return this.socketPath;
 	}
 
-	public listen() {
-		return new Promise<void>((resolve: () => void) => {
+	public async listen() {
+		const socketDirectory = path.dirname(this.socketPath);
+		await fs.ensureDir(socketDirectory);
+		await new Promise<void>((resolve: () => void) => {
 			this.server.listen(this.socketPath, resolve);
 		});
 	}
