@@ -157,17 +157,6 @@ if (parameters.raven.enabled) {
 		createWsSocketServer,
 		systemAPI,
 	);
-	await bridgeServer.start();
-	await systemAPI.applicationReady();
-
-	await Promise.all([
-		videoPlayer.initialize(),
-		cecListener.listen().catch((error: Error) => console.error('CEC initialization failed', error)),
-		manageCpuFan(display, systemAPI),
-		performFactorySettingsIfWasntPerformedYet(display, systemSettings),
-	]);
-
-	await display.syncDatetimeWithSystem();
 
 	async function stopApplication() {
 		console.log('stopping application');
@@ -184,4 +173,16 @@ if (parameters.raven.enabled) {
 
 	process.on('SIGINT', stopApplication);
 	process.on('SIGTERM', stopApplication);
+
+	await bridgeServer.start();
+	await systemAPI.applicationReady();
+
+	await Promise.all([
+		videoPlayer.initialize(),
+		cecListener.listen(),
+		manageCpuFan(display, systemAPI),
+		performFactorySettingsIfWasntPerformedYet(display, systemSettings),
+	]);
+
+	await display.syncDatetimeWithSystem();
 })().catch((error: any) => console.error(error));
