@@ -98,6 +98,11 @@ export default class NECPD {
 		return await this.necSerialPort.getFirmwareVersion(monitorId);
 	}
 
+	public async cecSearchDevice() {
+		const monitorId = await this.getMonitorId();
+		await this.necSerialPort.cecSearchDevice(monitorId);
+	}
+
 	private async getOrSetParameter(opcode: Opcode, value?: number) {
 		const monitorId = await this.getMonitorId();
 		return await this.necSerialPort.getOrSetParameter(monitorId, opcode, value);

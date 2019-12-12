@@ -26,6 +26,7 @@ import {
 	ComputeModuleLockMode,
 	COMPUTE_MODULE_DEFAULT_SETTINGS_PASSWORD,
 	FirmwareType,
+	CECSearchDevice,
 } from './constants';
 
 function wait(timeout: number) {
@@ -144,6 +145,11 @@ export default class NECSerialPort {
 			const address = convertMonitorIdToAddress(monitorId);
 			return await getFirmwareVersion(serialPort, address, getReply, FirmwareType.TYPE0);
 		});
+	}
+
+	public async cecSearchDevice(monitorId: string | number): Promise<void> {
+		await this.getOrSetParameter(monitorId, Opcode.CEC_SEARCH_DEVICE, CECSearchDevice.YES);
+		await wait(15e3);
 	}
 
 	@locked('necapi')
