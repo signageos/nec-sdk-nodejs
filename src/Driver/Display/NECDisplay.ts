@@ -9,7 +9,6 @@ import {
 	InputChangeType,
 	VideoInput as NECVideoInput,
 	CECMode,
-	CECSearchDevice,
 	CECAutoTurnOff,
 	ComputeModuleFanMode,
 	PowerStatus,
@@ -149,7 +148,7 @@ export default class NECDisplay implements IDisplay {
 		} else {
 			await this.necPD.setParameter(Opcode.CEC, CECMode.MODE1);
 		}
-		await this.necPD.setParameter(Opcode.CEC_SEARCH_DEVICE, CECSearchDevice.YES);
+		await this.necPD.cecSearchDevice();
 		await this.necPD.setParameter(Opcode.CEC_AUTO_TURN_OFF, CECAutoTurnOff.NO);
 	}
 
