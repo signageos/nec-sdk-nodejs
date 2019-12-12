@@ -174,15 +174,15 @@ if (parameters.raven.enabled) {
 	process.on('SIGINT', stopApplication);
 	process.on('SIGTERM', stopApplication);
 
+	const cecListenPromise = cecListener.listen()
+		.catch((error: Error) => console.error('CEC initialization failed', error));
+
 	await bridgeServer.start();
 	await systemAPI.applicationReady();
 
-	await Promise.all([
-		videoPlayer.initialize(),
-		cecListener.listen(),
-		manageCpuFan(display, systemAPI),
-		performFactorySettingsIfWasntPerformedYet(display, systemSettings),
-	]);
-
+	await videoPlayer.initialize();
+	await cecListenPromise;
 	await display.syncDatetimeWithSystem();
+	await manageCpuFan(display, systemAPI);
+	await performFactorySettingsIfWasntPerformedYet(display, systemSettings);
 })().catch((error: any) => console.error(error));
