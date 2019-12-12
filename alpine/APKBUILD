@@ -32,7 +32,8 @@ package() {
 
 	ln -sfT /media $pkgdir/var/lib/$pkgname/fs/external
 
-	install -m755 -D restart_wpewebkit.sh "$pkgdir"/usr/lib/signageos/bin/application/restart
+	install -m755 -D restart_wpewebkit.sh "$pkgdir"/usr/lib/signageos/bin/application/restart_client
+	install -m755 -D restart_server.sh "$pkgdir"/usr/lib/signageos/bin/application/restart_server
 
 	install -m644 -D nginx.conf "$pkgdir"/etc/nginx/conf.d/$pkgname.conf
 
