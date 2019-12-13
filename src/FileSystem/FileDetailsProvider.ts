@@ -41,10 +41,51 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 	}
 
 	private async getExtendedFileDetails(filePath: IFilePath, lastModifiedAt: number, mimeType: string): Promise<IExtendedFileDetails | null> {
+		const extendedFileDetails = this.getExtendedFileDetailsByMimeType(filePath, lastModifiedAt, mimeType);
+		const extendedFileMetadata = await this.getExtendedFileMetadataFromCacheOrCompute(filePath, lastModifiedAt, mimeType);
+
+		if (extendedFileDetails === null && extendedFileMetadata === null) {
+			return null;
+		}
+
+		return {
+			...extendedFileDetails || {},
+			...extendedFileMetadata || {},
+		};
+	}
+
+	private getExtendedFileDetailsByMimeType(
+		filePath: IFilePath,
+		lastModifiedAt: number,
+		mimeType: string,
+	): IExtendedFileDetails | null {
+		if (this.isVideo(mimeType)) {
+			const videoThumbnailUriTemplate = this.videoThumbnailExtractor.getVideoThumbnailUriTemplate(filePath, lastModifiedAt);
+			if (videoThumbnailUriTemplate) {
+				return {
+					videoThumbnailUriTemplate,
+				} as IVideoFileDetails;
+			}
+		} else if (this.isImage(mimeType)) {
+			if (this.imageResizer.getSupportedMimeTypes().indexOf(mimeType) !== -1) {
+				const imageThumbnailUriTemplate = this.imageResizer.getImageThumbnailUriTemplate(filePath, lastModifiedAt);
+				return {
+					imageThumbnailUriTemplate,
+				} as IImageFileDetails;
+			}
+		}
+		return null;
+	}
+
+	private async getExtendedFileMetadataFromCacheOrCompute(
+		filePath: IFilePath,
+		lastModifiedAt: number,
+		mimeType: string,
+	): Promise<IExtendedFileDetails | null> {
 		try {
 			return await this.metadataCache.getFileMetadata(filePath, lastModifiedAt);
 		} catch (error) {
-			const metadata = await this.getExtendedFileDetailsByMimeType(filePath, lastModifiedAt, mimeType);
+			const metadata = await this.getExtendedFileMetadataByMimeType(filePath, mimeType);
 			if (metadata === null) {
 				return null;
 			}
@@ -53,9 +94,8 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 		}
 	}
 
-	private async getExtendedFileDetailsByMimeType(
+	private async getExtendedFileMetadataByMimeType(
 		filePath: IFilePath,
-		lastModifiedAt: number,
 		mimeType: string,
 	): Promise<IExtendedFileDetails | null> {
 		if (this.isVideo(mimeType)) {
@@ -92,20 +132,7 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 				console.warn('Get extended file details videoCodec failed', error);
 			}
 
-			const videoThumbnailUriTemplate = await this.videoThumbnailExtractor.getVideoThumbnailUriTemplate(filePath, lastModifiedAt);
-			if (videoThumbnailUriTemplate) {
-				extendedFileDetails.videoThumbnailUriTemplate = videoThumbnailUriTemplate;
-			}
-
 			return extendedFileDetails;
-		} else
-		if (this.isImage(mimeType)) {
-			if (this.imageResizer.getSupportedMimeTypes().indexOf(mimeType) !== -1) {
-				const imageThumbnailUriTemplate = await this.imageResizer.getImageThumbnailUriTemplate(filePath, lastModifiedAt);
-				return {
-					imageThumbnailUriTemplate,
-				} as IImageFileDetails;
-			}
 		}
 
 		return null;
