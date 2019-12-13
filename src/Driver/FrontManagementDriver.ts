@@ -52,6 +52,7 @@ export default class FrontManagementDriver implements IManagementDriver {
 		private bridge: BridgeClient,
 		private socketClient: ISocket,
 		private fileSystemUrl: string,
+		private waitUntilServerConnected: () => Promise<void>,
 	) {
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);
 		this.sensors = createFrontSensors(this.socketClient);
@@ -254,6 +255,7 @@ export default class FrontManagementDriver implements IManagementDriver {
 			timestampMs,
 			timezone,
 		});
+		await this.waitUntilServerConnected(); // server is restarted in the process
 	}
 
 	public async setNTPTimeWithTimezone(ntpServer: string, timezone: string): Promise<void> {
@@ -262,6 +264,7 @@ export default class FrontManagementDriver implements IManagementDriver {
 			ntpServer,
 			timezone,
 		});
+		await this.waitUntilServerConnected(); // server is restarted in the process
 	}
 
 	public async setDebug(enabled: boolean): Promise<void> {

@@ -1,4 +1,5 @@
 import * as moment from 'moment-timezone';
+import * as fs from 'fs-extra';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
 import ITimer from '@signageos/front-display/es6/NativeDevice/Timer/ITimer';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
@@ -9,7 +10,6 @@ import {
 	InputChangeType,
 	VideoInput as NECVideoInput,
 	CECMode,
-	CECSearchDevice,
 	CECAutoTurnOff,
 	ComputeModuleFanMode,
 	PowerStatus,
@@ -36,16 +36,9 @@ import {
 	isScheduleEnabled,
 } from '../../NEC/scheduleHelpers';
 
-const REFRESH_DISPLAY_TIME_INTERVAL = 5 * 60e3; // 5 minutes
-
 export default class NECDisplay implements IDisplay {
 
-	constructor(private necPD: NECPD) {
-		setInterval(
-			() => this.necPD.setDisplayTimeFromSystem(),
-			REFRESH_DISPLAY_TIME_INTERVAL,
-		);
-	}
+	constructor(private necPD: NECPD) {}
 
 	public supports(capability: DisplayCapability): boolean {
 		switch (capability) {
@@ -150,14 +143,19 @@ export default class NECDisplay implements IDisplay {
 	}
 
 	public async initCEC() {
-		const maxValueSupported = await this.necPD.getMaxValue(Opcode.CEC);
-		if (maxValueSupported === CECMode.MODE2) {
-			await this.necPD.setParameter(Opcode.CEC, CECMode.MODE2);
-		} else {
-			await this.necPD.setParameter(Opcode.CEC, CECMode.MODE1);
+		const CEC_SET_FLAG_FILE = '/tmp/nec_cec_searched';
+		const isCECInitialized = await fs.pathExists(CEC_SET_FLAG_FILE);
+		if (!isCECInitialized) {
+			const maxValueSupported = await this.necPD.getMaxValue(Opcode.CEC);
+			if (maxValueSupported === CECMode.MODE2) {
+				await this.necPD.setParameter(Opcode.CEC, CECMode.MODE2);
+			} else {
+				await this.necPD.setParameter(Opcode.CEC, CECMode.MODE1);
+			}
+			await this.necPD.cecSearchDevice();
+			await this.necPD.setParameter(Opcode.CEC_AUTO_TURN_OFF, CECAutoTurnOff.NO);
+			await fs.writeFile(CEC_SET_FLAG_FILE, '1');
 		}
-		await this.necPD.setParameter(Opcode.CEC_SEARCH_DEVICE, CECSearchDevice.YES);
-		await this.necPD.setParameter(Opcode.CEC_AUTO_TURN_OFF, CECAutoTurnOff.NO);
 	}
 
 	public async resetSettings(): Promise<void> {
@@ -230,5 +228,9 @@ export default class NECDisplay implements IDisplay {
 			osdOrientation = OSDOrientation.LANDSCAPE;
 		}
 		await this.necPD.setParameter(Opcode.OSD_ROTATION, osdOrientation);
+	}
+
+	public syncDatetimeWithSystem(): Promise<void> {
+		return this.necPD.setDisplayTimeFromSystem();
 	}
 }

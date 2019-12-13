@@ -10,6 +10,7 @@ export interface ISystemAPI {
 	applicationReady(): Promise<void>;
 	applicationNotReady(): Promise<void>;
 	restartApplication(): Promise<void>;
+	restartServer(): Promise<void>;
 	upgradeApp(version: string): Promise<void>;
 	getFirmwareVersion(): Promise<string>;
 	upgradeFirmware(sourceUrl: string): Promise<void>;
@@ -82,7 +83,11 @@ export function createSystemAPI(): ISystemAPI {
 		},
 
 		async restartApplication() {
-			await execApiCommand('application', 'restart', [], { asRoot: true });
+			await execApiCommand('application', 'restart_client', [], { asRoot: true });
+		},
+
+		async restartServer(): Promise<void> {
+			await execApiCommand('application', 'restart_server', [], { asRoot: true });
 		},
 
 		async upgradeApp(version: string) {

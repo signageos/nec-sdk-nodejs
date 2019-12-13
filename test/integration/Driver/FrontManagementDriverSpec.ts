@@ -5,7 +5,7 @@ import { createBridgeAndItsDependencies } from '../Bridge/bridgeManagement';
 import FrontManagementDriver from '../../../src/Driver/FrontManagementDriver';
 
 function createFrontManagementDriver(bridgeClient: BridgeClient) {
-	return new FrontManagementDriver(bridgeClient, new EventEmitter() as any, 'file://');
+	return new FrontManagementDriver(bridgeClient, new EventEmitter() as any, 'file://', () => Promise.resolve());
 }
 
 describe('Driver.FrontManagementDriver', function () {

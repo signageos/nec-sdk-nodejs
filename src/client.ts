@@ -1,6 +1,7 @@
 // polyfill promisify for node.js 5
 require('util').promisify = require('util.promisify');
 
+import { EventEmitter } from 'events';
 import * as AsyncLock from 'async-lock';
 import BridgeClient from './Bridge/BridgeClient';
 import FrontDriver from './Driver/FrontDriver';
@@ -26,10 +27,14 @@ if (parameters.raven.enabled) {
 }
 
 (async () => {
+	const socketEventEmitter = new EventEmitter();
 	const socketClient = await new Promise((resolve: (socket: ISocket) => void) => {
 		const socket = createAutoReconnectingSocket(
 			parameters.server.bridge_url,
-			() => resolve(socket),
+			() => {
+				socketEventEmitter.emit('connected');
+				resolve(socket);
+			},
 			() => console.log('Bridge socket disconnected'),
 			(error: any) => console.error(error),
 		);
@@ -48,6 +53,9 @@ if (parameters.raven.enabled) {
 		bridge,
 		socketClient,
 		parameters.server.file_system_url,
+		() => new Promise<void>((resolve: () => void) => {
+			socketEventEmitter.once('connected', resolve);
+		}),
 	);
 	await managementNativeDriver.initialize(parameters.url.staticBaseUrl);
 
