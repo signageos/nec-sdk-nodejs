@@ -23,6 +23,7 @@ import { downloadFile } from './downloadFile';
 import { uploadFile } from './uploadFile';
 import { unzip } from './archive';
 import { trimSlashesAndDots } from './helper';
+import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 
 const EVENT_STORAGE_UNITS_CHANGED = 'storage_units_changed';
 
@@ -79,8 +80,10 @@ export default class FileSystem implements IFileSystem {
 			throw new Error('Download destination isn\'t a directory');
 		}
 
-		const tmpDownloadFilePath = this.getTmpDownloadFilePath(filePath);
+		const tmpDownloadFilePath = this.getTmpDownloadFilePath();
 		const tmpDownloadAbsolutePath = this.getAbsolutePath(tmpDownloadFilePath);
+		const tmpDownloadDirectory = path.dirname(tmpDownloadAbsolutePath);
+		await fs.ensureDir(tmpDownloadDirectory);
 		const file = fs.createWriteStream(tmpDownloadAbsolutePath);
 		await downloadFile(file, sourceUri, headers);
 		await this.moveFile(tmpDownloadFilePath, filePath, true);
@@ -396,13 +399,12 @@ export default class FileSystem implements IFileSystem {
 		throw new Error('Invalid path ' + relativePath);
 	}
 
-	private getTmpDownloadFilePath(destinationFilePath: IFilePath): IFilePath {
-		const parentDirectoryFilePath = this.getParentDirectoryFilePath(destinationFilePath);
-		const fileName = path.basename(destinationFilePath.filePath);
-		const tmpFileName = '.' + fileName + '.part';
+	private getTmpDownloadFilePath(): IFilePath {
+		const fileName = generateUniqueHash();
+		const tmpStorageUnit = this.getTmpStorageUnit();
 		return {
-			storageUnit: destinationFilePath.storageUnit,
-			filePath: path.join(parentDirectoryFilePath.filePath, tmpFileName),
+			storageUnit: tmpStorageUnit,
+			filePath: fileName,
 		};
 	}
 
