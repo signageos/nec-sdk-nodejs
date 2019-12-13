@@ -4,6 +4,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as checksum from 'checksum';
 import { IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
+import { ICopyFileOptions } from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 import {
@@ -164,7 +165,7 @@ export default class FileSystem implements IFileSystem {
 		}
 	}
 
-	public async copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void> {
+	public async copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, options: ICopyFileOptions = {}): Promise<void> {
 		const sourceExists = await this.exists(sourceFilePath);
 		if (!sourceExists) {
 			throw new FileOrDirectoryNotFound();
@@ -187,7 +188,11 @@ export default class FileSystem implements IFileSystem {
 
 		const sourceAbsolutePath = this.getAbsolutePath(sourceFilePath);
 		const destinationAbsolutePath = this.getAbsolutePath(destinationFilePath);
-		await fs.copy(sourceAbsolutePath, destinationAbsolutePath);
+		if (options.hardlink) {
+			await fs.link(sourceAbsolutePath, destinationAbsolutePath);
+		} else {
+			await fs.copy(sourceAbsolutePath, destinationAbsolutePath);
+		}
 	}
 
 	public async moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, overwrite: boolean = false) {

@@ -284,7 +284,7 @@ export default async function handleMessage(
 			return {};
 
 		case FSMessages.CopyFile:
-			await fileSystem.copyFile(message.sourceFilePath, message.destinationFilePath);
+			await fileSystem.copyFile(message.sourceFilePath, message.destinationFilePath, message.options);
 			return {};
 
 		case FSMessages.MoveFile:

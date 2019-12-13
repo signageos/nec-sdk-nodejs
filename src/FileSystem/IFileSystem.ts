@@ -1,4 +1,5 @@
 import { IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
+import { ICopyFileOptions } from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { IFileDetails } from './IFileDetails';
 
@@ -17,7 +18,7 @@ export default interface IFileSystem {
 	readFile(filePath: IFilePath): Promise<string>;
 	writeFile(filePath: IFilePath, contents: string | Buffer): Promise<void>;
 	deleteFile(filePath: IFilePath, recursive?: boolean): Promise<void>;
-	copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void>;
+	copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, options?: ICopyFileOptions): Promise<void>;
 	moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, force?: boolean): Promise<void>;
 	getFileChecksum(filePath: IFilePath, hashType: HashAlgorithm): Promise<string>;
 	extractFile(archiveFilePath: IFilePath, destinationDirectoryPath: IFilePath, method: string): Promise<void>;

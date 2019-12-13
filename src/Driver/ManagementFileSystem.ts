@@ -1,4 +1,4 @@
-import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
+import IFileSystem, { ICopyFileOptions } from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import { IFile, IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import IInternalFileSystem from '../FileSystem/IFileSystem';
 import { getFileUriPath } from './fileSystemHelpers';
@@ -67,8 +67,8 @@ export default class ManagementFileSystem implements IFileSystem {
 		return this.fileSystem.deleteFile(filePath, recursive);
 	}
 
-	public copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void> {
-		return this.fileSystem.copyFile(sourceFilePath, destinationFilePath);
+	public copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, options: ICopyFileOptions = {}): Promise<void> {
+		return this.fileSystem.copyFile(sourceFilePath, destinationFilePath, options);
 	}
 
 	public moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void> {
