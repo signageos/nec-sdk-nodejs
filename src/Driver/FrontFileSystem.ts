@@ -1,4 +1,4 @@
-import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
+import IFileSystem, { ICopyFileOptions } from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { IFile, IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
@@ -78,11 +78,12 @@ class FrontFileSystem implements IFileSystem {
 		});
 	}
 
-	public async copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void> {
+	public async copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, options: ICopyFileOptions = {}): Promise<void> {
 		await this.bridge.invoke<FSMessages.CopyFile, any>({
 			type: FSMessages.CopyFile,
 			sourceFilePath,
 			destinationFilePath,
+			options,
 		});
 	}
 
