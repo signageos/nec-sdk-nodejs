@@ -1,23 +1,29 @@
-import { WriteStream } from 'fs';
-import * as Request from 'request';
+import * as childProcess from 'child_process';
+import * as Debug from 'debug';
+
+const debug = Debug('@signageos/display-linux:FileSystem:downloadFile');
 
 export function downloadFile(
-	file: WriteStream,
+	destination: string,
 	uri: string,
-	headers?: { [key: string]: string },
+	headers: { [key: string]: string } = {},
 ) {
+	const headerArgs: string[] = [];
+	for (let header of Object.keys(headers)) {
+		headerArgs.push('-H');
+		headerArgs.push(`${header}: ${headers[header]}`);
+	}
+
 	return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-		const request = Request.get(uri, { headers });
-		request.on('response', (response: Request.Response) => {
-			if (response.statusCode && response.statusCode >= 200 && response.statusCode <= 299) {
-				response.pipe(file);
-				response.on('end', resolve);
+		const process = childProcess.spawn('curl', ['--fail', '-o', destination, ...headerArgs, uri]);
+		process.stdout.on('data', (chunk: any) => debug(chunk.toString()));
+		process.stderr.on('data', (chunk: any) => debug(chunk.toString()));
+		process.once('close', (code: number) => {
+			if (code === 0) {
+				resolve();
 			} else {
-				reject(new Error('File download failed with status code: ' + response.statusCode));
+				reject(new Error('File download failed with exit code: ' + code));
 			}
-		});
-		request.on('error', (error: Error) => {
-			reject(new Error('File download failed with status code: ' + error.message));
 		});
 	});
 }
