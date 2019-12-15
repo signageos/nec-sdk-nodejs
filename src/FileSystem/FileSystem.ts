@@ -84,8 +84,7 @@ export default class FileSystem implements IFileSystem {
 		const tmpDownloadAbsolutePath = this.getAbsolutePath(tmpDownloadFilePath);
 		const tmpDownloadDirectory = path.dirname(tmpDownloadAbsolutePath);
 		await fs.ensureDir(tmpDownloadDirectory);
-		const file = fs.createWriteStream(tmpDownloadAbsolutePath);
-		await downloadFile(file, sourceUri, headers);
+		await downloadFile(tmpDownloadAbsolutePath, sourceUri, headers);
 		await this.moveFile(tmpDownloadFilePath, filePath, true);
 	}
 
