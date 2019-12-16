@@ -10,6 +10,15 @@ import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 function createWindow(override: any = {}): Window {
 	return {
 		addEventListener: sinon.spy(),
+		document: {
+			getElementById: () => null,
+			createElement: () => ({
+				style: {},
+			}),
+			body: {
+				appendChild: () => null,
+			},
+		},
 		...override,
 	} as any;
 }

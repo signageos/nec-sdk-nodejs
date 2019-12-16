@@ -4,11 +4,16 @@ import { IOpenLinkOptions } from '@signageos/front-display/es6/NativeDevice/IBro
 import BridgeClient, { MessageType } from '../Bridge/BridgeClient';
 import { BrowserSetACLWhitelist, BrowserSetACLBlacklist, BrowserClearACL } from '../Bridge/bridgeBrowserMessages';
 import ProprietaryBrowser from '@signageos/front-display/es6/Browser/ProprietaryBrowser';
+import { ScreenRotationManager } from '@signageos/front-display/es6/NativeDevice/Screen/screenRotation';
 
 export default class Browser extends ProprietaryBrowser {
 
-	constructor(window: Window, private bridge: BridgeClient) {
-		super(window);
+	constructor(
+		window: Window,
+		screenRotationManager: ScreenRotationManager,
+		private bridge: BridgeClient,
+	) {
+		super(window, screenRotationManager);
 	}
 
 	@locked('browser')
