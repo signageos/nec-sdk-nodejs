@@ -13,8 +13,8 @@ export interface Coordinates {
 
 export function convertToPortrait(window: Window, x: number, y: number, width: number, height: number): Coordinates {
 	return {
-		x: window.innerWidth - (y + height),
-		y: x,
+		x: y,
+		y: window.innerHeight - (x + width),
 		width: height,
 		height: width,
 	};
@@ -22,8 +22,8 @@ export function convertToPortrait(window: Window, x: number, y: number, width: n
 
 export function convertToPortraitFlipped(window: Window, x: number, y: number, width: number, height: number): Coordinates {
 	return {
-		x: y,
-		y: window.innerHeight - (x + width),
+		x: window.innerWidth - (y + height),
+		y: x,
 		width: height,
 		height: width,
 	};

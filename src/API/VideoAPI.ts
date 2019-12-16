@@ -211,11 +211,11 @@ function getVideoWindowArgsString(x: number, y: number, width: number, height: n
 function convertOrientationToRotationAngle(orientation: Orientation) {
 	switch (orientation) {
 		case Orientation.PORTRAIT:
-			return 90;
+			return 270;
 		case Orientation.LANDSCAPE_FLIPPED:
 			return 180;
 		case Orientation.PORTRAIT_FLIPPED:
-			return 270;
+			return 90;
 		default:
 			return 0;
 	}
