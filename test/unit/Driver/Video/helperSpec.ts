@@ -15,15 +15,15 @@ describe('Driver.Video.helper', function () {
 			},
 			{
 				input: { x: 200, y: 100, width: 800, height: 600 },
-				expected: { x: 1220, y: 200, width: 600, height: 800 },
+				expected: { x: 100, y: 80, width: 600, height: 800 },
 			},
 			{
 				input: { x: 0, y: 0, width: 800, height: 600 },
-				expected: { x: 1320, y: 0, width: 600, height: 800 },
+				expected: { x: 0, y: 280, width: 600, height: 800 },
 			},
 			{
-				input: { x: 0, y: 520, width: 800, height: 1400 },
-				expected: { x: 0, y: 0, width: 1400, height: 800 },
+				input: { x: 280, y: 0, width: 800, height: 600 },
+				expected: { x: 0, y: 0, width: 600, height: 800 },
 			},
 		];
 
@@ -50,15 +50,15 @@ describe('Driver.Video.helper', function () {
 			},
 			{
 				input: { x: 200, y: 100, width: 800, height: 600 },
-				expected: { x: 100, y: 80, width: 600, height: 800 },
+				expected: { x: 1220, y: 200, width: 600, height: 800 },
 			},
 			{
 				input: { x: 0, y: 0, width: 800, height: 600 },
-				expected: { x: 0, y: 280, width: 600, height: 800 },
+				expected: { x: 1320, y: 0, width: 600, height: 800 },
 			},
 			{
-				input: { x: 280, y: 0, width: 800, height: 600 },
-				expected: { x: 0, y: 0, width: 600, height: 800 },
+				input: { x: 0, y: 520, width: 800, height: 1400 },
+				expected: { x: 0, y: 0, width: 1400, height: 800 },
 			},
 		];
 
