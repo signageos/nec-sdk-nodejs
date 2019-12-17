@@ -4,6 +4,7 @@ import {
 	GetDeviceUid,
 	GetModel,
 	GetSerialNumber,
+	GetTemperature,
 	Supports,
 	GetCurrentTimeWithTimezone,
 	SetManualTimeWithTimezone,
@@ -46,6 +47,7 @@ export default async function handleMessage(
 		GetDeviceUid |
 		GetModel |
 		GetSerialNumber |
+		GetTemperature |
 		ScreenMessages.GetOrientation |
 		GetCurrentTimeWithTimezone |
 		SetManualTimeWithTimezone |
@@ -114,6 +116,10 @@ export default async function handleMessage(
 		case GetSerialNumber:
 			const serialNumber = await nativeDriver.getSerialNumber();
 			return { serialNumber };
+
+		case GetTemperature:
+			const temperature = await nativeDriver.getCurrentTemperature();
+			return { temperature };
 
 		case GetCurrentTimeWithTimezone:
 			const currentTime = await nativeDriver.getCurrentTimeWithTimezone();
