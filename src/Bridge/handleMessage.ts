@@ -69,6 +69,7 @@ export default async function handleMessage(
 		VideoMessages.OpenInternalVideoInput |
 		VideoMessages.CloseInternalVideoInput |
 		FirmwareMessages.GetVersion |
+		FirmwareMessages.Upgrade |
 		NetworkMessages.IsWifiSupported |
 		NetworkMessages.IsWifiEnabled |
 		NetworkMessages.EnableWifi |
@@ -194,6 +195,10 @@ export default async function handleMessage(
 		case FirmwareMessages.GetVersion:
 			const version = await nativeDriver.firmwareGetVersion();
 			return { version };
+
+		case FirmwareMessages.Upgrade:
+			await nativeDriver.firmwareUpgrade(message.baseUrl, message.version, () => undefined);
+			return {};
 
 		case NetworkMessages.IsWifiSupported:
 			const isWifiSupported = await NetworkAPI.isWifiSupported();
