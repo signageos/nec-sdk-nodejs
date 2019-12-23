@@ -101,7 +101,7 @@ build:alpine:
     - rm -rf ~/packages
     - export VERSION=`cat ./VERSION`
     - npx @signageos/lib@just-tools version-upgrade $VERSION
-    - export VERSION=`echo $VERSION | sed -r 's/-[^.]+//g'` # omit branch version
+    - export VERSION=`echo $VERSION | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'` # omit branch version
     - make apk
     - aws s3 cp ~/packages/dist/armhf "$AWS_ALPINE_REPO_S3_PATH/armhf" --recursive --exclude "*" --include "signageos-display-linux*-$VERSION-r0.apk"
 
