@@ -173,6 +173,11 @@ if (parameters.raven.enabled) {
 
 	process.on('SIGINT', stopApplication);
 	process.on('SIGTERM', stopApplication);
+	process.removeAllListeners('uncaughtException');
+	process.on('uncaughtException', (error: any) => console.error(error && error.stack ? error.stack : error));
+	process.on('unhandledRejection', (error: Error) => {
+		throw error;
+	});
 
 	const cecListenPromise = cecListener.listen()
 		.catch((error: Error) => console.error('CEC initialization failed', error));
