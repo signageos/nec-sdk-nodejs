@@ -9,6 +9,7 @@ import * as express from 'express';
 import * as path from 'path';
 import * as AsyncLock from 'async-lock';
 import nodeFetch from 'node-fetch';
+import { CronJob } from 'cron';
 import ManagementDriver from './Driver/ManagementDriver';
 import ServerVideo from './Driver/Video/ServerVideo';
 import ServerVideoPlayer from './Driver/Video/ServerVideoPlayer';
@@ -187,7 +188,19 @@ if (parameters.raven.enabled) {
 
 	await videoPlayer.initialize();
 	await cecListenPromise;
-	await display.syncDatetimeWithSystem();
 	await manageCpuFan(display, systemAPI);
 	await performFactorySettingsIfWasntPerformedYet(display, systemSettings);
+
+	async function syncDatetimeToDisplay() {
+		try {
+			await display.syncDatetimeWithSystem();
+		} catch (error) {
+			console.error('Sync datetime to display failed', error);
+		}
+	}
+
+	await syncDatetimeToDisplay();
+	// sync every 10 mins when it's a whole minute, because setting time to NEC display only sets hours and minutes
+	const syncTimeJob = new CronJob('0 */10 * * * *', () => syncDatetimeToDisplay());
+	syncTimeJob.start();
 })().catch((error: any) => console.error(error));
