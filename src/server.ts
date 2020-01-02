@@ -186,10 +186,15 @@ if (parameters.raven.enabled) {
 	await bridgeServer.start();
 	await systemAPI.applicationReady();
 
-	await videoPlayer.initialize();
+	await videoPlayer.initialize()
+		.catch((error: Error) => console.error('initialize video player failed', error));
+
 	await cecListenPromise;
-	await manageCpuFan(display, systemAPI);
-	await performFactorySettingsIfWasntPerformedYet(display, systemSettings);
+
+	manageCpuFan(display, systemAPI);
+
+	await performFactorySettingsIfWasntPerformedYet(display, systemSettings)
+		.catch((error: Error) => console.error('perform factory settings failed', error));
 
 	async function syncDatetimeToDisplay() {
 		try {
