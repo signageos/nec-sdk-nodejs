@@ -42,6 +42,7 @@ import ImageResizer from './FileSystem/Image/ImageResizer';
 import VideoThumbnailExtractor from './FileSystem/Video/VideoThumbnailExtractor';
 import { createMonitors } from './Driver/Monitors/monitorsFactory';
 import Network from './Network/Network';
+import { notifyServerAlive, notifyServerStopped } from './Application/serverStatus';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -166,7 +167,7 @@ if (parameters.raven.enabled) {
 			cecListener.close(),
 			nativeDriver.servletRunner.closeAll(),
 		]);
-		await systemAPI.applicationNotReady();
+		await notifyServerStopped(systemAPI);
 		console.log('application will exit');
 		process.exit(0);
 	}
@@ -178,7 +179,7 @@ if (parameters.raven.enabled) {
 		.catch((error: Error) => console.error('CEC initialization failed', error));
 
 	await bridgeServer.start();
-	await systemAPI.applicationReady();
+	await notifyServerAlive(systemAPI);
 
 	await videoPlayer.initialize();
 	await cecListenPromise;

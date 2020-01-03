@@ -15,7 +15,7 @@ import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import { MINUTE_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/masterWebWorkerFactory';
 import { createAutoReconnectingSocket } from '@signageos/lib/dist/WebSocket/Client/WS/createWSSocket';
-import notifyApplicationAlive from './Application/notifyApplicationAlive';
+import { notifyClientAlive } from './Application/clientStatus';
 import { getAutoVerification } from './helper';
 import FrontManagementDriver from './Driver/FrontManagementDriver';
 const parameters = require('../config/parameters');
@@ -106,5 +106,5 @@ if (parameters.raven.enabled) {
 		autoVerification,
 	);
 
-	notifyApplicationAlive(socketClient);
+	notifyClientAlive(socketClient);
 })().catch((error: any) => console.error(error));
