@@ -7,8 +7,8 @@ export interface ISystemAPI {
 	getStorageStatus(): Promise<IStorageUnit[]>;
 	getCpuTemperature(): Promise<number>;
 	reboot(): Promise<void>;
-	applicationReady(): Promise<void>;
-	applicationNotReady(): Promise<void>;
+	applicationNotifyAlive(): Promise<void>;
+	applicationNotifyStopped(): Promise<void>;
 	restartApplication(): Promise<void>;
 	restartServer(): Promise<void>;
 	upgradeApp(version: string): Promise<void>;
@@ -74,12 +74,12 @@ export function createSystemAPI(): ISystemAPI {
 			await execApiCommand('device', 'reboot', [], { asRoot: true });
 		},
 
-		async applicationReady() {
-			await execApiCommand('application', 'ready', [], { asRoot: true });
+		async applicationNotifyAlive() {
+			await execApiCommand('application', 'notify_alive', [], { asRoot: true });
 		},
 
-		async applicationNotReady() {
-			await execApiCommand('application', 'not_ready', [], { asRoot: true });
+		async applicationNotifyStopped() {
+			await execApiCommand('application', 'notify_stopped', [], { asRoot: true });
 		},
 
 		async restartApplication() {
