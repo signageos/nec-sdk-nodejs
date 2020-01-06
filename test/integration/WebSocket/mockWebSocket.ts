@@ -16,16 +16,18 @@ class MockSocketConnection implements ISocketConnection {
 		});
 	}
 
-	public bindError(_listener: (error: Error) => void): void {
+	public bindError(_listener: (error: Error) => void) {
 		// do nothing
+		return () => undefined;
 	}
 
-	public bindMessage<TMessage>(event: string, listener: (payload: TMessage) => void): void {
+	public bindMessage<TMessage>(event: string, listener: (payload: TMessage) => void) {
 		this.eventEmitter.on('receive_message', (message: { event: string, payload: TMessage }) => {
 			if (message.event === event) {
 				listener(message.payload);
 			}
 		});
+		return () => undefined;
 	}
 
 	public getMessagePromise<TMessage>(_event: string): Promise<TMessage> {
