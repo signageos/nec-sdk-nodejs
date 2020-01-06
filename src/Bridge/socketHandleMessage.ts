@@ -11,6 +11,7 @@ import * as Debug from 'debug';
 import { MessageType } from './BridgeClient';
 import { ISystemAPI } from '../API/SystemAPI';
 import ISystemSettings from '../SystemSettings/ISystemSettings';
+import ClientWatchdog from '../Application/ClientWatchdog';
 const debug = Debug('@signageos/display-linux:Bridge:socketHandleMessage');
 
 export default function socketHandleMessage(
@@ -22,8 +23,10 @@ export default function socketHandleMessage(
 	systemSettings: ISystemSettings,
 	overlayRenderer: OverlayRenderer,
 	systemAPI: ISystemAPI,
+	clientWatchdog: ClientWatchdog,
 ) {
 	socket.bindMessage('message.' + MessageType.GENERIC, async (message: IBridgeMessage<any>) => {
+		clientWatchdog.notifyPendingTask();
 		try {
 			const response = await handleMessage(
 				fileSystem,
@@ -40,6 +43,8 @@ export default function socketHandleMessage(
 		} catch (error) {
 			debug('bridge message error', message);
 			await socket.sendMessage(message.invocationUid, { success: false });
+		} finally {
+			clientWatchdog.notifyPendingTaskFinished();
 		}
 	});
 }
