@@ -28,7 +28,6 @@ import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver
 import ICache from '@signageos/front-display/es6/Cache/ICache';
 import ICacheStorageInfo from '@signageos/front-display/es6/Cache/ICacheStorageInfo';
 import IFileDetailsProvider from '../FileSystem/IFileDetailsProvider';
-import ServletRunner from '../Servlet/ServletRunner';
 import IDisplay from './Display/IDisplay';
 import DisplayCapability from './Display/DisplayCapability';
 import { resolveCurrentBrightness } from '@signageos/front-display/es6/NativeDevice/Screen/screenHelper';
@@ -40,7 +39,6 @@ import INetwork from '@signageos/front-display/es6/NativeDevice/Network/INetwork
 export default class ManagementDriver implements IBasicDriver, IManagementDriver, ICacheDriver {
 
 	public fileSystem: IFileSystem;
-	public servletRunner: IServletRunner;
 	private deviceUid: string;
 
 	constructor(
@@ -53,13 +51,13 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		private overlayRenderer: OverlayRenderer,
 		fileDetailsProvider: IFileDetailsProvider,
 		private display: IDisplay,
+		public readonly servletRunner: IServletRunner,
 		public readonly sensors: ISensors,
 		public readonly monitors: IMonitors,
 		public readonly network: INetwork,
 		private systemAPI: ISystemAPI,
 	) {
 		this.fileSystem = new ManagementFileSystem(fileSystemUrl, internalFileSystem, fileDetailsProvider);
-		this.servletRunner = new ServletRunner(internalFileSystem);
 	}
 
 	public async initialize(_staticBaseUrl: string): Promise<void> {
