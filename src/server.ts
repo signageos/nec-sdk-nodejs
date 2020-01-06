@@ -9,6 +9,7 @@ import * as express from 'express';
 import * as path from 'path';
 import * as AsyncLock from 'async-lock';
 import nodeFetch from 'node-fetch';
+import { CronJob } from 'cron';
 import ManagementDriver from './Driver/ManagementDriver';
 import ServerVideo from './Driver/Video/ServerVideo';
 import ServerVideoPlayer from './Driver/Video/ServerVideoPlayer';
@@ -174,6 +175,11 @@ if (parameters.raven.enabled) {
 
 	process.on('SIGINT', stopApplication);
 	process.on('SIGTERM', stopApplication);
+	process.removeAllListeners('uncaughtException');
+	process.on('uncaughtException', (error: any) => console.error(error && error.stack ? error.stack : error));
+	process.on('unhandledRejection', (error: Error) => {
+		throw error;
+	});
 
 	const cecListenPromise = cecListener.listen()
 		.catch((error: Error) => console.error('CEC initialization failed', error));
@@ -181,9 +187,26 @@ if (parameters.raven.enabled) {
 	await bridgeServer.start();
 	await notifyServerAlive(systemAPI);
 
-	await videoPlayer.initialize();
+	await videoPlayer.initialize()
+		.catch((error: Error) => console.error('initialize video player failed', error));
+
 	await cecListenPromise;
-	await display.syncDatetimeWithSystem();
-	await manageCpuFan(display, systemAPI);
-	await performFactorySettingsIfWasntPerformedYet(display, systemSettings);
+
+	manageCpuFan(display, systemAPI);
+
+	await performFactorySettingsIfWasntPerformedYet(display, systemSettings)
+		.catch((error: Error) => console.error('perform factory settings failed', error));
+
+	async function syncDatetimeToDisplay() {
+		try {
+			await display.syncDatetimeWithSystem();
+		} catch (error) {
+			console.error('Sync datetime to display failed', error);
+		}
+	}
+
+	await syncDatetimeToDisplay();
+	// sync every 10 mins when it's a whole minute, because setting time to NEC display only sets hours and minutes
+	const syncTimeJob = new CronJob('0 */10 * * * *', () => syncDatetimeToDisplay());
+	syncTimeJob.start();
 })().catch((error: any) => console.error(error));

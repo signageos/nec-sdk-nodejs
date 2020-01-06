@@ -6,7 +6,7 @@ import * as Debug from 'debug';
 import * as AsyncLock from 'async-lock';
 const debug = Debug('@signageos/display-linux:CPUFanManager');
 
-export async function manageCpuFan(display: IDisplay, systemAPI: ISystemAPI) {
+export function manageCpuFan(display: IDisplay, systemAPI: ISystemAPI) {
 	const INTERVAL = 5e3;
 	if (display.supports(DisplayCapability.CPU_FAN)) {
 		setInterval(
