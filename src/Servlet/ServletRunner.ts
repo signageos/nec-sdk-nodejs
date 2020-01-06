@@ -1,4 +1,6 @@
 import * as childProcess from 'child_process';
+import * as fs from 'fs-extra';
+import * as path from 'path';
 import IServletRunner from '@signageos/front-display/es6/Servlet/IServletRunner';
 import { IFilePath } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import IFileSystem from '../FileSystem/IFileSystem';
@@ -10,7 +12,10 @@ export default class ServletRunner implements IServletRunner {
 	private closed: boolean = false;
 	private processes: { [key: string]: childProcess.ChildProcess } = {};
 
-	constructor(private fileSystem: IFileSystem) {}
+	constructor(
+		private fileSystem: IFileSystem,
+		private pidFileDir: string,
+	) {}
 
 	public async run(entryPoint: IFilePath, env?: { [p: string]: any }): Promise<void> {
 		if (this.closed) {
@@ -30,6 +35,7 @@ export default class ServletRunner implements IServletRunner {
 			}
 
 			delete this.processes[uniqueKey];
+			await this.deletePidFile(uniqueKey);
 
 			if (!this.closed) {
 				const TIMEOUT_BEFORE_RESTART = 1e3;
@@ -42,6 +48,7 @@ export default class ServletRunner implements IServletRunner {
 			delete this.processes[uniqueKey];
 		});
 		this.processes[uniqueKey] = servletProcess;
+		await this.createPidFile(uniqueKey, servletProcess.pid);
 	}
 
 	public getRunningCount() {
@@ -53,5 +60,20 @@ export default class ServletRunner implements IServletRunner {
 		for (let key of Object.keys(this.processes)) {
 			this.processes[key].kill();
 		}
+	}
+
+	private async createPidFile(uid: string, pid: number) {
+		const filePath = this.getPidFilePath(uid);
+		await fs.writeFile(filePath, pid.toString());
+	}
+
+	private async deletePidFile(uid: string) {
+		const filePath = this.getPidFilePath(uid);
+		await fs.remove(filePath);
+	}
+
+	private getPidFilePath(uid: string) {
+		const fileName = uid + '.pid';
+		return path.join(this.pidFileDir, fileName);
 	}
 }

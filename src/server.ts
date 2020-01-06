@@ -44,6 +44,7 @@ import VideoThumbnailExtractor from './FileSystem/Video/VideoThumbnailExtractor'
 import { createMonitors } from './Driver/Monitors/monitorsFactory';
 import Network from './Network/Network';
 import { notifyServerAlive, notifyServerStopped } from './Application/serverStatus';
+import ServletRunner from './Servlet/ServletRunner';
 const parameters = require('../config/parameters');
 
 let raven: Raven.Client | undefined = undefined;
@@ -87,6 +88,8 @@ if (parameters.raven.enabled) {
 	};
 	const videoPlayer = new ServerVideoPlayer(parameters.video.max_count, createVideo);
 
+	const servletRunner = new ServletRunner(fileSystem, parameters.paths.servletPidFilesPath);
+
 	const nativeDriver = new ManagementDriver(
 		parameters.url.socketUri,
 		parameters.server.file_system_url,
@@ -97,6 +100,7 @@ if (parameters.raven.enabled) {
 		overlayRenderer,
 		fileDetailsProvider,
 		display,
+		servletRunner,
 		sensors,
 		monitors,
 		network,

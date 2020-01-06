@@ -15,6 +15,8 @@ env_fs_root_path=/var/lib/signageos-display-linux/fs
 env_fs_system_path=/var/lib/signageos-display-linux/system
 env_fs_app_files_path=/usr/share/signageos-display-linux
 
+servlet_pid_files_path=/var/run/signageos/servlets
+
 depend() {
     need localmount loopback
     use udev logger
@@ -30,8 +32,24 @@ reload_storage_units() {
     fi
 }
 
+_ensure_pidfiles_path() {
+    mkdir -p "$servlet_pid_files_path"
+    chown $command_user:$command_group "$servlet_pid_files_path"
+}
+
+_stop_all_servlets() {
+    # attempt to gracefully stop servlets, sigkill after 5s
+    for pidfile in `ls "$servlet_pid_files_path"`; do
+        pidfile_path="$servlet_pid_files_path/$pidfile"
+        start-stop-daemon --stop --pidfile "$pidfile_path" --signal TERM --retry 5
+    done
+    # finally remove entire servlet directory
+    rm -rf "$servlet_pid_files_path"
+}
+
 start() {
     ebegin "starting signageOS server"
+    _ensure_pidfiles_path
     start-stop-daemon --start \
         --pidfile $pidfile \
         --make-pidfile \
@@ -40,6 +58,7 @@ start() {
         --env fs_root_path=$env_fs_root_path \
         --env fs_system_path=$env_fs_system_path \
         --env fs_app_files_path=$env_fs_app_files_path \
+        --env servlet_pid_files_path=$servlet_pid_files_path \
         --stdout-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.info'" \
         --stderr-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.err'" \
         --background \
@@ -51,6 +70,8 @@ stop() {
     ebegin "stopping signageOS server"
     start-stop-daemon --stop \
         --pidfile $pidfile \
-        --signal $stopsig
+        --signal $stopsig \
+        --retry 10
+    _stop_all_servlets
     eend $? "failed to stop signageOS server"
 }

@@ -28,6 +28,7 @@ exports = module.exports = Object.assign({}, basicParameters, {
 		rootPath,
 		distPath,
 		packagesPath,
+		servletPidFilesPath: process.env.servlet_pid_files_path,
 	},
 	app: {
 		name,
