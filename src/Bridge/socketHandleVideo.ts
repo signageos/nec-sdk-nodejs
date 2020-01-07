@@ -31,10 +31,10 @@ function bindVideoMessages(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 		try {
 			await handleVideoMessage(videoPlayer, message.message);
 			debug('video message success', message);
-			await socket.sendMessage(message.invocationUid, { success: true, response: {} });
+			await socket.sendMessageExpectingResponse(message.invocationUid, { success: true, response: {} });
 		} catch (error) {
 			debug('video message error', message);
-			await socket.sendMessage(message.invocationUid, { success: false });
+			await socket.sendMessageExpectingResponse(message.invocationUid, { success: false });
 		}
 	});
 }
@@ -79,15 +79,15 @@ async function handleVideoMessage(
 function forwardVideoEventsToClient(socket: ISocket, videoPlayer: IServerVideoPlayer) {
 	const onEnded = async (event: IVideoEvent) => {
 		debug('video ended', event);
-		await socket.sendMessage(VideoEnded, { ...event.srcArguments });
+		await socket.sendMessageExpectingResponse(VideoEnded, { ...event.srcArguments });
 	};
 	const onStopped = async (event: IVideoEvent) => {
 		debug('video stopped', event);
-		await socket.sendMessage(VideoStopped, { ...event.srcArguments });
+		await socket.sendMessageExpectingResponse(VideoStopped, { ...event.srcArguments });
 	};
 	const onError = async (event: IVideoEvent) => {
 		debug('video error', event);
-		await socket.sendMessage(VideoError, {
+		await socket.sendMessageExpectingResponse(VideoError, {
 			...event.srcArguments,
 			data: event.data,
 		});

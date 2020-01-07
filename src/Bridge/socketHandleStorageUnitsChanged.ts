@@ -3,7 +3,7 @@ import IFileSystem from '../FileSystem/IFileSystem';
 
 export default function socketHandleStorageUnitsChanged(socket: ISocket, fileSystem: IFileSystem) {
 	const eventListener = async () => {
-		await socket.sendMessage('storage_units_changed', {});
+		await socket.sendMessageExpectingResponse('storage_units_changed', {});
 	};
 
 	fileSystem.onStorageUnitsChanged(eventListener);

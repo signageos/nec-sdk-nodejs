@@ -39,9 +39,9 @@ class MockSocketConnection implements ISocketConnection {
 		this.eventEmitter.emit('send_message', { event, payload });
 	}
 
-	public sendMessageExpectingResponse(_event: string, _payload: any): Promise<void> {
+	public async sendMessageExpectingResponse(event: string, payload: any): Promise<void> {
 		// TODO
-		return new Promise<void>(() => {/* do nothing */});
+		this.eventEmitter.emit('send_message', { event, payload });
 	}
 
 	public async disconnect(code?: number, reason?: string): Promise<void> {

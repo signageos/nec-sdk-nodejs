@@ -39,10 +39,10 @@ export default function socketHandleMessage(
 				message.message,
 			);
 			debug('bridge message success', message);
-			await socket.sendMessage(message.invocationUid, { success: true, response });
+			await socket.sendMessageExpectingResponse(message.invocationUid, { success: true, response });
 		} catch (error) {
 			debug('bridge message error', message);
-			await socket.sendMessage(message.invocationUid, { success: false });
+			await socket.sendMessageExpectingResponse(message.invocationUid, { success: false });
 		} finally {
 			clientWatchdog.notifyPendingTaskFinished();
 		}

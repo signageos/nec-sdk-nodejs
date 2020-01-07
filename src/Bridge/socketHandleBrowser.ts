@@ -15,10 +15,10 @@ export default function socketHandleBrowser(
 		try {
 			await handleBrowserMessage(systemAPI, message.message);
 			debug('browser message success', message);
-			await socket.sendMessage(message.invocationUid, { success: true, response: {} });
+			await socket.sendMessageExpectingResponse(message.invocationUid, { success: true, response: {} });
 		} catch (error) {
 			debug('browser message error', message);
-			await socket.sendMessage(message.invocationUid, { success: false });
+			await socket.sendMessageExpectingResponse(message.invocationUid, { success: false });
 		}
 	});
 }

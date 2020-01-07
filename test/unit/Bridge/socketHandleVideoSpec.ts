@@ -15,6 +15,7 @@ function createMockSocket() {
 	return {
 		bindMessage: sinon.spy(),
 		sendMessage: sinon.stub().resolves(),
+		sendMessageExpectingResponse: sinon.stub().resolves(),
 		getDisconnectedPromise() {
 			return new Promise(() => {/* do nothing */});
 		},
@@ -30,10 +31,10 @@ describe('Bridge.socketHandleVideo', function () {
 				prepare: sinon.stub().resolves(),
 				addEventListener: sinon.spy(),
 			};
-			const sendMessage = sinon.stub().resolves();
+			const sendMessageExpectingResponse = sinon.stub().resolves();
 			const socket = {
 				...createMockSocket(),
-				sendMessage,
+				sendMessageExpectingResponse,
 				async bindMessage(_event: string, callback: (message: IBridgeMessage<any>) => Promise<void>) {
 					await callback({
 						invocationUid: 'message1',
@@ -53,8 +54,8 @@ describe('Bridge.socketHandleVideo', function () {
 					videoPlayer.prepare.getCall(0).args.should.deepEqual([
 						'video1', 1, 2, 1280, 720, Orientation.LANDSCAPE, false, {},
 					]);
-					sendMessage.callCount.should.equal(1);
-					sendMessage.getCall(0).args.should.deepEqual(['message1', { success: true, response: {} }]);
+					sendMessageExpectingResponse.callCount.should.equal(1);
+					sendMessageExpectingResponse.getCall(0).args.should.deepEqual(['message1', { success: true, response: {} }]);
 					done();
 				},
 			};
@@ -66,10 +67,10 @@ describe('Bridge.socketHandleVideo', function () {
 				prepare: sinon.stub().rejects(),
 				addEventListener: sinon.spy(),
 			};
-			const sendMessage = sinon.stub().resolves();
+			const sendMessageExpectingResponse = sinon.stub().resolves();
 			const socket = {
 				...createMockSocket(),
-				sendMessage,
+				sendMessageExpectingResponse,
 				async bindMessage(_event: string, callback: (message: IBridgeMessage<any>) => Promise<void>) {
 					await callback({
 						invocationUid: 'message2',
@@ -89,8 +90,8 @@ describe('Bridge.socketHandleVideo', function () {
 					videoPlayer.prepare.getCall(0).args.should.deepEqual([
 						'video2', 0, 5, 1920, 1080, Orientation.LANDSCAPE, false, {},
 					]);
-					sendMessage.callCount.should.equal(1);
-					sendMessage.getCall(0).args.should.deepEqual(['message2', { success: false }]);
+					sendMessageExpectingResponse.callCount.should.equal(1);
+					sendMessageExpectingResponse.getCall(0).args.should.deepEqual(['message2', { success: false }]);
 					done();
 				},
 			};
@@ -105,10 +106,10 @@ describe('Bridge.socketHandleVideo', function () {
 				play: sinon.stub().resolves(),
 				addEventListener: sinon.spy(),
 			};
-			const sendMessage = sinon.stub().resolves();
+			const sendMessageExpectingResponse = sinon.stub().resolves();
 			const socket = {
 				...createMockSocket(),
-				sendMessage,
+				sendMessageExpectingResponse,
 				async bindMessage(_event: string, callback: (message: IBridgeMessage<any>) => Promise<void>) {
 					await callback({
 						invocationUid: 'message3',
@@ -127,8 +128,8 @@ describe('Bridge.socketHandleVideo', function () {
 					videoPlayer.play.getCall(0).args.should.deepEqual([
 						'video3', 10, 15, 1280, 720, Orientation.LANDSCAPE, false,
 					]);
-					sendMessage.callCount.should.equal(1);
-					sendMessage.getCall(0).args.should.deepEqual(['message3', { success: true, response: {} }]);
+					sendMessageExpectingResponse.callCount.should.equal(1);
+					sendMessageExpectingResponse.getCall(0).args.should.deepEqual(['message3', { success: true, response: {} }]);
 					done();
 				},
 			};
@@ -140,10 +141,10 @@ describe('Bridge.socketHandleVideo', function () {
 				play: sinon.stub().rejects(),
 				addEventListener: sinon.spy(),
 			};
-			const sendMessage = sinon.stub().resolves();
+			const sendMessageExpectingResponse = sinon.stub().resolves();
 			const socket = {
 				...createMockSocket(),
-				sendMessage,
+				sendMessageExpectingResponse,
 				async bindMessage(_event: string, callback: (message: IBridgeMessage<any>) => Promise<void>) {
 					await callback({
 						invocationUid: 'message4',
@@ -162,8 +163,8 @@ describe('Bridge.socketHandleVideo', function () {
 					videoPlayer.play.getCall(0).args.should.deepEqual([
 						'video4', 20, 20, 1920, 1080, Orientation.LANDSCAPE, false,
 					]);
-					sendMessage.callCount.should.equal(1);
-					sendMessage.getCall(0).args.should.deepEqual(['message4', { success: false }]);
+					sendMessageExpectingResponse.callCount.should.equal(1);
+					sendMessageExpectingResponse.getCall(0).args.should.deepEqual(['message4', { success: false }]);
 					done();
 				},
 			};
@@ -178,10 +179,10 @@ describe('Bridge.socketHandleVideo', function () {
 				stop: sinon.stub().resolves(),
 				addEventListener: sinon.spy(),
 			};
-			const sendMessage = sinon.stub().resolves();
+			const sendMessageExpectingResponse = sinon.stub().resolves();
 			const socket = {
 				...createMockSocket(),
-				sendMessage,
+				sendMessageExpectingResponse,
 				async bindMessage(_event: string, callback: (message: IBridgeMessage<any>) => Promise<void>) {
 					await callback({
 						invocationUid: 'message5',
@@ -191,8 +192,8 @@ describe('Bridge.socketHandleVideo', function () {
 					videoPlayer.stop.getCall(0).args.should.deepEqual([
 						'video5', 10, 15, 1280, 720,
 					]);
-					sendMessage.callCount.should.equal(1);
-					sendMessage.getCall(0).args.should.deepEqual(['message5', { success: true, response: {} }]);
+					sendMessageExpectingResponse.callCount.should.equal(1);
+					sendMessageExpectingResponse.getCall(0).args.should.deepEqual(['message5', { success: true, response: {} }]);
 					done();
 				},
 			};
@@ -204,10 +205,10 @@ describe('Bridge.socketHandleVideo', function () {
 				stop: sinon.stub().rejects(),
 				addEventListener: sinon.spy(),
 			};
-			const sendMessage = sinon.stub().resolves();
+			const sendMessageExpectingResponse = sinon.stub().resolves();
 			const socket = {
 				...createMockSocket(),
-				sendMessage,
+				sendMessageExpectingResponse,
 				async bindMessage(_event: string, callback: (message: IBridgeMessage<any>) => Promise<void>) {
 					await callback({
 						invocationUid: 'message6',
@@ -217,8 +218,8 @@ describe('Bridge.socketHandleVideo', function () {
 					videoPlayer.stop.getCall(0).args.should.deepEqual([
 						'video6', 20, 20, 1920, 1080,
 					]);
-					sendMessage.callCount.should.equal(1);
-					sendMessage.getCall(0).args.should.deepEqual(['message6', { success: false }]);
+					sendMessageExpectingResponse.callCount.should.equal(1);
+					sendMessageExpectingResponse.getCall(0).args.should.deepEqual(['message6', { success: false }]);
 					done();
 				},
 			};
@@ -233,15 +234,15 @@ describe('Bridge.socketHandleVideo', function () {
 				clearAll: sinon.stub().resolves(),
 				addEventListener: sinon.spy(),
 			};
-			const sendMessage = sinon.stub().resolves();
+			const sendMessageExpectingResponse = sinon.stub().resolves();
 			const socket = {
 				...createMockSocket(),
-				sendMessage,
+				sendMessageExpectingResponse,
 				async bindMessage(_event: string, callback: (message: IBridgeMessage<any>) => Promise<void>) {
 					await callback({ invocationUid: 'message7', message: { type: StopAllVideos } });
 					videoPlayer.clearAll.callCount.should.equal(1);
-					sendMessage.callCount.should.equal(1);
-					sendMessage.getCall(0).args.should.deepEqual(['message7', { success: true, response: {} }]);
+					sendMessageExpectingResponse.callCount.should.equal(1);
+					sendMessageExpectingResponse.getCall(0).args.should.deepEqual(['message7', { success: true, response: {} }]);
 					done();
 				},
 			};
@@ -270,8 +271,8 @@ describe('Bridge.socketHandleVideo', function () {
 				},
 			};
 			eventEmitter.emit('ended', event);
-			socket.sendMessage.callCount.should.equal(1);
-			socket.sendMessage.getCall(0).args.should.deepEqual([VideoEnded, event.srcArguments]);
+			socket.sendMessageExpectingResponse.callCount.should.equal(1);
+			socket.sendMessageExpectingResponse.getCall(0).args.should.deepEqual([VideoEnded, event.srcArguments]);
 		});
 
 		it('should emit "stopped" send to socket when video is manually stopped', function () {
@@ -293,8 +294,8 @@ describe('Bridge.socketHandleVideo', function () {
 				},
 			};
 			eventEmitter.emit('stopped', event);
-			socket.sendMessage.callCount.should.equal(1);
-			socket.sendMessage.getCall(0).args.should.deepEqual([VideoStopped, event.srcArguments]);
+			socket.sendMessageExpectingResponse.callCount.should.equal(1);
+			socket.sendMessageExpectingResponse.getCall(0).args.should.deepEqual([VideoStopped, event.srcArguments]);
 		});
 
 		it('should emit "error" send to socket when video emits an error', function () {
@@ -317,8 +318,8 @@ describe('Bridge.socketHandleVideo', function () {
 				data: { message: 'error' },
 			};
 			eventEmitter.emit('error', event);
-			socket.sendMessage.callCount.should.equal(1);
-			socket.sendMessage.getCall(0).args.should.deepEqual([
+			socket.sendMessageExpectingResponse.callCount.should.equal(1);
+			socket.sendMessageExpectingResponse.getCall(0).args.should.deepEqual([
 				VideoError,
 				{
 					...event.srcArguments,

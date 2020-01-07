@@ -8,7 +8,7 @@ export default function socketHandleSensors(socket: ISocket, nativeDriver: IMana
 
 function listenToProximitySensorChanges(socket: ISocket, nativeDriver: IManagementDriver) {
 	const eventListener = async (detected: boolean) => {
-		await socket.sendMessage(ProximitySensorChange, {
+		await socket.sendMessageExpectingResponse(ProximitySensorChange, {
 			type: ProximitySensorChange,
 			detected,
 		});
