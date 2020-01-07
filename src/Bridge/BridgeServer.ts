@@ -22,6 +22,7 @@ import ICECListener from '../CEC/ICECListener';
 import ISystemSettings from '../SystemSettings/ISystemSettings';
 import IDisplay from '../Driver/Display/IDisplay';
 import { ISystemAPI } from '../API/SystemAPI';
+import ClientWatchdog from '../Application/ClientWatchdog';
 
 export default class BridgeServer {
 
@@ -151,6 +152,7 @@ export default class BridgeServer {
 
 	private handleSocketMessage() {
 		const debug = Debug('@signageos/display-linux:Bridge:BridgeServer:websocket');
+		const clientWatchdog = new ClientWatchdog(this.systemAPI);
 		this.socketServer.server.bindConnection((socket: ISocket) => {
 			debug('websocket client connected');
 			socketHandleMessage(
@@ -162,11 +164,12 @@ export default class BridgeServer {
 				this.systemSettings,
 				this.overlayRenderer,
 				this.systemAPI,
+				clientWatchdog,
 			);
 			socketHandleVideo(socket, this.videoPlayer);
 			socketHandleBrowser(socket, this.systemAPI);
 			socketHandleCEC(socket, this.cecListener);
-			socketHandleApplication(socket, this.systemAPI);
+			socketHandleApplication(socket, clientWatchdog);
 			socketHandleStorageUnitsChanged(socket, this.fileSystem);
 			socketHandleSensors(socket, this.nativeDriver);
 			socket.getDisconnectedPromise().then(() => debug('websocket client disconnected'));
