@@ -4,7 +4,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as checksum from 'checksum';
 import { IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
-import { ICopyFileOptions } from '@signageos/front-display/es6/NativeDevice/IFileSystem';
+import { ICopyFileOptions, IMoveFileOptions } from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 import {
@@ -85,7 +85,7 @@ export default class FileSystem implements IFileSystem {
 		const tmpDownloadDirectory = path.dirname(tmpDownloadAbsolutePath);
 		await fs.ensureDir(tmpDownloadDirectory);
 		await downloadFile(tmpDownloadAbsolutePath, sourceUri, headers);
-		await this.moveFile(tmpDownloadFilePath, filePath, true);
+		await this.moveFile(tmpDownloadFilePath, filePath, { overwrite: true });
 	}
 
 	public async uploadFile(filePath: IFilePath, formKey: string, uri: string, headers?: { [key: string]: string }) {
@@ -176,7 +176,9 @@ export default class FileSystem implements IFileSystem {
 		if (this.isRootDirectory(sourceFilePath)) {
 			throw new Error('Can\'t move root directory');
 		}
-		if (await this.exists(destinationFilePath)) {
+
+		const destinationExists = await this.exists(destinationFilePath);
+		if (!options.overwrite && destinationExists) {
 			throw new Error('Trying to move to an existing destination');
 		}
 
@@ -191,13 +193,16 @@ export default class FileSystem implements IFileSystem {
 		const sourceAbsolutePath = this.getAbsolutePath(sourceFilePath);
 		const destinationAbsolutePath = this.getAbsolutePath(destinationFilePath);
 		if (options.hardlink) {
+			if (options.overwrite && destinationExists) {
+				await fs.remove(destinationAbsolutePath);
+			}
 			await fs.link(sourceAbsolutePath, destinationAbsolutePath);
 		} else {
-			await fs.copy(sourceAbsolutePath, destinationAbsolutePath);
+			await fs.copy(sourceAbsolutePath, destinationAbsolutePath, { overwrite: options.overwrite });
 		}
 	}
 
-	public async moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, overwrite: boolean = false) {
+	public async moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, options: IMoveFileOptions = {}) {
 		const sourceExists = await this.exists(sourceFilePath);
 		if (!sourceExists) {
 			throw new FileOrDirectoryNotFound();
@@ -206,7 +211,7 @@ export default class FileSystem implements IFileSystem {
 		if (this.isRootDirectory(sourceFilePath)) {
 			throw new Error('Can\'t move root directory');
 		}
-		if (!overwrite && await this.exists(destinationFilePath)) {
+		if (!options.overwrite && await this.exists(destinationFilePath)) {
 			throw new Error('Trying to move to an existing destination');
 		}
 
@@ -220,7 +225,7 @@ export default class FileSystem implements IFileSystem {
 
 		const sourceAbsolutePath = this.getAbsolutePath(sourceFilePath);
 		const destinationAbsolutePath = this.getAbsolutePath(destinationFilePath);
-		await fs.move(sourceAbsolutePath, destinationAbsolutePath, { overwrite });
+		await fs.move(sourceAbsolutePath, destinationAbsolutePath, { overwrite: options.overwrite });
 	}
 
 	public async getFileChecksum(filePath: IFilePath, hashType: HashAlgorithm): Promise<string> {

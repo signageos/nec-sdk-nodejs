@@ -299,7 +299,7 @@ export default async function handleMessage(
 			return {};
 
 		case FSMessages.MoveFile:
-			await fileSystem.moveFile(message.sourceFilePath, message.destinationFilePath);
+			await fileSystem.moveFile(message.sourceFilePath, message.destinationFilePath, message.options);
 			return {};
 
 		case FSMessages.ReadFile:

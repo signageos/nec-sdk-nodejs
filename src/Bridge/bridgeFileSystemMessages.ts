@@ -1,6 +1,6 @@
 import { IFilePath, IHeaders } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
-import { ICopyFileOptions } from '@signageos/front-display/es6/NativeDevice/IFileSystem';
+import { ICopyFileOptions, IMoveFileOptions } from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 
 export const ListFiles = 'FileSystem.ListFiles';
 export interface ListFiles {
@@ -42,6 +42,7 @@ export interface MoveFile {
 	type: typeof MoveFile;
 	sourceFilePath: IFilePath;
 	destinationFilePath: IFilePath;
+	options?: IMoveFileOptions;
 }
 
 export const ReadFile = 'FileSystem.ReadFile';
