@@ -386,6 +386,17 @@ describe('FileSystem', function () {
 			should(await fs.pathExists(sourceFilePath)).be.true();
 		});
 
+		it('should create hardlink of a file in a new location', async function () {
+			const fileSystem = createFileSystem();
+			const sourceFilePath = getAbsolutePath('source');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fileSystem.copyFile(getFilePathObject('source'), getFilePathObject('destination'), { hardlink: true });
+			const destinationFilePath = getAbsolutePath('destination');
+			const destinationContents = await fs.readFile(destinationFilePath);
+			destinationContents.toString().should.equal('source file');
+			should(await fs.pathExists(sourceFilePath)).be.true();
+		});
+
 		it('should copy directory to a new location', async function () {
 			const fileSystem = createFileSystem();
 			const sourceDirectoryPath = getAbsolutePath('source_dir');
@@ -413,6 +424,32 @@ describe('FileSystem', function () {
 			await fs.writeFile(destinationFilePath, 'destination file');
 			await fileSystem.copyFile(getFilePathObject('source'), getFilePathObject('destination'))
 				.should.be.rejected();
+		});
+
+		it('should overwrite already existing destination with a copy of the source file', async function () {
+			const fileSystem = createFileSystem();
+			const sourceFilePath = getAbsolutePath('source');
+			const destinationFilePath = getAbsolutePath('destination');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fs.writeFile(destinationFilePath, 'destination file');
+			await fileSystem.copyFile(getFilePathObject('source'), getFilePathObject('destination'), { overwrite: true });
+			const destinationContents = await fs.readFile(destinationFilePath);
+			destinationContents.toString().should.equal('source file');
+		});
+
+		it('should overwrite already existing destination with the hardlink of the source file', async function () {
+			const fileSystem = createFileSystem();
+			const sourceFilePath = getAbsolutePath('source');
+			const destinationFilePath = getAbsolutePath('destination');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fs.writeFile(destinationFilePath, 'destination file');
+			await fileSystem.copyFile(
+				getFilePathObject('source'),
+				getFilePathObject('destination'),
+				{ overwrite: true, hardlink: true },
+			);
+			const destinationContents = await fs.readFile(destinationFilePath);
+			destinationContents.toString().should.equal('source file');
 		});
 
 		it('should throw error for non-existent destination parent directory', async function () {
@@ -455,6 +492,17 @@ describe('FileSystem', function () {
 			await fs.writeFile(destinationFilePath, 'destination file');
 			await fileSystem.moveFile(getFilePathObject('source'), getFilePathObject('destination'))
 				.should.be.rejected();
+		});
+
+		it('should overwrite already existing location', async function () {
+			const fileSystem = createFileSystem();
+			const sourceFilePath = getAbsolutePath('source');
+			const destinationFilePath = getAbsolutePath('destination');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fs.writeFile(destinationFilePath, 'destination file');
+			await fileSystem.moveFile(getFilePathObject('source'), getFilePathObject('destination'), { overwrite: true });
+			const destinationContents = await fs.readFile(destinationFilePath);
+			destinationContents.toString().should.equal('source file');
 		});
 
 		it('should throw error for non-existent destination parent directory', async function () {
