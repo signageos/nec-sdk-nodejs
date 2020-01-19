@@ -88,11 +88,8 @@ build:raspbian:
     paths:
       - signageos-display-linux.deb
 
-build:alpine:
+.build:alpine:
   stage: build
-  tags:
-    - armhf
-    - alpine
   dependencies:
     - prepare
     - prebuild
@@ -103,7 +100,23 @@ build:alpine:
     - npx @signageos/lib@just-tools version-upgrade $VERSION
     - export VERSION=`echo $VERSION | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'` # omit branch version
     - make apk
-    - aws s3 cp ~/packages/dist/armhf "$AWS_ALPINE_REPO_S3_PATH/armhf" --recursive --exclude "*" --include "signageos-display-linux*-$VERSION-r0.apk"
+    - aws s3 cp ~/packages/dist/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos-display-linux*-$VERSION-r0.apk"
+
+build:alpine-armhf:
+  extends: .build:alpine
+  tags:
+    - alpine
+    - armhf
+  variables:
+    ARCHITECTURE: armhf
+
+build:alpine-aarch64:
+  extends: .build:alpine
+  tags:
+    - alpine
+    - aarch64
+  variables:
+    ARCHITECTURE: aarch64
 
 publish:npm:
   stage: publish
