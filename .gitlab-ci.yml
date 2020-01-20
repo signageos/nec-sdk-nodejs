@@ -110,6 +110,14 @@ build:alpine-armhf:
   variables:
     ARCHITECTURE: armhf
 
+build:alpine-armv7:
+  extends: .build:alpine
+  tags:
+    - alpine
+    - armv7
+  variables:
+    ARCHITECTURE: armv7
+
 build:alpine-aarch64:
   extends: .build:alpine
   tags:
