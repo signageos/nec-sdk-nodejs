@@ -12,6 +12,7 @@ import { IFilePath, IStorageUnit } from '@signageos/front-display/es6/NativeDevi
 import { FileOrDirectoryNotFound } from '../../../src/FileSystem/IFileSystem';
 import FileSystem from '../../../src/FileSystem/FileSystem';
 import { ISystemAPI } from '../../../src/API/SystemAPI';
+import { IVideoAPI } from '../../../src/API/VideoAPI';
 
 const parameters = require('../../../config/parameters');
 const fileSystemRoot = parameters.fileSystem.root;
@@ -27,7 +28,7 @@ const testStorageUnit = {
 } as IStorageUnit;
 
 function createFileSystem() {
-	return new FileSystem(fileSystemRoot, tmpFileSystemRoot, appFilesFileSystemRoot, 'SIGUSR2', {} as ISystemAPI);
+	return new FileSystem(fileSystemRoot, tmpFileSystemRoot, appFilesFileSystemRoot, 'SIGUSR2', {} as ISystemAPI, {} as IVideoAPI);
 }
 
 function getRootPath() {

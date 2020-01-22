@@ -58,14 +58,15 @@ if (parameters.raven.enabled) {
 (async () => {
 	const systemAPI = createSystemAPI();
 	const bridgeExpressApp = express();
+	const videoAPI = createVideoAPI();
 	const fileSystem = new FileSystem(
 		parameters.fileSystem.root,
 		parameters.fileSystem.tmp,
 		parameters.fileSystem.appFiles,
 		'SIGUSR2',
 		systemAPI,
+		videoAPI,
 	);
-	const videoAPI = createVideoAPI();
 	const fileMetadataCache = new FileMetadataCache(fileSystem);
 	const thumbnailRequestHandler = new ThumbnailRequestHandler(parameters.server.file_system_url, bridgeExpressApp, fileSystem);
 	const imageResizer = new ImageResizer(thumbnailRequestHandler);

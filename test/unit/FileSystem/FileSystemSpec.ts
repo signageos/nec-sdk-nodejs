@@ -2,13 +2,14 @@ import * as sinon from 'sinon';
 import FileSystem from '../../../src/FileSystem/FileSystem';
 import { IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { ISystemAPI } from '../../../src/API/SystemAPI';
+import { IVideoAPI } from '../../../src/API/VideoAPI';
 
 describe('FileSystem', function () {
 
 	describe('getAbsolutePath', function () {
 
 		it('should return correct path for internal storage unit', function () {
-			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI);
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI, {} as IVideoAPI);
 			const internalStorageUnit = {
 				type: 'internal',
 				capacity: 0,
@@ -24,7 +25,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should return correct path for external storage unit', function () {
-			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI);
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI, {} as IVideoAPI);
 			const externalStorageUnit = {
 				type: 'sda1',
 				capacity: 0,
@@ -40,7 +41,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should return correct path for tmp storage unit', function () {
-			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI);
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI, {} as IVideoAPI);
 			const tmpStorageUnit = fileSystem.getTmpStorageUnit();
 			const absolutePath = fileSystem.getAbsolutePath({
 				filePath: 'test3/file3',
@@ -50,7 +51,7 @@ describe('FileSystem', function () {
 		});
 
 		it('should return correct path for app files storage unit', function () {
-			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI);
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI, {} as IVideoAPI);
 			const appFilesStorageUnit = fileSystem.getAppFilesStorageUnit();
 			const absolutePath = fileSystem.getAbsolutePath({
 				filePath: 'test4/file4',
@@ -63,7 +64,7 @@ describe('FileSystem', function () {
 	describe('onStorageUnitsChanged', function () {
 
 		it('should call listener every time storage units changed', function () {
-			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'TESTSIGNAL' as any, {} as ISystemAPI);
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'TESTSIGNAL' as any, {} as ISystemAPI, {} as IVideoAPI);
 			const listener = sinon.spy();
 			fileSystem.onStorageUnitsChanged(listener);
 			process.emit('TESTSIGNAL' as any);
@@ -74,7 +75,7 @@ describe('FileSystem', function () {
 	describe('removeStorageUnitsChangedListener', function () {
 
 		it('should remove listener', function () {
-			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'TESTSIGNAL' as any, {} as ISystemAPI);
+			const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'TESTSIGNAL' as any, {} as ISystemAPI, {} as IVideoAPI);
 			const listener = sinon.spy();
 			fileSystem.onStorageUnitsChanged(listener);
 			fileSystem.removeStorageUnitsChangedListener(listener);

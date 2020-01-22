@@ -4,6 +4,7 @@ import { IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSyst
 import { ISystemAPI } from '../../../../src/API/SystemAPI';
 import ThumbnailRequestHandler from '../../../../src/FileSystem/Thumbnail/ThumbnailRequestHandler';
 import VideoThumbnailExtractor from '../../../../src/FileSystem/Video/VideoThumbnailExtractor';
+import { IVideoAPI } from '../../../../src/API/VideoAPI';
 
 describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 
@@ -13,7 +14,7 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 
 		const imageResizer = {} as any;
 		const videoAPI = {} as any;
-		const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI);
+		const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI, {} as IVideoAPI);
 		const thumbnailRequestHandler = new ThumbnailRequestHandler('http://example.com', { get: () => undefined } as any, fileSystem);
 		const videoThumbnailExtractor = new VideoThumbnailExtractor(thumbnailRequestHandler, imageResizer, videoAPI);
 
