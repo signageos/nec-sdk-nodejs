@@ -12,6 +12,7 @@ import { promisify } from 'util';
 import { IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { ISystemAPI } from '../../../../src/API/SystemAPI';
 import ThumbnailRequestHandler from '../../../../src/FileSystem/Thumbnail/ThumbnailRequestHandler';
+import { IVideoAPI } from '../../../../src/API/VideoAPI';
 const parameters = require('../../../../config/parameters');
 
 describe('FileSystem.Image.ImageResizer', function () {
@@ -47,7 +48,7 @@ describe('FileSystem.Image.ImageResizer', function () {
 				return 'image/png';
 			},
 		} as ISystemAPI;
-		const fileSystem = new FileSystem(FILE_SYSTEM_BASE_PATH, TMP_BASE_PATH, '/app', 'SIGUSR2', systemAPI);
+		const fileSystem = new FileSystem(FILE_SYSTEM_BASE_PATH, TMP_BASE_PATH, '/app', 'SIGUSR2', systemAPI, {} as IVideoAPI);
 		const thumbnailRequestHandler = new ThumbnailRequestHandler(FILE_SYSTEM_URL, expressApp, fileSystem);
 		const imageResizer = new ImageResizer(thumbnailRequestHandler);
 

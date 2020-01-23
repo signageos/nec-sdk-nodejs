@@ -4,6 +4,7 @@ import FileSystem from "../../../../src/FileSystem/FileSystem";
 import { IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { ISystemAPI } from '../../../../src/API/SystemAPI';
 import ThumbnailRequestHandler from '../../../../src/FileSystem/Thumbnail/ThumbnailRequestHandler';
+import { IVideoAPI } from '../../../../src/API/VideoAPI';
 
 describe('FileSystem.Image.ImageResizer', function () {
 
@@ -11,7 +12,7 @@ describe('FileSystem.Image.ImageResizer', function () {
 
 		const lastModifiedAt = 1574858888870;
 
-		const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI);
+		const fileSystem = new FileSystem('/base/directory', '/tmp', '/app', 'SIGUSR2', {} as ISystemAPI, {} as IVideoAPI);
 		const thumbnailRequestHandler = new ThumbnailRequestHandler('http://example.com', { get: () => undefined } as any, fileSystem);
 		const imageResizer = new ImageResizer(thumbnailRequestHandler);
 

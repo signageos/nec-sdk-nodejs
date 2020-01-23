@@ -24,6 +24,7 @@ import { uploadFile } from './uploadFile';
 import { unzip } from './archive';
 import { trimSlashesAndDots } from './helper';
 import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
+import { IVideoAPI } from '../API/VideoAPI';
 
 const EVENT_STORAGE_UNITS_CHANGED = 'storage_units_changed';
 
@@ -37,6 +38,7 @@ export default class FileSystem implements IFileSystem {
 		private appFilesDirectory: string,
 		private storageUnitsChangedSignal: NodeJS.Signals,
 		private systemAPI: ISystemAPI,
+		private videoAPI: IVideoAPI,
 	) {
 		this.eventEmitter = new EventEmitter();
 		this.listenToStorageUnitsChanged();
@@ -119,6 +121,12 @@ export default class FileSystem implements IFileSystem {
 		let mimeType: string | undefined = undefined;
 		try {
 			mimeType = await this.systemAPI.getFileMimeType(absolutePath);
+			if (mimeType === 'image/x-tga') {
+				const mediaCodec = await this.videoAPI.getVideoCodec(absolutePath);
+				if (mediaCodec === 'mpeg2video') {
+					mimeType = 'video/mpeg';
+				}
+			}
 		} catch (error) {
 			console.warn('failed to get mime type', error);
 		}
