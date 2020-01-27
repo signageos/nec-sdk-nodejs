@@ -7,7 +7,8 @@ stages:
   - test
   - prebuild
   - build
-  - publish
+  - publish:alpine
+  - publish:npm
   - release
 
 cache:
@@ -100,7 +101,12 @@ build:raspbian:
     - npx @signageos/lib@just-tools version-upgrade $VERSION
     - export VERSION=`echo $VERSION | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'` # omit branch version
     - make apk
-    - aws s3 cp ~/packages/dist/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos-display-linux*-$VERSION-r0.apk"
+    - mkdir -p packages/signageos-display-linux/$ARCHITECTURE
+    - cp ~/packages/dist/$ARCHITECTURE/signageos-display-linux*-$VERSION-r0.apk packages/signageos-display-linux/$ARCHITECTURE
+  artifacts:
+    when: on_success
+    paths:
+      - packages/signageos-display-linux/$ARCHITECTURE
 
 build:alpine-armhf:
   extends: .build:alpine
@@ -128,8 +134,42 @@ build:alpine-aarch64:
   variables:
     ARCHITECTURE: aarch64
 
+.publish:alpine:
+  image: $CI_REGISTRY/signageos/docker-alpine:master
+  stage: publish:alpine
+  before_script: []
+  script:
+    - export VERSION=`cat ./VERSION`
+    - aws s3 cp packages/signageos-display-linux/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos-display-linux*-$VERSION-r0.apk"
+
+publish:alpine-armhf:
+  extends: .publish:alpine
+  dependencies:
+    - prepare
+    - build:alpine-armhf
+  variables:
+    ARCHITECTURE: armhf
+
+publish:alpine-armv7:
+  allow_failure: true
+  extends: .publish:alpine
+  dependencies:
+    - prepare
+    - build:alpine-armv7
+  variables:
+    ARCHITECTURE: armv7
+
+publish:alpine-aarch64:
+  allow_failure: true
+  extends: .publish:alpine
+  dependencies:
+    - prepare
+    - build:alpine-aarch64
+  variables:
+    ARCHITECTURE: aarch64
+
 publish:npm:
-  stage: publish
+  stage: publish:npm
   dependencies:
     - prepare
     - prebuild
