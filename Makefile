@@ -28,7 +28,7 @@ apk: dist
 	cp -r $(DIST)/client $(ALPINE_DIST)/
 	cp -r $(DIST)/server $(ALPINE_DIST)/
 	cp alpine/* $(ALPINE_DIST)
-	sed -i "s/pkgver=\"x\"/pkgver=\"${VERSION}\"/" $(ALPINE_DIST)/APKBUILD
+	sed -i "s/pkgver=\"__pkg_version_placeholder__\"/pkgver=\"${VERSION}\"/" $(ALPINE_DIST)/APKBUILD
 	tools/make-package-json-public.js $(ALPINE_DIST)/server/package.json
 	cd $(ALPINE_DIST)/server; npm install
 	cd $(ALPINE_DIST); tar -czf display-linux.tar.gz client server
