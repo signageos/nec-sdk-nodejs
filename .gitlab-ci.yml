@@ -111,6 +111,7 @@ build:alpine-armhf:
     ARCHITECTURE: armhf
 
 build:alpine-armv7:
+  allow_failure: true
   extends: .build:alpine
   tags:
     - alpine
@@ -119,6 +120,7 @@ build:alpine-armv7:
     ARCHITECTURE: armv7
 
 build:alpine-aarch64:
+  allow_failure: true
   extends: .build:alpine
   tags:
     - alpine
