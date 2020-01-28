@@ -139,13 +139,11 @@ build:alpine-aarch64:
   stage: publish:alpine
   before_script: []
   script:
-    - export VERSION=`cat ./VERSION`
-    - aws s3 cp packages/signageos-display-linux/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos-display-linux*-$VERSION-r0.apk"
+    - aws s3 cp packages/signageos-display-linux/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos-display-linux*-r0.apk"
 
 publish:alpine-armhf:
   extends: .publish:alpine
   dependencies:
-    - prepare
     - build:alpine-armhf
   variables:
     ARCHITECTURE: armhf
@@ -154,7 +152,6 @@ publish:alpine-armv7:
   allow_failure: true
   extends: .publish:alpine
   dependencies:
-    - prepare
     - build:alpine-armv7
   variables:
     ARCHITECTURE: armv7
@@ -163,7 +160,6 @@ publish:alpine-aarch64:
   allow_failure: true
   extends: .publish:alpine
   dependencies:
-    - prepare
     - build:alpine-aarch64
   variables:
     ARCHITECTURE: aarch64
