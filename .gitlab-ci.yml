@@ -96,6 +96,7 @@ build:raspbian:
     - prebuild
   before_script: []
   script:
+    - sudo apk update
     - rm -rf ~/packages
     - export VERSION=`cat ./VERSION`
     - npx @signageos/lib@just-tools version-upgrade $VERSION
