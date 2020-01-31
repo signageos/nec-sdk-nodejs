@@ -34,7 +34,7 @@ export default class EmulatedDisplay implements IDisplay {
 		throw new Error('Not implemented');
 	}
 
-	public setBrightness(_brightness: number): Promise<void> {
+	public async setBrightness(_brightness: number): Promise<void> {
 		throw new Error('Not implemented');
 	}
 
@@ -46,19 +46,19 @@ export default class EmulatedDisplay implements IDisplay {
 		await this.systemSettings.setVolume(volume);
 	}
 
-	public getTimers(): Promise<ITimer[]> {
+	public async getTimers(): Promise<ITimer[]> {
 		throw new Error('Not implemented');
 	}
 
-	public setTimer(_index: number, _timeOn: string | null, _timeOff: string | null, _days: TimerWeekday[]): Promise<void> {
+	public async setTimer(_index: number, _timeOn: string | null, _timeOff: string | null, _days: TimerWeekday[]): Promise<void> {
 		throw new Error('Not implemented');
 	}
 
-	public openVideoInput(_videoInput: VideoInput): Promise<void> {
+	public async openVideoInput(_videoInput: VideoInput): Promise<void> {
 		throw new Error('Not implemented');
 	}
 
-	public closeVideoInput(): Promise<void> {
+	public async closeVideoInput(): Promise<void> {
 		throw new Error('Not implemented');
 	}
 
@@ -70,15 +70,15 @@ export default class EmulatedDisplay implements IDisplay {
 		// do nothing
 	}
 
-	public cpuFanOn(): Promise<void> {
+	public async cpuFanOn(): Promise<void> {
 		throw new Error('Not implemented');
 	}
 
-	public cpuFanOff(): Promise<void> {
+	public async cpuFanOff(): Promise<void> {
 		throw new Error('Not implemented');
 	}
 
-	public setOSDOrientation(_orientation: Orientation): Promise<void> {
+	public async setOSDOrientation(_orientation: Orientation): Promise<void> {
 		throw new Error('Not implemented');
 	}
 
