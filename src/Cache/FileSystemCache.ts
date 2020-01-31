@@ -53,7 +53,9 @@ export default class FileSystemCache implements ICache {
 	public async deleteOne(uid: string): Promise<void> {
 		const cacheDir = await this.getCacheDirectory();
 		const filePath = this.getFilePath(uid, cacheDir);
-		await this.fileSystem.deleteFile(filePath);
+		if (await this.fileSystem.exists(filePath)) {
+			await this.fileSystem.deleteFile(filePath);
+		}
 	}
 
 	public async getStorageInfo(): Promise<ICacheStorageInfo> {
