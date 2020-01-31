@@ -316,7 +316,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async setManualTimeWithTimezone(timestampMs: number, timezone: string): Promise<void> {
-		const datetimeString = moment.unix(timestampMs).format('YYYY-MM-DD HH:mm:ss');
+		const datetimeString = moment(timestampMs).format('YYYY-MM-DD HH:mm:ss');
 		await this.systemAPI.setDatetime(datetimeString);
 		await this.systemAPI.setTimezone(timezone);
 		await this.display.syncDatetimeWithSystem();
