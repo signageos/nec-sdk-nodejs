@@ -45,6 +45,13 @@ export interface MoveFile {
 	options?: IMoveFileOptions;
 }
 
+export const Link = 'FileSystem.Link';
+export interface Link {
+	type: typeof Link;
+	sourceFilePath: IFilePath;
+	destinationFilePath: IFilePath;
+}
+
 export const ReadFile = 'FileSystem.ReadFile';
 export interface ReadFile {
 	type: typeof ReadFile;

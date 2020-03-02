@@ -96,6 +96,14 @@ class FrontFileSystem implements IFileSystem {
 		});
 	}
 
+	public async link(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void> {
+		await this.bridge.invoke<FSMessages.Link, any>({
+			type: FSMessages.Link,
+			sourceFilePath,
+			destinationFilePath,
+		});
+	}
+
 	public async writeFile(filePath: IFilePath, contents: string): Promise<void> {
 		await this.bridge.invoke<FSMessages.WriteFile, any>({
 			type: FSMessages.WriteFile,

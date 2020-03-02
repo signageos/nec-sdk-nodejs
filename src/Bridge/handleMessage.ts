@@ -90,6 +90,7 @@ export default async function handleMessage(
 		FSMessages.DeleteFile |
 		FSMessages.CopyFile |
 		FSMessages.MoveFile |
+		FSMessages.Link |
 		FSMessages.ReadFile |
 		FSMessages.WriteFile |
 		FSMessages.GetFileDetails |
@@ -300,6 +301,10 @@ export default async function handleMessage(
 
 		case FSMessages.MoveFile:
 			await fileSystem.moveFile(message.sourceFilePath, message.destinationFilePath, message.options);
+			return {};
+
+		case FSMessages.Link:
+			await fileSystem.link(message.sourceFilePath, message.destinationFilePath);
 			return {};
 
 		case FSMessages.ReadFile:

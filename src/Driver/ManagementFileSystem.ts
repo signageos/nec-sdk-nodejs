@@ -75,6 +75,10 @@ export default class ManagementFileSystem implements IFileSystem {
 		return this.fileSystem.moveFile(sourceFilePath, destinationFilePath);
 	}
 
+	public link(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void> {
+		return this.fileSystem.link(sourceFilePath, destinationFilePath);
+	}
+
 	public getFileChecksum(filePath: IFilePath, hashType: HashAlgorithm): Promise<string> {
 		return this.fileSystem.getFileChecksum(filePath, hashType);
 	}
