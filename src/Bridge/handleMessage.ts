@@ -49,6 +49,7 @@ export default async function handleMessage(
 		GetSerialNumber |
 		GetTemperature |
 		ScreenMessages.GetOrientation |
+		ScreenMessages.GetVideoOrientation |
 		GetCurrentTimeWithTimezone |
 		SetManualTimeWithTimezone |
 		SetNTPTimeWithTimezone |
@@ -151,9 +152,19 @@ export default async function handleMessage(
 			const orientation = await systemSettings.getScreenOrientation();
 			return { orientation };
 
+		case ScreenMessages.GetVideoOrientation:
+			const videoOrientation = await systemSettings.getVideoOrientation();
+			return { videoOrientation };
+
 		case ScreenMessages.SetOrientation:
 			// TODO front display should not accept unused parameters when are not necessary
-			await nativeDriver.screenResize('unused', message.orientation, Resolution.FULL_HD, 'unused');
+			await nativeDriver.screenResize(
+				'unused',
+				message.orientation,
+				Resolution.FULL_HD,
+				'unused',
+				message.videoOrientation,
+			);
 			return {};
 
 		case ScreenMessages.PowerOff:

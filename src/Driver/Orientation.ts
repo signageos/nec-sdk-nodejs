@@ -1,9 +1,0 @@
-
-enum Orientation {
-	LANDSCAPE = 'LANDSCAPE',
-	LANDSCAPE_FLIPPED = 'LANDSCAPE_FLIPPED',
-	PORTRAIT = 'PORTRAIT',
-	PORTRAIT_FLIPPED = 'PORTRAIT_FLIPPED'
-}
-
-export default Orientation;

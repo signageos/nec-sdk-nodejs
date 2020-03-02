@@ -1,4 +1,6 @@
 // polyfill promisify for node.js 5
+import FrontSystemSettings from './SystemSettings/FrontSystemSettings';
+
 require('util').promisify = require('util.promisify');
 
 import { EventEmitter } from 'events';
@@ -40,10 +42,12 @@ if (parameters.raven.enabled) {
 		);
 	});
 	const bridge = new BridgeClient(parameters.server.bridge_url, socketClient);
+	const systemSettings = new FrontSystemSettings(bridge);
 	const nativeDriver = new FrontDriver(
 		window,
 		frontAppletPrefix,
 		bridge,
+		systemSettings,
 		socketClient,
 		parameters.server.file_system_url,
 		parameters.video.max_count,
@@ -51,6 +55,7 @@ if (parameters.raven.enabled) {
 	await nativeDriver.initialize(parameters.url.staticBaseUrl);
 	const managementNativeDriver = new FrontManagementDriver(
 		bridge,
+		systemSettings,
 		socketClient,
 		parameters.server.file_system_url,
 		() => new Promise<void>((resolve: () => void) => {

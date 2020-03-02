@@ -20,8 +20,8 @@ import IBrightness from '@signageos/front-display/es6/NativeDevice/IBrightness';
 import IServerVideoPlayer from './Video/IServerVideoPlayer';
 import OverlayRenderer from '../Overlay/OverlayRenderer';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import VideoOrientation from '@signageos/front-display/es6/Video/Orientation';
 import Resolution from '@signageos/front-display/es6/NativeDevice/Resolution';
-import PrivateOrientation from './Orientation';
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
 import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType';
 import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver';
@@ -265,11 +265,10 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		orientation: Orientation,
 		_resolution: Resolution,
 		_currentVersion: string,
-		_videoOrientation?: Orientation,
+		videoOrientation?: VideoOrientation,
 	): Promise<() => Promise<void> | Promise<void>> {
-		const privateOrientation = Orientation[orientation] as PrivateOrientation;
 		await Promise.all([
-			this.systemSettings.setScreenOrientation(privateOrientation),
+			this.systemSettings.setScreenOrientation(orientation, videoOrientation),
 			this.display.setOSDOrientation(orientation).catch((error: Error) => console.error('setOSDOrientation failed', error)),
 		]);
 		return () => this.appRestart();

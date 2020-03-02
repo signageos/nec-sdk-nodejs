@@ -9,6 +9,8 @@ import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheS
 import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import IBrowser from '@signageos/front-display/es6/NativeDevice/IBrowser';
+import IScreenRotationManager from '@signageos/front-display/es6/NativeDevice/Screen/IScreenRotationManager';
+import ScreenRotationManager from '@signageos/front-display/es6/NativeDevice/Screen/ScreenRotationManager';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
 import BridgeVideoClient from '../Bridge/BridgeVideoClient';
@@ -34,7 +36,7 @@ import Key from '../CEC/Key';
 import Led from './Hardware/Led';
 import FrontWifi from './Hardware/FrontWifi';
 import Browser from './Browser';
-import { FrontScreenRotationManager } from './Screen/screenRotation';
+import ISystemSettings from '../SystemSettings/ISystemSettings';
 
 export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
@@ -46,7 +48,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	private deviceUid: string;
 	private cache: ICache;
-	private screenRotationManager: FrontScreenRotationManager;
+	private screenRotationManager: IScreenRotationManager;
 	private bridgeVideoClient: BridgeVideoClient;
 	private overlay: OverlayHandler;
 
@@ -54,6 +56,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		private window: Window,
 		private frontAppletPrefix: string,
 		private bridge: BridgeClient,
+		private systemSettings: ISystemSettings,
 		private socketClient: ISocket,
 		private fileSystemUrl: string,
 		maxVideoCount: number,
@@ -61,14 +64,10 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
 		const bodyElement = this.window.document.getElementById('body')!;
-		this.screenRotationManager = new FrontScreenRotationManager(
-			this.window.localStorage,
-			[bodyElement],
-			this.bridge,
-		);
+		this.screenRotationManager = new ScreenRotationManager([bodyElement]);
 		this.bridgeVideoClient = new BridgeVideoClient(
 			this.window,
-			() => this.screenRotationManager.getCurrentOrientation(),
+			() => this.systemSettings.getScreenOrientation(),
 			this.bridge, socketClient,
 		);
 		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridgeVideoClient, maxVideoCount);
@@ -110,7 +109,8 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	}
 
 	public async initialize(_staticBaseUrl: string) {
-		await this.screenRotationManager.updateOrientation();
+		const orientation = await this.systemSettings.getScreenOrientation();
+		this.screenRotationManager.applyOrientation(orientation);
 	}
 
 	public isDetected() {
