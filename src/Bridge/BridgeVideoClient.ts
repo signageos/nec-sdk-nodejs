@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
-import IVideo from '@signageos/front-display/es6/Video/IVideo';
+import IVideoEventEmitter from '@signageos/front-display/es6/Video/IVideoEventEmitter';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import {
 	PlayVideo,
@@ -61,7 +61,7 @@ export default class BridgeVideoClient {
 		width: number,
 		height: number,
 		isStream: boolean,
-	): Promise<IVideo> {
+	): Promise<IVideoEventEmitter> {
 		const coordinates = await this.convertCoordinatesForOrientation(x, y, width, height);
 		const orientation = await this.getOrientation();
 		await this.bridge.invoke<PlayVideo, {}>(
@@ -168,12 +168,12 @@ export default class BridgeVideoClient {
 	}
 
 	private convertEventEmitterWithConvertedCoordinatesBackToOriginalCoordinates(
-		videoEmitter: IVideo,
+		videoEmitter: IVideoEventEmitter,
 		originalX: number,
 		originalY: number,
 		originalWidth: number,
 		originalHeight: number,
-	): IVideo {
+	): IVideoEventEmitter {
 		const convertedVideoEmitter = new EventEmitter();
 		const convertEvent = (event: IVideoEvent) => ({
 			...event,
