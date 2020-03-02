@@ -74,7 +74,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridgeVideoClient, maxVideoCount);
 		this.stream = new BridgeStreamPlayer(this.window, this.bridge, this.bridgeVideoClient);
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);
-		this.browser = new Browser(this.window, this.screenRotationManager, this.bridge);
+		this.browser = new Browser(this.window, this.bridge);
 		this.overlay = new OverlayHandler(this.window, this.frontAppletPrefix, this.bridge);
 		this.hardware = {
 			led: new Led(),
@@ -111,7 +111,6 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	public async initialize(_staticBaseUrl: string) {
 		await this.screenRotationManager.updateOrientation();
-		await this.browser.updateOrientation();
 	}
 
 	public isDetected() {
