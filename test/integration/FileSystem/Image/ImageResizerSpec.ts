@@ -52,7 +52,7 @@ describe('FileSystem.Image.ImageResizer', function () {
 		const thumbnailRequestHandler = new ThumbnailRequestHandler(FILE_SYSTEM_URL, expressApp, fileSystem);
 		const imageResizer = new ImageResizer(thumbnailRequestHandler);
 
-		before((done: Function) => {
+		before((done: () => void) => {
 			httpServer.listen(TEST_PORT, done);
 		});
 
@@ -63,7 +63,7 @@ describe('FileSystem.Image.ImageResizer', function () {
 			await fs.mkdirp(EXTERNAL_BASE_PATH + '/usb1');
 		});
 
-		after((done: Function) => {
+		after((done: () => void) => {
 			httpServer.close(done);
 		});
 
