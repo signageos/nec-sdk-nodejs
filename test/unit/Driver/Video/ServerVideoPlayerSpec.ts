@@ -1,5 +1,4 @@
 import * as sinon from 'sinon';
-import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import ServerVideoPlayer from '../../../../src/Driver/Video/ServerVideoPlayer';
 import MockServerVideo from './MockServerVideo';
 
@@ -38,7 +37,6 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 							y: number,
 							width: number,
 							height: number,
-							orientation: Orientation,
 							isStream: boolean,
 						) => {
 							if (!idle) {
@@ -51,7 +49,6 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 							y.should.equal(1);
 							width.should.equal(1920);
 							height.should.equal(1080);
-							orientation.should.equal(Orientation.LANDSCAPE);
 							isStream.should.be.true();
 						},
 						addEventListener: sinon.spy(),
@@ -59,7 +56,7 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 				};
 
 				const videoPlayer = new ServerVideoPlayer(3, createVideo as any);
-				await videoPlayer.prepare('video1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+				await videoPlayer.prepare('video1', 0, 1, 1920, 1080, true);
 				prepareCalled.should.be.true();
 			});
 		}
@@ -70,7 +67,7 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 				addEventListener: sinon.spy(),
 			});
 			const videoPlayer = new ServerVideoPlayer(5, createVideo as any);
-			await videoPlayer.prepare('video1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true)
+			await videoPlayer.prepare('video1', 0, 1, 1920, 1080, true)
 				.should.be.rejected();
 		});
 	});
@@ -88,8 +85,8 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 				};
 
 				const videoPlayer = new ServerVideoPlayer(3, createVideo);
-				await videos[i].prepare('video1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
-				await videoPlayer.play('video1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+				await videos[i].prepare('video1', 0, 1, 1920, 1080, true);
+				await videoPlayer.play('video1', 0, 1, 1920, 1080, true);
 				videos[i].isPlaying().should.be.true();
 			});
 		}
@@ -103,11 +100,11 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 			};
 
 			const videoPlayer = new ServerVideoPlayer(3, createVideo);
-			await videos[0].prepare('video1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videos[0].prepare('video1', 0, 1, 1920, 1080, true);
 			await videos[0].play();
-			await videos[2].prepare('video2', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videos[2].prepare('video2', 0, 1, 1920, 1080, true);
 			await videos[2].play();
-			await videoPlayer.play('video3', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videoPlayer.play('video3', 0, 1, 1920, 1080, true);
 			await videos[1].isPlaying().should.be.true();
 		});
 
@@ -120,13 +117,13 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 			};
 
 			const videoPlayer = new ServerVideoPlayer(3, createVideo);
-			await videos[0].prepare('video1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videos[0].prepare('video1', 0, 1, 1920, 1080, true);
 			await videos[0].play();
-			await videos[1].prepare('video2', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videos[1].prepare('video2', 0, 1, 1920, 1080, true);
 			await videos[1].play();
-			await videos[2].prepare('video3', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videos[2].prepare('video3', 0, 1, 1920, 1080, true);
 			await videos[2].play();
-			await videoPlayer.play('video4', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true)
+			await videoPlayer.play('video4', 0, 1, 1920, 1080, true)
 				.should.be.rejected();
 		});
 	});
@@ -143,15 +140,15 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 
 			const videoPlayer = new ServerVideoPlayer(3, createVideo);
 
-			await videos[0].prepare('video1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videos[0].prepare('video1', 0, 1, 1920, 1080, true);
 			await videos[0].play();
 			videos[0].isPlaying();
 
-			await videos[1].prepare('video2', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videos[1].prepare('video2', 0, 1, 1920, 1080, true);
 			await videos[1].play();
 			videos[1].isPlaying();
 
-			await videos[2].prepare('video3', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videos[2].prepare('video3', 0, 1, 1920, 1080, true);
 			await videos[2].play();
 			videos[2].isPlaying();
 
@@ -175,15 +172,15 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 
 			const videoPlayer = new ServerVideoPlayer(3, createVideo);
 
-			await videos[0].prepare('video1', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videos[0].prepare('video1', 0, 1, 1920, 1080, true);
 			await videos[0].play();
 			videos[0].isPlaying();
 
-			await videos[1].prepare('video2', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videos[1].prepare('video2', 0, 1, 1920, 1080, true);
 			await videos[1].play();
 			videos[1].isPlaying();
 
-			await videos[2].prepare('video3', 0, 1, 1920, 1080, Orientation.LANDSCAPE, true);
+			await videos[2].prepare('video3', 0, 1, 1920, 1080, true);
 			await videos[2].play();
 			videos[2].isPlaying();
 

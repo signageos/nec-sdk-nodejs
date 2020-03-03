@@ -1,4 +1,3 @@
-import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import IServerVideoPlayer from './IServerVideoPlayer';
 import IServerVideo from './IServerVideo';
 import { EventEmitter } from "events";
@@ -43,12 +42,11 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		y: number,
 		width: number,
 		height: number,
-		orientation: Orientation,
 		isStream: boolean,
 		options: IOptions = {},
 	): Promise<void> {
 		const idleVideo = this.getIdleVideoOrThrowException();
-		await idleVideo.prepare(uri, x, y, width, height, orientation, isStream, options);
+		await idleVideo.prepare(uri, x, y, width, height, isStream, options);
 	}
 
 	public async play(
@@ -57,7 +55,6 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		y: number,
 		width: number,
 		height: number,
-		orientation: Orientation,
 		isStream: boolean,
 	): Promise<void> {
 		let video: IServerVideo;
@@ -65,7 +62,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 			video = this.getVideoByArgumentsOrThrowException(uri, x, y, width, height);
 		} catch (error) {
 			video = this.getIdleVideoOrThrowException();
-			await video.prepare(uri, x, y, width, height, orientation, isStream, {});
+			await video.prepare(uri, x, y, width, height, isStream, {});
 		}
 
 		await video.play();

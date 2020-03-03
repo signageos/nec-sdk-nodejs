@@ -9,7 +9,6 @@ import {
 import socketHandleVideo from '../../../src/Bridge/socketHandleVideo';
 import { EventEmitter } from 'events';
 import IBridgeMessage from '../../../src/Bridge/IBridgeMessage';
-import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 
 function createMockSocket() {
 	return {
@@ -45,15 +44,12 @@ describe('Bridge.socketHandleVideo', function () {
 							y: 2,
 							width: 1280,
 							height: 720,
-							orientation: Orientation.LANDSCAPE,
 							isStream: false,
 							options: {},
 						},
 					});
 					videoPlayer.prepare.callCount.should.equal(1);
-					videoPlayer.prepare.getCall(0).args.should.deepEqual([
-						'video1', 1, 2, 1280, 720, Orientation.LANDSCAPE, false, {},
-					]);
+					videoPlayer.prepare.getCall(0).args.should.deepEqual(['video1', 1, 2, 1280, 720, false, {}]);
 					sendMessageExpectingResponse.callCount.should.equal(1);
 					sendMessageExpectingResponse.getCall(0).args.should.deepEqual(['message1', { success: true, response: {} }]);
 					done();
@@ -81,15 +77,12 @@ describe('Bridge.socketHandleVideo', function () {
 							y: 5,
 							width: 1920,
 							height: 1080,
-							orientation: Orientation.LANDSCAPE,
 							isStream: false,
 							options: {},
 						},
 					});
 					videoPlayer.prepare.callCount.should.equal(1);
-					videoPlayer.prepare.getCall(0).args.should.deepEqual([
-						'video2', 0, 5, 1920, 1080, Orientation.LANDSCAPE, false, {},
-					]);
+					videoPlayer.prepare.getCall(0).args.should.deepEqual(['video2', 0, 5, 1920, 1080, false, {}]);
 					sendMessageExpectingResponse.callCount.should.equal(1);
 					sendMessageExpectingResponse.getCall(0).args.should.deepEqual(['message2', { success: false }]);
 					done();
@@ -120,14 +113,11 @@ describe('Bridge.socketHandleVideo', function () {
 							y: 15,
 							width: 1280,
 							height: 720,
-							orientation: Orientation.LANDSCAPE,
 							isStream: false,
 						},
 					});
 					videoPlayer.play.callCount.should.equal(1);
-					videoPlayer.play.getCall(0).args.should.deepEqual([
-						'video3', 10, 15, 1280, 720, Orientation.LANDSCAPE, false,
-					]);
+					videoPlayer.play.getCall(0).args.should.deepEqual(['video3', 10, 15, 1280, 720, false]);
 					sendMessageExpectingResponse.callCount.should.equal(1);
 					sendMessageExpectingResponse.getCall(0).args.should.deepEqual(['message3', { success: true, response: {} }]);
 					done();
@@ -155,14 +145,11 @@ describe('Bridge.socketHandleVideo', function () {
 							y: 20,
 							width: 1920,
 							height: 1080,
-							orientation: Orientation.LANDSCAPE,
 							isStream: false,
 						},
 					});
 					videoPlayer.play.callCount.should.equal(1);
-					videoPlayer.play.getCall(0).args.should.deepEqual([
-						'video4', 20, 20, 1920, 1080, Orientation.LANDSCAPE, false,
-					]);
+					videoPlayer.play.getCall(0).args.should.deepEqual(['video4', 20, 20, 1920, 1080, false]);
 					sendMessageExpectingResponse.callCount.should.equal(1);
 					sendMessageExpectingResponse.getCall(0).args.should.deepEqual(['message4', { success: false }]);
 					done();
