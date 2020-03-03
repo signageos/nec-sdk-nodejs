@@ -8,7 +8,6 @@ import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver
 import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheStorageInfo';
 import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
-import IBrowser from '@signageos/front-display/es6/NativeDevice/IBrowser';
 import IScreenRotationManager from '@signageos/front-display/es6/NativeDevice/Screen/IScreenRotationManager';
 import ScreenRotationManager from '@signageos/front-display/es6/NativeDevice/Screen/ScreenRotationManager';
 import { APPLICATION_TYPE } from './constants';
@@ -44,7 +43,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	public readonly video: BridgeVideoPlayer;
 	public readonly stream: IStreamPlayer;
 	public readonly fileSystem: IFileSystem;
-	public readonly browser: IBrowser;
+	public readonly browser: Browser;
 
 	private deviceUid: string;
 	private cache: ICache;
@@ -63,8 +62,12 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	) {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
+		this.browser = new Browser(this.window, this.bridge);
 		const bodyElement = this.window.document.getElementById('body')!;
-		this.screenRotationManager = new ScreenRotationManager([bodyElement]);
+		this.screenRotationManager = new ScreenRotationManager([
+			bodyElement,
+			this.browser.getWrapperElement(),
+		]);
 		this.bridgeVideoClient = new BridgeVideoClient(
 			this.window,
 			() => this.systemSettings.getScreenOrientation(),
@@ -73,7 +76,6 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridgeVideoClient, maxVideoCount);
 		this.stream = new BridgeStreamPlayer(this.window, this.bridge, this.bridgeVideoClient);
 		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);
-		this.browser = new Browser(this.window, this.bridge);
 		this.overlay = new OverlayHandler(this.window, this.frontAppletPrefix, this.bridge);
 		this.hardware = {
 			led: new Led(),
