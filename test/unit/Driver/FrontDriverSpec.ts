@@ -38,6 +38,11 @@ describe('Driver.FrontDriver', function () {
 					.resolves({ model: 'model1' }),
 				socketClient: new EventEmitter(),
 			};
+			const browser = {
+				getWrapperElement() {
+					return {};
+				},
+			};
 
 			const frontDriver = new FrontDriver(
 				createWindow(),
@@ -45,8 +50,10 @@ describe('Driver.FrontDriver', function () {
 				bridge as any,
 				{} as any,
 				createMockSocket(),
-				'http://localhost:8081',
-				1,
+				{} as any,
+				{} as any,
+				{} as any,
+				browser as any,
 			);
 			const model = await frontDriver.getModel();
 			model.should.equal('model1');

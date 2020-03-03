@@ -1,12 +1,7 @@
 // polyfill promisify for node.js 5
-import FrontSystemSettings from './SystemSettings/FrontSystemSettings';
-
 require('util').promisify = require('util.promisify');
-
 import { EventEmitter } from 'events';
 import * as AsyncLock from 'async-lock';
-import BridgeClient from './Bridge/BridgeClient';
-import FrontDriver from './Driver/FrontDriver';
 import front from '@signageos/front-display/es6/Front/front';
 import { createSocketSynchronizer } from '@signageos/front-display/es6/Front/Applet/Sync/synchronizerFactory';
 import * as Raven from 'raven-js';
@@ -19,7 +14,7 @@ import { createWebWorkerFactory } from '@signageos/front-display/es6/WebWorker/m
 import { createAutoReconnectingSocket } from '@signageos/lib/dist/WebSocket/Client/WS/createWSSocket';
 import { notifyClientAlive } from './Application/clientStatus';
 import { getAutoVerification } from './helper';
-import FrontManagementDriver from './Driver/FrontManagementDriver';
+import { createFrontDrivers } from './Driver/frontDriverFactory';
 const parameters = require('../config/parameters');
 const frontAppletPrefix = parameters.frontApplet.prefix;
 
@@ -41,36 +36,29 @@ if (parameters.raven.enabled) {
 			(error: any) => console.error(error),
 		);
 	});
-	const bridge = new BridgeClient(parameters.server.bridge_url, socketClient);
-	const systemSettings = new FrontSystemSettings(bridge);
-	const nativeDriver = new FrontDriver(
+
+	const { frontDriver, managementDriver } = createFrontDrivers(
 		window,
-		frontAppletPrefix,
-		bridge,
-		systemSettings,
-		socketClient,
+		parameters.server.bridge_url,
 		parameters.server.file_system_url,
+		parameters.frontApplet.prefix,
 		parameters.video.max_count,
-	);
-	await nativeDriver.initialize(parameters.url.staticBaseUrl);
-	const managementNativeDriver = new FrontManagementDriver(
-		bridge,
-		systemSettings,
 		socketClient,
-		parameters.server.file_system_url,
 		() => new Promise<void>((resolve: () => void) => {
 			socketEventEmitter.once('connected', resolve);
 		}),
 	);
-	await managementNativeDriver.initialize(parameters.url.staticBaseUrl);
+
+	await frontDriver.initialize(parameters.url.staticBaseUrl);
+	await managementDriver.initialize(parameters.url.staticBaseUrl);
 
 	const synchronizer = createSocketSynchronizer(
 		parameters.url.synchronizerServerUrl,
-		() => nativeDriver,
+		() => frontDriver,
 	);
 
 	try {
-		const deviceUid = await nativeDriver.getDeviceUid();
+		const deviceUid = await frontDriver.getDeviceUid();
 		Raven.setUserContext({
 			id: deviceUid,
 		});
@@ -95,8 +83,8 @@ if (parameters.raven.enabled) {
 		frontAppletPrefix,
 		parameters.frontDisplay.version,
 		parameters.url.weinreServerUrl,
-		nativeDriver,
-		managementNativeDriver,
+		frontDriver,
+		managementDriver,
 		synchronizer,
 		offlineStorageLock,
 		webWorkerFactory,
