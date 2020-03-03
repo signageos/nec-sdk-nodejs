@@ -8,6 +8,7 @@ import BridgeVideoPlayer from './Video/BridgeVideoPlayer';
 import BridgeStreamPlayer from './Video/BridgeStreamPlayer';
 import Browser from './Browser';
 import FrontFileSystem from './FrontFileSystem';
+import { adaptVideoPlayer, adaptStreamPlayer } from '@signageos/front-display/es6/NativeDevice/Screen/adaptPlayers';
 
 export function createFrontDrivers(
 	window: Window,
@@ -21,8 +22,10 @@ export function createFrontDrivers(
 	const bridge = new BridgeClient(serverUri, socketClient);
 	const systemSettings = new FrontSystemSettings(bridge);
 	const bridgeVideoClient = new BridgeVideoClient(bridge, socketClient);
-	const videoPlayer = new BridgeVideoPlayer(fileSystemUrl, bridgeVideoClient, maxVideoCount);
-	const streamPlayer = new BridgeStreamPlayer(window, bridge, bridgeVideoClient);
+	const baseVideoPlayer = new BridgeVideoPlayer(fileSystemUrl, bridgeVideoClient, maxVideoCount);
+	const baseStreamPlayer = new BridgeStreamPlayer(window, bridge, bridgeVideoClient);
+	const videoPlayer = adaptVideoPlayer(window, baseVideoPlayer, () => systemSettings.getScreenOrientation());
+	const streamPlayer = adaptStreamPlayer(window, baseStreamPlayer, () => systemSettings.getScreenOrientation());
 	const fileSystem = new FrontFileSystem(fileSystemUrl, bridge, socketClient);
 	const browser = new Browser(window, bridge);
 	const frontDriver = new FrontDriver(
