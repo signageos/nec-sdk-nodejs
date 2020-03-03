@@ -17,6 +17,14 @@ import BridgeClient, { MessageType } from './BridgeClient';
 import { IOptions } from '@signageos/front-display/es6/Video/IVideoPlayer';
 import { checksumString } from '@signageos/front-display/es6/Hash/checksum';
 
+/**
+ * Handle video/stream related communication with the server
+ *
+ * This class abstracts all the basic logic of sending video/stream related requests to the server.
+ * It also listens to any video/stream events pushed from the server.
+ * Since the server communication is almost identical for videos and streams, it's beneficial to have this logic abstracted
+ * in this class and then use it both in video and stream player.
+ */
 export default class BridgeVideoClient {
 
 	private playingVideos: { [videoId: string]: EventEmitter } = {};
