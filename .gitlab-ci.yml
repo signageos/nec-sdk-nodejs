@@ -1,4 +1,4 @@
-image: $CI_REGISTRY/signageos/docker-node:10.17-alpine-build-zip-vips-ffmpeg
+image: $CI_REGISTRY/signageos/docker-node:12.16.1-alpine-build-zip-vips-ffmpeg
 services:
   - docker:dind
 
