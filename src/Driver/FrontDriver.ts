@@ -80,6 +80,8 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		switch (capability) {
 			case FrontCapability.FILE_SYSTEM_INTERNAL_STORAGE:
 			case FrontCapability.FILE_SYSTEM_EXTERNAL_STORAGE:
+			case FrontCapability.FILE_SYSTEM_FILE_CHECKSUM:
+			case FrontCapability.FILE_SYSTEM_LINK:
 			case FrontCapability.TIMERS_PROPRIETARY:
 				return true;
 			case FrontCapability.WIFI:
