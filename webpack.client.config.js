@@ -51,7 +51,7 @@ module.exports = {
 				include: [
 					path.resolve(parameters.paths.rootPath, 'config'),
 					path.resolve(parameters.paths.rootPath, 'src'),
-					/node_modules\/(@signageos|hugport-*|cron)/,
+					/node_modules\/(@signageos|hugport-*|cron|debug)/,
 				],
 				loader: 'babel-loader',
 				query: {
