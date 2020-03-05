@@ -23,6 +23,9 @@ export default class BridgeVideoPlayer implements IVideoPlayer {
 	@locked('video')
 	@debug(DEBUG_NAMESPACE)
 	public async prepare(uri: string, x: number, y: number, width: number, height: number, options: IOptions = {}): Promise<void> {
+		if (options['4k']) {
+			throw new Error('4K video playback is not supported');
+		}
 		const uriRelative = this.stripFileSystemRootFromUri(uri);
 		await this.bridgeVideoClient.prepareVideo(uriRelative, x, y, width, height, false, options);
 	}
