@@ -4,6 +4,7 @@ import { EventEmitter } from "events";
 import { debug } from '@signageos/lib/dist/Debug/debugDecorator';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import { IOptions } from '@signageos/front-display/es6/Video/IVideoPlayer';
+import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 
 const DEBUG_NAMESPACE = '@signageos/display-linux:Driver:Video:ServerVideoPlayer';
 
@@ -39,6 +40,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		);
 	}
 
+	@locked('ServerVideoPlayer')
 	@debug(DEBUG_NAMESPACE)
 	public async prepare(
 		uri: string,
@@ -53,6 +55,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		await idleVideo.prepare(uri, x, y, width, height, isStream, options);
 	}
 
+	@locked('ServerVideoPlayer')
 	@debug(DEBUG_NAMESPACE)
 	public async play(
 		uri: string,
@@ -73,6 +76,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		await video.play();
 	}
 
+	@locked('ServerVideoPlayer')
 	@debug(DEBUG_NAMESPACE)
 	public async stop(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const video = this.getVideoByArguments(uri, x, y, width, height);
@@ -81,6 +85,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		}
 	}
 
+	@locked('ServerVideoPlayer')
 	@debug(DEBUG_NAMESPACE)
 	public async pause(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const video = this.getVideoByArguments(uri, x, y, width, height);
@@ -89,6 +94,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		}
 	}
 
+	@locked('ServerVideoPlayer')
 	@debug(DEBUG_NAMESPACE)
 	public async resume(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const video = this.getVideoByArguments(uri, x, y, width, height);
@@ -105,6 +111,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		this.eventEmitter.removeListener(event, listener);
 	}
 
+	@locked('ServerVideoPlayer')
 	@debug(DEBUG_NAMESPACE)
 	public async clearAll(): Promise<void> {
 		await Promise.all(
