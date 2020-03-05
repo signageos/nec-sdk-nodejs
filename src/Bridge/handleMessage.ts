@@ -60,6 +60,7 @@ export default async function handleMessage(
 		PowerMessages.SystemReboot |
 		PowerMessages.GetTimers |
 		PowerMessages.SetTimer |
+		ScreenMessages.IsPoweredOn |
 		ScreenMessages.PowerOff |
 		ScreenMessages.PowerOn |
 		ScreenMessages.SetBrightness |
@@ -166,6 +167,10 @@ export default async function handleMessage(
 				message.videoOrientation,
 			);
 			return {};
+
+		case ScreenMessages.IsPoweredOn:
+			const isPoweredOn = await nativeDriver.displayIsPowerOn();
+			return { isPoweredOn };
 
 		case ScreenMessages.PowerOff:
 			await nativeDriver.displayPowerOff();
