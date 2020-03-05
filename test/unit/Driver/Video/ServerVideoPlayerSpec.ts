@@ -108,7 +108,7 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 			await videos[1].isPlaying().should.be.true();
 		});
 
-		it('should throw error when the video is not prepared and there are no idle video players', async function () {
+		it('should postpone play video when there are no available resources left currently', async function () {
 			const videos: MockServerVideo[] = [];
 			const createVideo = () => {
 				const video = new MockServerVideo();
@@ -123,8 +123,9 @@ describe('Driver.Video.ServerVideoPlayer', function () {
 			await videos[1].play();
 			await videos[2].prepare('video3', 0, 1, 1920, 1080, true);
 			await videos[2].play();
-			await videoPlayer.play('video4', 0, 1, 1920, 1080, true)
-				.should.be.rejected();
+			const playVideo4Promise = videoPlayer.play('video4', 0, 1, 1920, 1080, true);
+			await videos[0].stop();
+			await playVideo4Promise;
 		});
 	});
 

@@ -79,6 +79,10 @@ class MockServerVideo implements IServerVideo {
 	public addEventListener(eventName: string, callback: (event: IVideoEvent) => void): void {
 		this.eventEmitter.addListener(eventName, callback);
 	}
+
+	public waitUntilIdle(): Promise<void> {
+		return Promise.resolve();
+	}
 }
 
 export default MockServerVideo;

@@ -22,6 +22,7 @@ interface IServerVideo {
 	isIdle(): boolean;
 	isPlaying(): boolean;
 	addEventListener(eventName: string, listener: (event: IVideoEvent) => void): void;
+	waitUntilIdle(): Promise<void>;
 }
 
 export default IServerVideo;

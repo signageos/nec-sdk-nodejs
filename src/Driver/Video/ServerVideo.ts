@@ -36,6 +36,7 @@ export default class ServerVideo implements IServerVideo {
 	private childProcess: ChildProcess | null = null;
 	private isStream: boolean = false;
 	private finished: boolean = false;
+	private resolveOnceIdleCallbacks: (() => void)[] = [];
 
 	constructor(
 		private fileSystem: IFileSystem,
@@ -155,7 +156,7 @@ export default class ServerVideo implements IServerVideo {
 		}
 
 		this.videoEventListener.removeAllListeners();
-		this.state = State.IDLE;
+		this.setStateIdle();
 		this.childProcess = null;
 		this.videoArguments = null;
 		this.finished = false;
@@ -172,6 +173,12 @@ export default class ServerVideo implements IServerVideo {
 
 	public addEventListener(eventName: string, listener: (event: IVideoEvent) => void) {
 		this.eventEmitter.on(eventName, listener);
+	}
+
+	public waitUntilIdle(): Promise<void> {
+		return new Promise<void>((resolve: () => void) => {
+			this.resolveOnceIdleCallbacks.push(resolve);
+		});
 	}
 
 	private async prepareVideoChildProcess(
@@ -203,7 +210,7 @@ export default class ServerVideo implements IServerVideo {
 
 		videoProcess.once('close', (code: number, signal: string | null) => {
 			debug(`video process closed, uri: ${uri}, code: ${code}, signal: ${signal}`);
-			this.state = State.IDLE;
+			this.setStateIdle();
 			this.finished = true;
 			if (signal !== null) {
 				this.eventEmitter.emit('stopped', { type: 'stopped', srcArguments: videoEventSrcArgs });
@@ -246,5 +253,13 @@ export default class ServerVideo implements IServerVideo {
 		} else {
 			return await this.systemSettings.getScreenOrientation();
 		}
+	}
+
+	private setStateIdle() {
+		this.state = State.IDLE;
+		for (let i = 0; i < this.resolveOnceIdleCallbacks.length; i++) {
+			this.resolveOnceIdleCallbacks[i]();
+		}
+		this.resolveOnceIdleCallbacks = [];
 	}
 }
