@@ -1,8 +1,11 @@
 import IServerVideoPlayer from './IServerVideoPlayer';
 import IServerVideo from './IServerVideo';
 import { EventEmitter } from "events";
+import { debug } from '@signageos/lib/dist/Debug/debugDecorator';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import { IOptions } from '@signageos/front-display/es6/Video/IVideoPlayer';
+
+const DEBUG_NAMESPACE = '@signageos/display-linux:Driver:Video:ServerVideoPlayer';
 
 export default class ServerVideoPlayer implements IServerVideoPlayer {
 
@@ -36,6 +39,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		);
 	}
 
+	@debug(DEBUG_NAMESPACE)
 	public async prepare(
 		uri: string,
 		x: number,
@@ -49,6 +53,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		await idleVideo.prepare(uri, x, y, width, height, isStream, options);
 	}
 
+	@debug(DEBUG_NAMESPACE)
 	public async play(
 		uri: string,
 		x: number,
@@ -68,6 +73,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		await video.play();
 	}
 
+	@debug(DEBUG_NAMESPACE)
 	public async stop(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const video = this.getVideoByArguments(uri, x, y, width, height);
 		if (video) {
@@ -75,6 +81,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		}
 	}
 
+	@debug(DEBUG_NAMESPACE)
 	public async pause(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const video = this.getVideoByArguments(uri, x, y, width, height);
 		if (video) {
@@ -82,6 +89,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		}
 	}
 
+	@debug(DEBUG_NAMESPACE)
 	public async resume(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const video = this.getVideoByArguments(uri, x, y, width, height);
 		if (video) {
@@ -97,6 +105,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		this.eventEmitter.removeListener(event, listener);
 	}
 
+	@debug(DEBUG_NAMESPACE)
 	public async clearAll(): Promise<void> {
 		await Promise.all(
 			this.videos.map(async (video: IServerVideo) => {

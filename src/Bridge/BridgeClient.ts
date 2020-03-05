@@ -2,6 +2,9 @@ import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 import BridgeMessage from './IBridgeMessage';
 import { IBridgeServerResponse } from './IBridgeServerResponse';
+import * as Debug from 'debug';
+
+const debug = Debug('@signageos/display-linux:Bridge:BridgeClient');
 
 export enum MessageType {
 	GENERIC = 'generic',
@@ -24,10 +27,12 @@ export default class BridgeClient {
 		messageType: MessageType = MessageType.GENERIC,
 	): Promise<TResult> {
 		const invocationUid = generateUniqueHash();
+		debug(`emit message ${messageType}, uid: ${invocationUid}`, message);
 		this.socketClient.emit('message.' + messageType, { invocationUid, message } as BridgeMessage<TMessage>);
 
 		return new Promise((resolve: (result: TResult) => void, reject: (error: BridgeRequestFailedError) => void) => {
 			this.socketClient.once(invocationUid, (response: IBridgeServerResponse<TResult>) => {
+				debug(`response ${invocationUid}`, response);
 				if (response.success) {
 					resolve(response.response);
 				} else {
