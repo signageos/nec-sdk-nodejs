@@ -13,7 +13,13 @@ export enum MessageType {
 	// TODO create other types to remove messages from generic
 }
 
-export class BridgeRequestFailedError {}
+export class BridgeRequestFailedError extends Error {
+	constructor(message: string) {
+		super(message);
+		// https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+		Object.setPrototypeOf(this, BridgeRequestFailedError.prototype);
+	}
+}
 
 export default class BridgeClient {
 
@@ -36,7 +42,7 @@ export default class BridgeClient {
 				if (response.success) {
 					resolve(response.response);
 				} else {
-					reject(new BridgeRequestFailedError());
+					reject(new BridgeRequestFailedError(`bridge message ${message.type} failed`));
 				}
 			});
 		});
