@@ -2,9 +2,10 @@
 
 set -e
 
-VERSION=$1
-if [ -z "$VERSION" ]; then
-    echo "Usage: $0 <version>"
+TARGET=$1
+VERSION=$2
+if [ -z "$TARGET" ] || [ -z "$VERSION" ]; then
+    echo "Usage: $0 <target> <version>"
     exit 1
 fi
 
@@ -20,10 +21,12 @@ npm install
 cd -
 
 cp -r common/* "$TMP_DIR"
-cp -r rpi3/* "$TMP_DIR"
+cp -r $TARGET/* "$TMP_DIR"
 cp LICENSE "$TMP_DIR"
 
-sed "s/pkgver=\"__pkg_version_placeholder__\"/pkgver=\"${VERSION}\"/" APKBUILD.dist > APKBUILD
+sed "s/__pkg_version_placeholder__/${VERSION}/" APKBUILD.dist | sed "s/__target__/$TARGET/" > APKBUILD
+cp signageos.pre-install "signageos-$TARGET.pre-install"
+cp signageos.post-install "signageos-$TARGET.post-install"
 
 abuild checksum
 abuild -r

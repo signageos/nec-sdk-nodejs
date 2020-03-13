@@ -100,7 +100,7 @@ prebuild:
     - export VERSION=`cat ./VERSION`
     - npx @signageos/lib@just-tools version-upgrade $VERSION
     - export VERSION=`echo $VERSION | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'` # omit branch version
-    - tools/build-apk.sh $VERSION
+    - tools/build-apk.sh $TARGET $VERSION
     - mkdir -p packages/signageos/$ARCHITECTURE
     - cp ~/packages/dist/$ARCHITECTURE/signageos*-$VERSION-r0.apk packages/signageos/$ARCHITECTURE
   artifacts:
@@ -108,31 +108,14 @@ prebuild:
     paths:
       - packages/signageos/$ARCHITECTURE
 
-build:alpine-armhf:
+build:alpine-rpi:
   extends: .build:alpine
   tags:
     - alpine
     - armhf
   variables:
     ARCHITECTURE: armhf
-
-build:alpine-armv7:
-  allow_failure: true
-  extends: .build:alpine
-  tags:
-    - alpine
-    - armv7
-  variables:
-    ARCHITECTURE: armv7
-
-build:alpine-aarch64:
-  allow_failure: true
-  extends: .build:alpine
-  tags:
-    - alpine
-    - aarch64
-  variables:
-    ARCHITECTURE: aarch64
+    TARGET: rpi
 
 .publish:alpine:
   image: $CI_REGISTRY/signageos/docker-alpine:master
@@ -140,30 +123,15 @@ build:alpine-aarch64:
   cache: {}
   before_script: []
   script:
-    - aws s3 cp packages/signageos/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos*-r0.apk"
+    - aws s3 cp packages/signageos/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos-$TARGET*-r0.apk"
 
-publish:alpine-armhf:
+publish:alpine-rpi:
   extends: .publish:alpine
   dependencies:
-    - build:alpine-armhf
+    - build:alpine-rpi
   variables:
     ARCHITECTURE: armhf
-
-publish:alpine-armv7:
-  allow_failure: true
-  extends: .publish:alpine
-  dependencies:
-    - build:alpine-armv7
-  variables:
-    ARCHITECTURE: armv7
-
-publish:alpine-aarch64:
-  allow_failure: true
-  extends: .publish:alpine
-  dependencies:
-    - build:alpine-aarch64
-  variables:
-    ARCHITECTURE: aarch64
+    TARGET: rpi
 
 publish:npm:
   stage: publish:npm
