@@ -4,5 +4,5 @@
 set -e
 
 # switch to factory_reset runlevel
-# has to be detached because it's parent process (signageos-display-linux-server) will get stopped while switching runlevels
+# has to be detached because it's parent process (signageos-server) will get stopped while switching runlevels
 nohup openrc factory_reset | /usr/bin/logger -p local0.info &

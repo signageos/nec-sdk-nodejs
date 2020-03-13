@@ -8,7 +8,7 @@ upgrade_app() {
     VERSION=`cat "$VERSION_FILE"`
     rm -rf "$VERSION_FILE"
     apk update
-    apk add "signageos-display-linux=$VERSION"
+    apk add "signageos=$VERSION"
 }
 
 if [ -f "$VERSION_FILE" ]; then

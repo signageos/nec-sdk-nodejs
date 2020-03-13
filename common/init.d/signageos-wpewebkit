@@ -5,7 +5,7 @@ description="WPE Webkit"
 
 depend() {
     need localmount loopback nginx docker
-    use signageos-display-linux-server
+    use signageos-server
 }
 
 start() {

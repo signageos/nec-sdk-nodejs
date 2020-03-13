@@ -4,16 +4,16 @@ name=$RC_SVCNAME
 description="signageOS client"
 pidfile="/run/$name.pid"
 command="/usr/bin/node"
-command_args="/usr/share/signageos-display-linux/server/server.js"
+command_args="/usr/share/signageos/server/server.js"
 command_user="signageos"
 command_group="signageos"
 stopsig=TERM
 
 extra_started_commands="reload_storage_units"
 
-env_fs_root_path=/var/lib/signageos-display-linux/fs
-env_fs_system_path=/var/lib/signageos-display-linux/system
-env_fs_app_files_path=/usr/share/signageos-display-linux
+env_fs_root_path=/var/lib/signageos/fs
+env_fs_system_path=/var/lib/signageos/system
+env_fs_app_files_path=/usr/share/signageos
 
 servlet_pid_files_path=/var/run/signageos/servlets
 

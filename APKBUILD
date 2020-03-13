@@ -1,5 +1,5 @@
 # Maintainer: signageOS <dev@signageos.io>
-pkgname="signageos-display-linux"
+pkgname="signageos"
 pkgver="__pkg_version_placeholder__"
 pkgrel=0
 pkgdesc="SignageOS client"
