@@ -11,10 +11,11 @@ stages:
   - publish:npm
   - release
 
-cache:
+cache: &cache
   key: "$CI_PROJECT_ID"
   paths:
     - node_modules/
+  policy: pull-push
 
 before_script:
   - npm config set unsafe-perm true
@@ -27,6 +28,7 @@ before_script:
 prepare:
   image: $CI_REGISTRY/signageos/docker:master
   stage: prepare
+  cache: {}
   before_script: []
   script:
     - ci-prepare
@@ -44,9 +46,15 @@ test:general:
     fs_system_path: /test_system_fs
   script:
     - npm test
+  cache:
+    <<: *cache
+    policy: pull
 
 test:lint:
   stage: test
+  cache:
+    <<: *cache
+    policy: pull
   except:
     - tags
   script:
@@ -56,6 +64,9 @@ test:lint:
 test:changelog:
   image: $CI_REGISTRY/signageos/docker:master
   stage: test
+  cache:
+    <<: *cache
+    policy: pull
   except:
     - tags
   allow_failure: true
@@ -64,6 +75,9 @@ test:changelog:
 
 prebuild:
   stage: prebuild
+  cache:
+    <<: *cache
+    policy: pull
   dependencies:
     - prepare
   script:
@@ -75,6 +89,7 @@ prebuild:
 
 .build:alpine:
   stage: build
+  cache: {}
   dependencies:
     - prepare
     - prebuild
@@ -122,6 +137,7 @@ build:alpine-aarch64:
 .publish:alpine:
   image: $CI_REGISTRY/signageos/docker-alpine:master
   stage: publish:alpine
+  cache: {}
   before_script: []
   script:
     - aws s3 cp packages/signageos-display-linux/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos-display-linux*-r0.apk"
@@ -151,6 +167,9 @@ publish:alpine-aarch64:
 
 publish:npm:
   stage: publish:npm
+  cache:
+    <<: *cache
+    policy: pull
   dependencies:
     - prepare
     - prebuild
@@ -160,6 +179,7 @@ publish:npm:
 release:tag:
   image: $CI_REGISTRY/signageos/docker:master
   stage: release
+  cache: {}
   only:
     - master
   when: manual
@@ -171,6 +191,9 @@ release:tag:
 release:notes:
   image: $CI_REGISTRY/signageos/docker:master
   stage: release
+  cache:
+    <<: *cache
+    policy: pull
   only:
     - tags
   script:
