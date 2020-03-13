@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";
 import wait from '@signageos/lib/dist/Timer/wait';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import VideoOrientation from '@signageos/front-display/es6/Video/Orientation';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import {
 	IVideoAPI,
@@ -35,6 +36,7 @@ export default class ServerVideo implements IServerVideo {
 	private childProcess: ChildProcess | null = null;
 	private isStream: boolean = false;
 	private finished: boolean = false;
+	private resolveOnceIdleCallbacks: (() => void)[] = [];
 
 	constructor(
 		private fileSystem: IFileSystem,
@@ -69,7 +71,6 @@ export default class ServerVideo implements IServerVideo {
 		y: number,
 		width: number,
 		height: number,
-		orientation: Orientation,
 		isStream: boolean,
 		options: IOptions = {},
 	) {
@@ -81,7 +82,7 @@ export default class ServerVideo implements IServerVideo {
 			this.videoEventListener.once('ready', resolve);
 		});
 
-		this.childProcess = await this.prepareVideoChildProcess(uri, x, y, width, height, orientation, isStream, options);
+		this.childProcess = await this.prepareVideoChildProcess(uri, x, y, width, height, isStream, options);
 		this.videoArguments = { uri, x, y, width, height };
 		this.isStream = isStream;
 
@@ -155,7 +156,7 @@ export default class ServerVideo implements IServerVideo {
 		}
 
 		this.videoEventListener.removeAllListeners();
-		this.state = State.IDLE;
+		this.setStateIdle();
 		this.childProcess = null;
 		this.videoArguments = null;
 		this.finished = false;
@@ -174,18 +175,24 @@ export default class ServerVideo implements IServerVideo {
 		this.eventEmitter.on(eventName, listener);
 	}
 
+	public waitUntilIdle(): Promise<void> {
+		return new Promise<void>((resolve: () => void) => {
+			this.resolveOnceIdleCallbacks.push(resolve);
+		});
+	}
+
 	private async prepareVideoChildProcess(
 		uri: string,
 		x: number,
 		y: number,
 		width: number,
 		height: number,
-		orientation: Orientation,
 		isStream: boolean,
 		options: IOptions,
 	) {
 		const socketPath = this.videoEventListener.getSocketPath();
 		const volume = await this.getAbsoluteVolume(options);
+		const orientation = await this.getVideoOrientation();
 		let videoProcess: ChildProcess;
 		if (isStream) {
 			debug(`prepare stream, uri: ${uri}, x: ${x}, y: ${y}, width: ${width}, height: ${height}`);
@@ -203,7 +210,7 @@ export default class ServerVideo implements IServerVideo {
 
 		videoProcess.once('close', (code: number, signal: string | null) => {
 			debug(`video process closed, uri: ${uri}, code: ${code}, signal: ${signal}`);
-			this.state = State.IDLE;
+			this.setStateIdle();
 			this.finished = true;
 			if (signal !== null) {
 				this.eventEmitter.emit('stopped', { type: 'stopped', srcArguments: videoEventSrcArgs });
@@ -237,5 +244,22 @@ export default class ServerVideo implements IServerVideo {
 		}
 		const absoluteVolume = (options.volume / 100) * systemVolume;
 		return Math.trunc(absoluteVolume);
+	}
+
+	private async getVideoOrientation(): Promise<Orientation> {
+		const videoOrientation = await this.systemSettings.getVideoOrientation();
+		if (videoOrientation !== null) {
+			return Orientation[VideoOrientation[videoOrientation] as keyof typeof Orientation];
+		} else {
+			return await this.systemSettings.getScreenOrientation();
+		}
+	}
+
+	private setStateIdle() {
+		this.state = State.IDLE;
+		for (let i = 0; i < this.resolveOnceIdleCallbacks.length; i++) {
+			this.resolveOnceIdleCallbacks[i]();
+		}
+		this.resolveOnceIdleCallbacks = [];
 	}
 }

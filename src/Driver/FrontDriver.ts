@@ -8,10 +8,10 @@ import ICacheDriver from '@signageos/front-display/es6/NativeDevice/ICacheDriver
 import ICacheStorageInfo from '@signageos/front-display/es6/NativeDevice/ICacheStorageInfo';
 import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
-import IBrowser from '@signageos/front-display/es6/NativeDevice/IBrowser';
+import IScreenRotationManager from '@signageos/front-display/es6/NativeDevice/Screen/IScreenRotationManager';
+import ScreenRotationManager from '@signageos/front-display/es6/NativeDevice/Screen/ScreenRotationManager';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
-import BridgeVideoClient from '../Bridge/BridgeVideoClient';
 import {
 	GetDeviceUid,
 	GetModel,
@@ -23,9 +23,6 @@ import {
 import {
 	IsWifiSupported,
 } from '../Bridge/bridgeNetworkMessages';
-import BridgeVideoPlayer from './Video/BridgeVideoPlayer';
-import BridgeStreamPlayer from './Video/BridgeStreamPlayer';
-import FrontFileSystem from './FrontFileSystem';
 import OverlayHandler from '../Overlay/OverlayHandler';
 import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import cecKeyMap from './Input/cecKeyMap';
@@ -34,47 +31,36 @@ import Key from '../CEC/Key';
 import Led from './Hardware/Led';
 import FrontWifi from './Hardware/FrontWifi';
 import Browser from './Browser';
-import { FrontScreenRotationManager } from './Screen/screenRotation';
+import ISystemSettings from '../SystemSettings/ISystemSettings';
+import IVideoPlayer from '@signageos/front-display/es6/Video/IVideoPlayer';
 
 export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	public readonly hardware: Hardware;
-	public readonly video: BridgeVideoPlayer;
-	public readonly stream: IStreamPlayer;
-	public readonly fileSystem: IFileSystem;
-	public readonly browser: IBrowser;
 
 	private deviceUid: string;
 	private cache: ICache;
-	private screenRotationManager: FrontScreenRotationManager;
-	private bridgeVideoClient: BridgeVideoClient;
+	private screenRotationManager: IScreenRotationManager;
 	private overlay: OverlayHandler;
 
 	constructor(
 		private window: Window,
 		private frontAppletPrefix: string,
 		private bridge: BridgeClient,
+		private systemSettings: ISystemSettings,
 		private socketClient: ISocket,
-		private fileSystemUrl: string,
-		maxVideoCount: number,
+		public readonly video: IVideoPlayer,
+		public readonly stream: IStreamPlayer,
+		public readonly fileSystem: IFileSystem,
+		public readonly browser: Browser,
 	) {
 		const DEFAULT_TOTAL_SIZE_BYTES = 5 * 1024 * 1024; // Default quota of localStorage in browsers
 		this.cache = new ProprietaryCache(this.window.localStorage, DEFAULT_TOTAL_SIZE_BYTES);
 		const bodyElement = this.window.document.getElementById('body')!;
-		this.screenRotationManager = new FrontScreenRotationManager(
-			this.window.localStorage,
-			[bodyElement],
-			this.bridge,
-		);
-		this.bridgeVideoClient = new BridgeVideoClient(
-			this.window,
-			() => this.screenRotationManager.getCurrentOrientation(),
-			this.bridge, socketClient,
-		);
-		this.video = new BridgeVideoPlayer(this.fileSystemUrl, this.bridgeVideoClient, maxVideoCount);
-		this.stream = new BridgeStreamPlayer(this.window, this.bridge, this.bridgeVideoClient);
-		this.fileSystem = new FrontFileSystem(this.fileSystemUrl, this.bridge, this.socketClient);
-		this.browser = new Browser(this.window, this.screenRotationManager, this.bridge);
+		this.screenRotationManager = new ScreenRotationManager([
+			bodyElement,
+			this.browser.getWrapperElement(),
+		]);
 		this.overlay = new OverlayHandler(this.window, this.frontAppletPrefix, this.bridge);
 		this.hardware = {
 			led: new Led(),
@@ -94,6 +80,8 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 		switch (capability) {
 			case FrontCapability.FILE_SYSTEM_INTERNAL_STORAGE:
 			case FrontCapability.FILE_SYSTEM_EXTERNAL_STORAGE:
+			case FrontCapability.FILE_SYSTEM_FILE_CHECKSUM:
+			case FrontCapability.FILE_SYSTEM_LINK:
 			case FrontCapability.TIMERS_PROPRIETARY:
 				return true;
 			case FrontCapability.WIFI:
@@ -110,8 +98,8 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	}
 
 	public async initialize(_staticBaseUrl: string) {
-		await this.screenRotationManager.updateOrientation();
-		await this.browser.updateOrientation();
+		const orientation = await this.systemSettings.getScreenOrientation();
+		this.screenRotationManager.applyOrientation(orientation);
 	}
 
 	public isDetected() {
@@ -201,7 +189,8 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	public async restoreDisplayArea() {
 		await Promise.all([
-			this.bridgeVideoClient.clearAll(),
+			this.video.clearAll(),
+			this.stream.clearAll(),
 			this.overlay.clearAll(),
 			this.browser.close(),
 		]);

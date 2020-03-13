@@ -387,17 +387,6 @@ describe('FileSystem', function () {
 			should(await fs.pathExists(sourceFilePath)).be.true();
 		});
 
-		it('should create hardlink of a file in a new location', async function () {
-			const fileSystem = createFileSystem();
-			const sourceFilePath = getAbsolutePath('source');
-			await fs.writeFile(sourceFilePath, 'source file');
-			await fileSystem.copyFile(getFilePathObject('source'), getFilePathObject('destination'), { hardlink: true });
-			const destinationFilePath = getAbsolutePath('destination');
-			const destinationContents = await fs.readFile(destinationFilePath);
-			destinationContents.toString().should.equal('source file');
-			should(await fs.pathExists(sourceFilePath)).be.true();
-		});
-
 		it('should copy directory to a new location', async function () {
 			const fileSystem = createFileSystem();
 			const sourceDirectoryPath = getAbsolutePath('source_dir');
@@ -434,21 +423,6 @@ describe('FileSystem', function () {
 			await fs.writeFile(sourceFilePath, 'source file');
 			await fs.writeFile(destinationFilePath, 'destination file');
 			await fileSystem.copyFile(getFilePathObject('source'), getFilePathObject('destination'), { overwrite: true });
-			const destinationContents = await fs.readFile(destinationFilePath);
-			destinationContents.toString().should.equal('source file');
-		});
-
-		it('should overwrite already existing destination with the hardlink of the source file', async function () {
-			const fileSystem = createFileSystem();
-			const sourceFilePath = getAbsolutePath('source');
-			const destinationFilePath = getAbsolutePath('destination');
-			await fs.writeFile(sourceFilePath, 'source file');
-			await fs.writeFile(destinationFilePath, 'destination file');
-			await fileSystem.copyFile(
-				getFilePathObject('source'),
-				getFilePathObject('destination'),
-				{ overwrite: true, hardlink: true },
-			);
 			const destinationContents = await fs.readFile(destinationFilePath);
 			destinationContents.toString().should.equal('source file');
 		});
@@ -517,6 +491,44 @@ describe('FileSystem', function () {
 		it('should throw error when trying to move root', async function () {
 			const fileSystem = createFileSystem();
 			await fileSystem.moveFile(getFilePathObject(''), getFilePathObject('destination')).should.be.rejected();
+		});
+	});
+
+	describe('link', function () {
+
+		it('should create hardlink of a file', async function () {
+			const fileSystem = createFileSystem();
+			const sourceFilePath = getAbsolutePath('source');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fileSystem.link(getFilePathObject('source'), getFilePathObject('destination'));
+			const destinationFilePath = getAbsolutePath('destination');
+			const destinationContents = await fs.readFile(destinationFilePath);
+			destinationContents.toString().should.equal('source file');
+			should(await fs.pathExists(sourceFilePath)).be.true();
+		});
+
+		it('should throw error for non-existent source file', async function () {
+			const fileSystem = createFileSystem();
+			await fileSystem.link(getFilePathObject('source'), getFilePathObject('destination'))
+				.should.be.rejected();
+		});
+
+		it('should throw error for already existing destination', async function () {
+			const fileSystem = createFileSystem();
+			const sourceFilePath = getAbsolutePath('source');
+			const destinationFilePath = getAbsolutePath('destination');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fs.writeFile(destinationFilePath, 'destination file');
+			await fileSystem.link(getFilePathObject('source'), getFilePathObject('destination'))
+				.should.be.rejected();
+		});
+
+		it('should throw error for non-existent destination parent directory', async function () {
+			const fileSystem = createFileSystem();
+			const sourceFilePath = getAbsolutePath('source');
+			await fs.writeFile(sourceFilePath, 'source file');
+			await fileSystem.link(getFilePathObject('source'), getFilePathObject('directory/destination'))
+				.should.be.rejected();
 		});
 	});
 

@@ -33,7 +33,7 @@ import FileDetailsProvider from './FileSystem/FileDetailsProvider';
 import FileMetadataCache from './FileSystem/FileMetadataCache';
 import { createSystemAPI } from './API/SystemAPI';
 import FSSystemSettings from './SystemSettings/FSSystemSettings';
-import { performFactorySettingsIfWasntPerformedYet } from './SystemSettings/factorySettings';
+import { performDisplayFactorySettingsIfWasntPerformedYet } from './SystemSettings/factorySettings';
 import { createDisplay } from './Driver/Display/displayFactory';
 import { createSensors } from './Driver/Sensors/sensorsFactory';
 import { getAutoVerification } from './helper';
@@ -199,7 +199,7 @@ if (parameters.raven.enabled) {
 
 	manageCpuFan(display, systemAPI);
 
-	await performFactorySettingsIfWasntPerformedYet(display, systemSettings)
+	await performDisplayFactorySettingsIfWasntPerformedYet(display, parameters.fileSystem.system)
 		.catch((error: Error) => console.error('perform factory settings failed', error));
 
 	async function syncDatetimeToDisplay() {

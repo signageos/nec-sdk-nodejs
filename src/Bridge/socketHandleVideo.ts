@@ -51,13 +51,12 @@ async function handleVideoMessage(
 				message.y,
 				message.width,
 				message.height,
-				message.orientation,
 				message.isStream,
 				message.options,
 			);
 			break;
 		case PlayVideo:
-			await videoPlayer.play(message.uri, message.x, message.y, message.width, message.height, message.orientation, message.isStream);
+			await videoPlayer.play(message.uri, message.x, message.y, message.width, message.height, message.isStream);
 			break;
 		case PauseVideo:
 			await videoPlayer.pause(message.uri, message.x, message.y, message.width, message.height);

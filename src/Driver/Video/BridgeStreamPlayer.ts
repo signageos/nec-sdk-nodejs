@@ -3,7 +3,7 @@ import IStreamPlayer from '@signageos/front-display/es6/Stream/IStreamPlayer';
 import StreamProtocol from '@signageos/front-display/es6/Stream/StreamProtocol';
 import IStream from '@signageos/front-display/es6/Stream/IStream';
 import StreamURI from '@signageos/front-display/es6/Stream/StreamURI';
-import IVideo from '@signageos/front-display/es6/Video/IVideo';
+import IVideoEventEmitter from '@signageos/front-display/es6/Video/IVideoEventEmitter';
 import BridgeVideoClient from '../../Bridge/BridgeVideoClient';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
@@ -95,7 +95,7 @@ export default class BridgeStreamPlayer implements IStreamPlayer {
 		return supportedProtocols.indexOf(protocol) >= 0;
 	}
 
-	private convertVideoEventEmitterToStreamEventEmitter(videoEmitter: IVideo, protocol: StreamProtocol): IStream {
+	private convertVideoEventEmitterToStreamEventEmitter(videoEmitter: IVideoEventEmitter, protocol: StreamProtocol): IStream {
 		const streamEmitter = new EventEmitter();
 
 		videoEmitter.on('error', (event: IVideoEvent) => streamEmitter.emit('error', {

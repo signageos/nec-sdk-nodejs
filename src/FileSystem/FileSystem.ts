@@ -200,14 +200,7 @@ export default class FileSystem implements IFileSystem {
 
 		const sourceAbsolutePath = this.getAbsolutePath(sourceFilePath);
 		const destinationAbsolutePath = this.getAbsolutePath(destinationFilePath);
-		if (options.hardlink) {
-			if (options.overwrite && destinationExists) {
-				await fs.remove(destinationAbsolutePath);
-			}
-			await fs.link(sourceAbsolutePath, destinationAbsolutePath);
-		} else {
-			await fs.copy(sourceAbsolutePath, destinationAbsolutePath, { overwrite: options.overwrite });
-		}
+		await fs.copy(sourceAbsolutePath, destinationAbsolutePath, { overwrite: options.overwrite });
 	}
 
 	public async moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, options: IMoveFileOptions = {}) {
@@ -234,6 +227,30 @@ export default class FileSystem implements IFileSystem {
 		const sourceAbsolutePath = this.getAbsolutePath(sourceFilePath);
 		const destinationAbsolutePath = this.getAbsolutePath(destinationFilePath);
 		await fs.move(sourceAbsolutePath, destinationAbsolutePath, { overwrite: options.overwrite });
+	}
+
+	public async link(sourceFilePath: IFilePath, destinationFilePath: IFilePath) {
+		const sourceExists = await this.exists(sourceFilePath);
+		if (!sourceExists) {
+			throw new FileOrDirectoryNotFound();
+		}
+
+		const destinationExists = await this.exists(destinationFilePath);
+		if (destinationExists) {
+			throw new Error('Trying to create a link in an existing destination');
+		}
+
+		const destinationParentDirectoryFilePath = this.getParentDirectoryFilePath(destinationFilePath);
+		if (!(await this.exists(destinationParentDirectoryFilePath))) {
+			throw new Error('Can\'t create link in a non-existent directory');
+		}
+		if (!(await this.isDirectory(destinationParentDirectoryFilePath))) {
+			throw new Error('Trying to create a link but the destination is a file, not a directory');
+		}
+
+		const sourceAbsolutePath = this.getAbsolutePath(sourceFilePath);
+		const destinationAbsolutePath = this.getAbsolutePath(destinationFilePath);
+		await fs.link(sourceAbsolutePath, destinationAbsolutePath);
 	}
 
 	public async getFileChecksum(filePath: IFilePath, hashType: HashAlgorithm): Promise<string> {

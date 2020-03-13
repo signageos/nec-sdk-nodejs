@@ -1,4 +1,4 @@
-image: $CI_REGISTRY/signageos/docker-node:10.17-alpine-build-zip-vips-ffmpeg
+image: $CI_REGISTRY/signageos/docker-node:12.16.1-alpine-build-zip-vips-ffmpeg
 services:
   - docker:dind
 
@@ -22,7 +22,7 @@ before_script:
   - export TAG=$([ "$CI_COMMIT_TAG" == "" ] && echo $CI_COMMIT_REF_NAME || echo $(echo ${VERSION}-latest | sed -E 's/^[0-9]+.[0-9]+.[0-9]+-([a-zA-Z0-9]+)(\.[0-9]+)?(-[a-zA-Z0-9]+)?$/\1/p' | tail -n1))
   - tools/npm-login.sh
   - npx @signageos/lib@just-tools version-upgrade $VERSION
-  - npm install --ignore-scripts
+  - npm install
 
 prepare:
   image: $CI_REGISTRY/signageos/docker:master

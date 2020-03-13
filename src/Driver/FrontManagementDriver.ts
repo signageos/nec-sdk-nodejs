@@ -1,6 +1,7 @@
 import INetwork from '@signageos/front-display/es6/NativeDevice/Network/INetwork';
 import FrontNetwork from './FrontNetwork';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import VideoOrientation from '@signageos/front-display/es6/Video/Orientation';
 import IFileSystem from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import { APPLICATION_TYPE } from './constants';
 import BridgeClient from '../Bridge/BridgeClient';
@@ -23,7 +24,6 @@ import {
 } from '../Bridge/bridgeSystemMessages';
 import * as ScreenMessages from '../Bridge/bridgeScreenMessages';
 import * as PowerMessages from '../Bridge/bridgePowerMessages';
-import * as AudioMessages from '../Bridge/bridgeAudioMessages';
 import * as FirmwareMessages from '../Bridge/bridgeFirmwareMessages';
 import FrontFileSystem from './FrontFileSystem';
 import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
@@ -39,6 +39,7 @@ import TimerType from '@signageos/front-display/es6/NativeDevice/Timer/TimerType
 import TimerWeekday from '@signageos/front-display/es6/NativeDevice/Timer/TimerWeekday';
 import { createFrontSensors } from './FrontSensors';
 import FrontMonitors from './FrontMonitors';
+import ISystemSettings from '../SystemSettings/ISystemSettings';
 
 export default class FrontManagementDriver implements IManagementDriver {
 
@@ -50,6 +51,7 @@ export default class FrontManagementDriver implements IManagementDriver {
 
 	constructor(
 		private bridge: BridgeClient,
+		private systemSettings: ISystemSettings,
 		private socketClient: ISocket,
 		private fileSystemUrl: string,
 		private waitUntilServerConnected: () => Promise<void>,
@@ -82,17 +84,11 @@ export default class FrontManagementDriver implements IManagementDriver {
 	}
 
 	public async getVolume(): Promise<number> {
-		const { volume } = await this.bridge.invoke<AudioMessages.GetVolume, { volume: number }>({
-			type: AudioMessages.GetVolume,
-		});
-		return volume;
+		return await this.systemSettings.getVolume();
 	}
 
 	public async setVolume(volume: number): Promise<void> {
-		await this.bridge.invoke<AudioMessages.SetVolume, void>({
-			type: AudioMessages.SetVolume,
-			volume,
-		});
+		await this.systemSettings.setVolume(volume);
 	}
 
 	public async screenGetBrightness(): Promise<IBrightness> {
@@ -279,12 +275,9 @@ export default class FrontManagementDriver implements IManagementDriver {
 		orientation: Orientation,
 		_resolution: Resolution,
 		_currentVersion: string,
-		_videoOrientation?: Orientation,
+		videoOrientation?: VideoOrientation,
 	): Promise<() => Promise<void> | Promise<void>> {
-		await this.bridge.invoke<ScreenMessages.SetOrientation, void>({
-			type: ScreenMessages.SetOrientation,
-			orientation,
-		});
+		await this.systemSettings.setScreenOrientation(orientation, videoOrientation);
 		return () => this.systemReboot();
 	}
 

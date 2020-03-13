@@ -1,4 +1,5 @@
 import Orientation from "@signageos/front-display/es6/NativeDevice/Orientation";
+import VideoOrientation from "@signageos/front-display/es6/Video/Orientation";
 import IBrightness from "@signageos/front-display/es6/NativeDevice/IBrightness";
 
 export const GetOrientation = 'Screen.GetOrientation';
@@ -6,10 +7,16 @@ export interface GetOrientation {
 	type: typeof GetOrientation;
 }
 
+export const GetVideoOrientation = 'Screen.GetVideoOrientation';
+export interface GetVideoOrientation {
+	type: typeof GetVideoOrientation;
+}
+
 export const SetOrientation = 'Screen.SetOrientation';
 export interface SetOrientation {
 	type: typeof SetOrientation;
 	orientation: Orientation;
+	videoOrientation?: VideoOrientation;
 }
 
 export const PowerOff = 'Screen.PowerOff';

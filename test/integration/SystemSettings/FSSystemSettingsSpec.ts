@@ -1,8 +1,8 @@
 import * as should from 'should';
 import * as path from 'path';
 import * as fs from 'fs-extra';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import FSSystemSettings from '../../../src/SystemSettings/FSSystemSettings';
-import Orientation from '../../../src/Driver/Orientation';
 
 const parameters = require('../../../config/parameters');
 const fileSystemRoot = parameters.fileSystem.system;
@@ -56,7 +56,12 @@ describe('SystemSettings.FSSystemSettings', function () {
 		});
 	});
 
-	const orientations: (keyof typeof Orientation)[] = ['LANDSCAPE', 'PORTRAIT', 'LANDSCAPE_FLIPPED', 'PORTRAIT_FLIPPED'];
+	const orientations: Orientation[] = [
+		Orientation.LANDSCAPE,
+		Orientation.PORTRAIT,
+		Orientation.LANDSCAPE_FLIPPED,
+		Orientation.PORTRAIT_FLIPPED,
+	];
 
 	describe('getScreenOrientation', function () {
 
@@ -67,19 +72,19 @@ describe('SystemSettings.FSSystemSettings', function () {
 		});
 
 		for (let orientation of orientations) {
-			it(`should return value "${orientation}" saved to file system previously`, async function () {
-				const settings = { screenOrientation: orientation };
+			it(`should return value "${Orientation[orientation]}" saved to file system previously`, async function () {
+				const settings = { screenOrientation: Orientation[orientation] };
 				await fs.writeFile(systemSettingsFilePath, JSON.stringify(settings));
 				const fsSystemSettings = new FSSystemSettings(fileSystemRoot);
 				const screenOrientation = await fsSystemSettings.getScreenOrientation();
-				should(screenOrientation).be.equal(Orientation[orientation]);
+				should(screenOrientation).be.equal(orientation);
 			});
 
-			it(`should return value "${orientation}" set via setScreenOrientation method`, async function () {
+			it(`should return value "${Orientation[orientation]}" set via setScreenOrientation method`, async function () {
 				const fsSystemSettings = new FSSystemSettings(fileSystemRoot);
-				await fsSystemSettings.setScreenOrientation(Orientation[orientation]);
+				await fsSystemSettings.setScreenOrientation(orientation);
 				const screenOrientation = await fsSystemSettings.getScreenOrientation();
-				should(screenOrientation).be.equal(Orientation[orientation]);
+				should(screenOrientation).be.equal(orientation);
 			});
 		}
 	});
@@ -87,52 +92,15 @@ describe('SystemSettings.FSSystemSettings', function () {
 	describe('setScreenOrientation', function () {
 
 		for (let orientation of orientations) {
-			it(`should save new orientation setting "${orientation}" to file system`, async function () {
+			it(`should save new orientation setting "${Orientation[orientation]}" to file system`, async function () {
 				const fsSystemSettings = new FSSystemSettings(fileSystemRoot);
-				await fsSystemSettings.setScreenOrientation(Orientation[orientation]);
+				await fsSystemSettings.setScreenOrientation(orientation);
 				const settingsBuffer = await fs.readFile(systemSettingsFilePath);
 				const settings = JSON.parse(settingsBuffer.toString());
 				should(settings).deepEqual({
-					screenOrientation: orientation,
+					screenOrientation: Orientation[orientation],
 				});
 			});
 		}
-	});
-
-	describe('wasFactorySettingsPerformed', function () {
-
-		it('should return false when there are no settings yet', async function () {
-			const fsSystemSettings = new FSSystemSettings(fileSystemRoot);
-			const wasFactorySettingsPerformed = await fsSystemSettings.wasFactorySettingsPerformed();
-			should(wasFactorySettingsPerformed).be.false();
-		});
-
-		it('should return value saved to file system previously', async function () {
-			const settings = { factorySettingsPerformed: true };
-			await fs.writeFile(systemSettingsFilePath, JSON.stringify(settings));
-			const fsSystemSettings = new FSSystemSettings(fileSystemRoot);
-			const wasFactorySettingsPerformed = await fsSystemSettings.wasFactorySettingsPerformed();
-			should(wasFactorySettingsPerformed).be.true();
-		});
-
-		it('should return true if setFactorySettingsPerformed() was called previously', async function () {
-			const fsSystemSettings = new FSSystemSettings(fileSystemRoot);
-			await fsSystemSettings.setFactorySettingsPerformed();
-			const wasFactorySettingsPerformed = await fsSystemSettings.wasFactorySettingsPerformed();
-			should(wasFactorySettingsPerformed).be.true();
-		});
-	});
-
-	describe('setFactorySettingsPerformed', function () {
-
-		it(`should save new factorySettingsPerformed setting to file system`, async function () {
-			const fsSystemSettings = new FSSystemSettings(fileSystemRoot);
-			await fsSystemSettings.setFactorySettingsPerformed();
-			const settingsBuffer = await fs.readFile(systemSettingsFilePath);
-			const settings = JSON.parse(settingsBuffer.toString());
-			should(settings).deepEqual({
-				factorySettingsPerformed: true,
-			});
-		});
 	});
 });

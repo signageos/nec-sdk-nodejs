@@ -49,6 +49,7 @@ export default async function handleMessage(
 		GetSerialNumber |
 		GetTemperature |
 		ScreenMessages.GetOrientation |
+		ScreenMessages.GetVideoOrientation |
 		GetCurrentTimeWithTimezone |
 		SetManualTimeWithTimezone |
 		SetNTPTimeWithTimezone |
@@ -59,6 +60,7 @@ export default async function handleMessage(
 		PowerMessages.SystemReboot |
 		PowerMessages.GetTimers |
 		PowerMessages.SetTimer |
+		ScreenMessages.IsPoweredOn |
 		ScreenMessages.PowerOff |
 		ScreenMessages.PowerOn |
 		ScreenMessages.SetBrightness |
@@ -90,6 +92,7 @@ export default async function handleMessage(
 		FSMessages.DeleteFile |
 		FSMessages.CopyFile |
 		FSMessages.MoveFile |
+		FSMessages.Link |
 		FSMessages.ReadFile |
 		FSMessages.WriteFile |
 		FSMessages.GetFileDetails |
@@ -150,10 +153,24 @@ export default async function handleMessage(
 			const orientation = await systemSettings.getScreenOrientation();
 			return { orientation };
 
+		case ScreenMessages.GetVideoOrientation:
+			const videoOrientation = await systemSettings.getVideoOrientation();
+			return { videoOrientation };
+
 		case ScreenMessages.SetOrientation:
 			// TODO front display should not accept unused parameters when are not necessary
-			await nativeDriver.screenResize('unused', message.orientation, Resolution.FULL_HD, 'unused');
+			await nativeDriver.screenResize(
+				'unused',
+				message.orientation,
+				Resolution.FULL_HD,
+				'unused',
+				message.videoOrientation,
+			);
 			return {};
+
+		case ScreenMessages.IsPoweredOn:
+			const isPoweredOn = await nativeDriver.displayIsPowerOn();
+			return { isPoweredOn };
 
 		case ScreenMessages.PowerOff:
 			await nativeDriver.displayPowerOff();
@@ -300,6 +317,10 @@ export default async function handleMessage(
 
 		case FSMessages.MoveFile:
 			await fileSystem.moveFile(message.sourceFilePath, message.destinationFilePath, message.options);
+			return {};
+
+		case FSMessages.Link:
+			await fileSystem.link(message.sourceFilePath, message.destinationFilePath);
 			return {};
 
 		case FSMessages.ReadFile:

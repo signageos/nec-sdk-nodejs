@@ -61,7 +61,7 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 		const imageResizer = new ImageResizer(thumbnailRequestHandler);
 		const videoThumbnailExtractor = new VideoThumbnailExtractor(thumbnailRequestHandler, imageResizer, videoAPI);
 
-		before((done: Function) => {
+		before((done: () => void) => {
 			httpServer.listen(TEST_PORT, done);
 		});
 
@@ -74,7 +74,7 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 			mockVideoDurationMs = 0;
 		});
 
-		after((done: Function) => {
+		after((done: () => void) => {
 			httpServer.close(done);
 		});
 

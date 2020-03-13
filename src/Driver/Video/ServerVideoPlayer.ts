@@ -1,9 +1,13 @@
-import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import IServerVideoPlayer from './IServerVideoPlayer';
 import IServerVideo from './IServerVideo';
 import { EventEmitter } from "events";
+import { debug } from '@signageos/lib/dist/Debug/debugDecorator';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import { IOptions } from '@signageos/front-display/es6/Video/IVideoPlayer';
+import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
+import { NoMoreAvailableVideosError } from '@signageos/front-display/es6/NativeDevice/Error/videoErrors';
+
+const DEBUG_NAMESPACE = '@signageos/display-linux:Driver:Video:ServerVideoPlayer';
 
 export default class ServerVideoPlayer implements IServerVideoPlayer {
 
@@ -37,40 +41,44 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		);
 	}
 
+	@locked('ServerVideoPlayer')
+	@debug(DEBUG_NAMESPACE)
 	public async prepare(
 		uri: string,
 		x: number,
 		y: number,
 		width: number,
 		height: number,
-		orientation: Orientation,
 		isStream: boolean,
 		options: IOptions = {},
 	): Promise<void> {
 		const idleVideo = this.getIdleVideoOrThrowException();
-		await idleVideo.prepare(uri, x, y, width, height, orientation, isStream, options);
+		await idleVideo.prepare(uri, x, y, width, height, isStream, options);
 	}
 
+	@locked('ServerVideoPlayer')
+	@debug(DEBUG_NAMESPACE)
 	public async play(
 		uri: string,
 		x: number,
 		y: number,
 		width: number,
 		height: number,
-		orientation: Orientation,
 		isStream: boolean,
 	): Promise<void> {
-		let video: IServerVideo;
 		try {
-			video = this.getVideoByArgumentsOrThrowException(uri, x, y, width, height);
+			await this.playVideo(uri, x, y, width, height, isStream);
 		} catch (error) {
-			video = this.getIdleVideoOrThrowException();
-			await video.prepare(uri, x, y, width, height, orientation, isStream, {});
+			if (error instanceof NoMoreAvailableVideosError) {
+				this.playVideoOnceAvailable(uri, x, y, width, height, isStream);
+			} else {
+				throw error;
+			}
 		}
-
-		await video.play();
 	}
 
+	@locked('ServerVideoPlayer')
+	@debug(DEBUG_NAMESPACE)
 	public async stop(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const video = this.getVideoByArguments(uri, x, y, width, height);
 		if (video) {
@@ -78,6 +86,8 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		}
 	}
 
+	@locked('ServerVideoPlayer')
+	@debug(DEBUG_NAMESPACE)
 	public async pause(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const video = this.getVideoByArguments(uri, x, y, width, height);
 		if (video) {
@@ -85,6 +95,8 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		}
 	}
 
+	@locked('ServerVideoPlayer')
+	@debug(DEBUG_NAMESPACE)
 	public async resume(uri: string, x: number, y: number, width: number, height: number): Promise<void> {
 		const video = this.getVideoByArguments(uri, x, y, width, height);
 		if (video) {
@@ -100,6 +112,8 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		this.eventEmitter.removeListener(event, listener);
 	}
 
+	@locked('ServerVideoPlayer')
+	@debug(DEBUG_NAMESPACE)
 	public async clearAll(): Promise<void> {
 		await Promise.all(
 			this.videos.map(async (video: IServerVideo) => {
@@ -112,6 +126,27 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 		);
 	}
 
+	private async playVideo(uri: string, x: number, y: number, width: number, height: number, isStream: boolean) {
+		let video: IServerVideo;
+		try {
+			video = this.getVideoByArgumentsOrThrowException(uri, x, y, width, height);
+		} catch (error) {
+			video = this.getIdleVideoOrThrowException();
+			await video.prepare(uri, x, y, width, height, isStream, {});
+		}
+		await video.play();
+	}
+
+	private playVideoOnceAvailable(uri: string, x: number, y: number, width: number, height: number, isStream: boolean) {
+		this.waitUntilSomeVideoBecomesIdle().then(() => this.play(uri, x, y, width, height, isStream));
+	}
+
+	private waitUntilSomeVideoBecomesIdle() {
+		return Promise.race(
+			this.videos.map((video: IServerVideo) => video.waitUntilIdle()),
+		);
+	}
+
 	private getIdleVideoOrThrowException() {
 		for (let video of this.videos) {
 			if (video.isIdle()) {
@@ -119,7 +154,7 @@ export default class ServerVideoPlayer implements IServerVideoPlayer {
 			}
 		}
 
-		throw new Error('All available video players are busy');
+		throw new NoMoreAvailableVideosError();
 	}
 
 	private getVideoByArguments(uri: string, x: number, y: number, width: number, height: number): IServerVideo | null {

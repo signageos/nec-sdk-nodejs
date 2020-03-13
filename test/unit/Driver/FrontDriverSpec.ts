@@ -38,8 +38,23 @@ describe('Driver.FrontDriver', function () {
 					.resolves({ model: 'model1' }),
 				socketClient: new EventEmitter(),
 			};
+			const browser = {
+				getWrapperElement() {
+					return {};
+				},
+			};
 
-			const frontDriver = new FrontDriver(createWindow(), 'hug', bridge as any, createMockSocket(), 'http://localhost:8081', 1);
+			const frontDriver = new FrontDriver(
+				createWindow(),
+				'hug',
+				bridge as any,
+				{} as any,
+				createMockSocket(),
+				{} as any,
+				{} as any,
+				{} as any,
+				browser as any,
+			);
 			const model = await frontDriver.getModel();
 			model.should.equal('model1');
 		});

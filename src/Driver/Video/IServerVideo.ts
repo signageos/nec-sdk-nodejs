@@ -1,4 +1,3 @@
-import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import IVideoEvent from '@signageos/front-display/es6/Video/IVideoEvent';
 import { IVideoArguments } from './ServerVideo';
 import { IOptions } from '@signageos/front-display/es6/Video/IVideoPlayer';
@@ -13,7 +12,6 @@ interface IServerVideo {
 		y: number,
 		width: number,
 		height: number,
-		orientation: Orientation,
 		isStream: boolean,
 		options?: IOptions,
 	): Promise<void>;
@@ -24,6 +22,7 @@ interface IServerVideo {
 	isIdle(): boolean;
 	isPlaying(): boolean;
 	addEventListener(eventName: string, listener: (event: IVideoEvent) => void): void;
+	waitUntilIdle(): Promise<void>;
 }
 
 export default IServerVideo;

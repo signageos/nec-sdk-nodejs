@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import Orientation from '../Driver/Orientation';
+import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
+import VideoOrientation from '@signageos/front-display/es6/Video/Orientation';
 import ISystemSettings from './ISystemSettings';
 
 const DEFAULT_VOLUME = 100;
@@ -10,8 +11,8 @@ export default class FSSystemSettings implements ISystemSettings {
 
 	private settings: {
 		volume?: number;
-		screenOrientation?: Orientation;
-		factorySettingsPerformed?: boolean;
+		screenOrientation?: keyof typeof Orientation;
+		videoOrientation?: keyof typeof VideoOrientation;
 	} = {};
 	private loadedFromFS: boolean = false;
 
@@ -38,21 +39,25 @@ export default class FSSystemSettings implements ISystemSettings {
 		if (typeof this.settings.screenOrientation === 'undefined') {
 			return DEFAULT_SCREEN_ORIENTATION;
 		}
-		return this.settings.screenOrientation;
+		return Orientation[this.settings.screenOrientation];
 	}
 
-	public async setScreenOrientation(orientation: Orientation): Promise<void> {
-		this.settings.screenOrientation = orientation;
-		await this.saveToFileSystem();
-	}
-
-	public async wasFactorySettingsPerformed(): Promise<boolean> {
+	public async getVideoOrientation(): Promise<VideoOrientation | null> {
 		await this.loadFromFileSystemIfNotLoaded();
-		return this.settings.factorySettingsPerformed || false;
+		if (typeof this.settings.videoOrientation !== 'undefined') {
+			return VideoOrientation[this.settings.videoOrientation];
+		} else {
+			return null;
+		}
 	}
 
-	public async setFactorySettingsPerformed(): Promise<void> {
-		this.settings.factorySettingsPerformed = true;
+	public async setScreenOrientation(orientation: Orientation, videoOrientation?: VideoOrientation): Promise<void> {
+		this.settings.screenOrientation = Orientation[orientation] as keyof typeof Orientation;
+		if (typeof videoOrientation !== 'undefined') {
+			this.settings.videoOrientation = VideoOrientation[videoOrientation] as keyof typeof VideoOrientation;
+		} else {
+			delete this.settings.videoOrientation;
+		}
 		await this.saveToFileSystem();
 	}
 

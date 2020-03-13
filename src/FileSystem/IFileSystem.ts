@@ -20,6 +20,7 @@ export default interface IFileSystem {
 	deleteFile(filePath: IFilePath, recursive?: boolean): Promise<void>;
 	copyFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, options?: ICopyFileOptions): Promise<void>;
 	moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, options?: IMoveFileOptions): Promise<void>;
+	link(sourceFilePath: IFilePath, destinationFilePath: IFilePath): Promise<void>;
 	getFileChecksum(filePath: IFilePath, hashType: HashAlgorithm): Promise<string>;
 	extractFile(archiveFilePath: IFilePath, destinationDirectoryPath: IFilePath, method: string): Promise<void>;
 	createDirectory(directoryPath: IFilePath): Promise<void>;
