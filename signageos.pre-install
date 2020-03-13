@@ -1,0 +1,13 @@
+#!/bin/sh
+
+addgroup -S signageos 2>/dev/null
+adduser -S -D -h /var/log/signageos -s /sbin/nologin -G signageos -g signageOS signageos 2>/dev/null
+adduser signageos video
+adduser signageos dialout # this gives signageos user access to UART for controlling NEC display
+
+DEBUG_PASSWD=`head /dev/urandom | tr -dc A-Za-z0-9 | head -c 30`
+echo "$DEBUG_PASSWD
+$DEBUG_PASSWD" | adduser debug 2>/dev/null
+DEBUG_PASSWD=''
+
+exit 0

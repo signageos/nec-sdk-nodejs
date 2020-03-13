@@ -1,0 +1,74 @@
+# Maintainer: signageOS <dev@signageos.io>
+pkgname="signageos"
+pkgver="__pkg_version_placeholder__"
+pkgrel=0
+pkgdesc="SignageOS application"
+url="https://www.signageos.io"
+pkgusers="signageos debug"
+pkggroups="signageos debug"
+arch="armhf armv7 aarch64"
+license="custom"
+_coredeps="
+    sudo bash coreutils util-linux e2fsprogs dosfstools unzip file lshw ntfs-3g exfat-utils fuse-exfat nodejs=~10 ffmpeg squid gnupg
+    nginx logrotate libcec raspberrypi raspi2png vips-dev curl signageos-omxplayer=0.29-r0 signageos-rpi-cec-listener=0.37-r0
+    signageos-rpi-overlay-renderer=0.6-r0 signageos-rpi-display-info=0.5-r0
+"
+_dockerdeps="iptables libseccomp runc tini-static device-mapper-libs"
+depends="$_coredeps $_dockerdeps"
+makedepends="npm"
+options="!check"
+subpackages="$pkgname-openrc $pkgname-doc"
+install="$pkgname.pre-install $pkgname.post-install"
+source=""
+builddir="tmp/apk"
+
+package() {
+    mkdir -p "$pkgdir"/usr/lib/signageos/bin
+    sed -i "s/__version_placeholder__/$pkgver/" api/signageos
+    cp -r api/* "$pkgdir"/usr/lib/signageos/bin
+    chmod 755 "$pkgdir"/usr/lib/signageos/bin/signageos
+
+    mkdir -p "$pkgdir"/usr/bin
+    ln -s /usr/lib/signageos/bin/signageos "$pkgdir"/usr/bin/signageos
+
+	mkdir -p "$pkgdir"/usr/share/signageos
+	cp -r dist/client "$pkgdir"/usr/share/signageos
+	cp -r dist/server "$pkgdir"/usr/share/signageos
+	install -m644 -D loader/loader.mp4 "$pkgdir"/usr/share/signageos/loader.mp4
+    install -m644 -D squid/squid.conf.default "$pkgdir"/usr/share/signageos/squid.conf.default
+
+    cp -r sbin "$pkgdir"
+    chmod 755 "$pkgdir"/sbin/*
+
+    install -m600 -D debug/authorized_keys "$pkgdir"/home/debug/.ssh/authorized_keys
+    chown -R debug:debug "$pkgdir"/home/debug
+
+    install -m600 -D sudoers.d/signageos "$pkgdir"/etc/sudoers.d/signageos
+    install -m600 -D sudoers.d/debug "$pkgdir"/etc/sudoers.d/debug
+
+    install -m644 -D udev/vchiq-permissions.rules "$pkgdir"/etc/udev/rules.d/98-signageos-vchiq-permissions.rules
+    install -m644 -D udev/automount.rules "$pkgdir"/etc/udev/rules.d/99-signageos-automount.rules
+
+    mkdir -p "$pkgdir"/etc/init.d/
+    cp init.d/* "$pkgdir"/etc/init.d/
+    chmod 755 "$pkgdir"/etc/init.d/*
+
+	install -m644 -D etc/nginx/conf.d/signageos.conf "$pkgdir"/etc/nginx/conf.d/signageos.conf
+    install -m644 -D etc/logrotate.d/syslog "$pkgdir"/etc/logrotate.d/syslog
+
+	install -m644 -D LICENSE "$pkgdir"/usr/share/licenses/signageos/LICENSE
+
+    mkdir -p "$pkgdir"/etc/signageos/time
+
+    mkdir -p "$pkgdir"/var/log/signageos
+    chown signageos:signageos $pkgdir/var/log/signageos
+
+	mkdir -p $pkgdir/var/lib/signageos/fs/internal
+	mkdir -p $pkgdir/var/lib/signageos/system
+    chown -R signageos:signageos $pkgdir/var/lib/signageos
+
+	ln -sfT /media $pkgdir/var/lib/signageos/fs/external
+
+	mkdir -p "$pkgdir"/lib
+	ln -s /opt/vc/lib/libbcm_host.so "$pkgdir"/lib/libbcm_host.so
+}

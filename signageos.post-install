@@ -1,0 +1,5 @@
+#!/bin/sh
+
+cp -P /etc/localtime /etc/signageos/time/localtime # this is a hack to allow changing timezone inside wpewebkit container
+
+signageos web clear_acl --no-reload # overwrite default squid config with our default config

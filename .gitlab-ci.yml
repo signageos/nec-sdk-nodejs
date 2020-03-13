@@ -100,13 +100,13 @@ prebuild:
     - export VERSION=`cat ./VERSION`
     - npx @signageos/lib@just-tools version-upgrade $VERSION
     - export VERSION=`echo $VERSION | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'` # omit branch version
-    - make apk
-    - mkdir -p packages/signageos-display-linux/$ARCHITECTURE
-    - cp ~/packages/dist/$ARCHITECTURE/signageos-display-linux*-$VERSION-r0.apk packages/signageos-display-linux/$ARCHITECTURE
+    - tools/build-apk.sh $VERSION
+    - mkdir -p packages/signageos/$ARCHITECTURE
+    - cp ~/packages/dist/$ARCHITECTURE/signageos*-$VERSION-r0.apk packages/signageos/$ARCHITECTURE
   artifacts:
     when: on_success
     paths:
-      - packages/signageos-display-linux/$ARCHITECTURE
+      - packages/signageos/$ARCHITECTURE
 
 build:alpine-armhf:
   extends: .build:alpine
@@ -140,7 +140,7 @@ build:alpine-aarch64:
   cache: {}
   before_script: []
   script:
-    - aws s3 cp packages/signageos-display-linux/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos-display-linux*-r0.apk"
+    - aws s3 cp packages/signageos/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos*-r0.apk"
 
 publish:alpine-armhf:
   extends: .publish:alpine
