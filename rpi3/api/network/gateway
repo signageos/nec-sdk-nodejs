@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# get default network gateway
+
+ip r | grep default | cut -d ' ' -f 3 | head -n1

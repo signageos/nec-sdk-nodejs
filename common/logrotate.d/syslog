@@ -1,0 +1,11 @@
+/var/log/messages {
+    rotate 7
+    size 100M
+    compress
+    delaycompress
+    missingok
+    notifempty
+    postrotate
+        /usr/bin/killall -HUP syslogd
+    endscript
+}

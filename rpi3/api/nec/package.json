@@ -1,0 +1,12 @@
+{
+  "name": "@signageos/linux-alpine-api-nec",
+  "version": "1.0.0",
+  "scripts": {
+    "clean": "yarn autoclean --force"
+  },
+  "author": "signageOS Inc.",
+  "license": "ISC",
+  "dependencies": {
+    "@signageos/nec-sdk": "0.0.0-master.19"
+  }
+}

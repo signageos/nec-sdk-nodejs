@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# refresh overlay
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <pid>"
+    echo "  pid - ID of the running overlay process"
+    exit 1
+fi
+
+PID=$1
+
+kill -s SIGRTMIN+4 "$PID"

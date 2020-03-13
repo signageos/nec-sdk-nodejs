@@ -1,0 +1,253 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <img_url>"
+    exit 1
+fi
+
+. /sbin/signageos-diskutils
+
+TMP_DIR=/media/mmcblk0p3
+
+IMG_URL="$1"
+IMG_ARCHIVE_FILENAME=`basename $IMG_URL`
+IMG_ARCHIVE_EXTENSION=${IMG_ARCHIVE_FILENAME##*.}
+IMG_ARCHIVE_FULL_PATH="$TMP_DIR/$IMG_ARCHIVE_FILENAME"
+
+IMG_BASENAME="${IMG_ARCHIVE_FILENAME%.*}"
+if echo "$IMG_BASENAME" | grep -q '\.img$'; then
+    IMG_FILENAME="$IMG_BASENAME"
+else
+    IMG_FILENAME="$IMG_BASENAME.img"
+fi
+
+IMG_FULL_PATH="$TMP_DIR/$IMG_FILENAME"
+
+PLACEHOLDER_PARTITION_NUM=2
+PLACEHOLDER_PARTITION="${DISK}p${PLACEHOLDER_PARTITION_NUM}"
+TMP_PARTITION_NUM=3
+TMP_PARTITION="${DISK}p${TMP_PARTITION_NUM}"
+
+IS_PROCESS_AT_THE_POINT_OF_NO_RETURN=0
+BACKUP_IMG="$TMP_DIR/.sosbackup.img"
+
+get_disk_total_sectors() {
+    disk="$1"
+    fdisk -l $disk | head -1 | sed 's/.* \([0-9]*\) sectors/\1/'
+}
+
+get_disk_last_sector() {
+  disk="$1"
+  disk_sectors_count=`get_disk_total_sectors "$disk"`
+  echo $(( $disk_sectors_count - 1 ))
+}
+
+is_img_url_valid() {
+    if wget --spider "$IMG_URL"; then
+        echo "URL valid"
+    else
+        echo "URL invalid"
+        return 1
+    fi
+}
+
+create_tmp_partition() {
+  tmp_partition_size=$(( 4 * 1024 * 1024 * 1024 )) # 4GBi
+  tmp_partition_sectors=$(( $tmp_partition_size / $DISK_SECTOR_SIZE ))
+  tmp_last_sector=`get_disk_last_sector "$DISK"`
+  tmp_first_sector=$(( $tmp_last_sector - $tmp_partition_sectors ))
+
+  sync
+  echo "n
+  p
+  $TMP_PARTITION_NUM
+  $tmp_first_sector
+
+  w
+  " | fdisk "$DISK" -W always
+  mkfs.ext4 -F "$TMP_PARTITION"
+  sync
+}
+
+delete_tmp_partition() {
+  echo "d
+  $TMP_PARTITION_NUM
+  w
+  " | fdisk "$DISK" -W always
+}
+
+mount_tmp_partition() {
+  mkdir -p "$TMP_DIR"
+  mount "$TMP_PARTITION" "$TMP_DIR"
+}
+
+umount_tmp_partition() {
+  umount "$TMP_PARTITION"
+}
+
+download_image_archive() {
+  echo "downloading image"
+  wget -O "$IMG_ARCHIVE_FULL_PATH" "$IMG_URL"
+}
+
+extract_image_archive() {
+  case "$IMG_ARCHIVE_EXTENSION" in
+    zip)
+      echo "extracting image"
+      unzip "$IMG_ARCHIVE_FULL_PATH" -d "$TMP_DIR"
+      ;;
+    gz)
+      echo "extracting image"
+      gunzip -c "$IMG_ARCHIVE_FULL_PATH" > "$IMG_FULL_PATH"
+      ;;
+  esac
+}
+
+backup_original_disk() {
+  echo "backing up original disk"
+  boot_partition_end_sector=`get_end_sector_of_partition $DISK $BOOT_PARTITION`
+  backup_sectors=$(( $boot_partition_end_sector + 1 ))
+  dd if="$DISK" of="$BACKUP_IMG" bs="$DISK_SECTOR_SIZE" count="$backup_sectors"
+  sync
+}
+
+recover_from_backup() {
+  echo "recover disk from backup"
+  dd if="$BACKUP_IMG" of="$DISK" bs="$DISK_SECTOR_SIZE"
+  sync
+}
+
+umount_boot_partition() {
+  echo "unmounting boot partition"
+  service udev stop
+  umount /.modloop
+  umount /dev/mmcblk0p1
+}
+
+copy_to_disk_what_comes_after_boot_partition() {
+    # first copy everything that comes after boot partition because no matter how much data that is
+    # if boot partition and partition table are untouched, everything would be fine if something happened at this stage
+    # and the original system would still be there and it would recover after reboot
+
+    first_sector=`get_start_sector_of_partition "$DISK" "$PLACEHOLDER_PARTITION"`
+    image_total_sectors=`get_disk_total_sectors "$IMG_FULL_PATH"`
+    sectors_copied=$(( $image_total_sectors - $first_sector ))
+    retries_left=3
+
+    echo "copy data that come after boot partition"
+
+    while [ $retries_left -gt 0 ]
+    do
+        dd if="$IMG_FULL_PATH" of="$PLACEHOLDER_PARTITION" bs="$DISK_SECTOR_SIZE" skip="$first_sector"
+        sync
+        disk_md5sum=`dd if="$PLACEHOLDER_PARTITION" bs="$DISK_SECTOR_SIZE" count="$sectors_copied" | md5sum -b`
+        image_md5sum=`dd if="$IMG_FULL_PATH" bs="$DISK_SECTOR_SIZE" skip="$first_sector" | md5sum -b`
+        if [ "$disk_md5sum" = "$image_md5sum" ]; then
+            echo "data after boot partition successfully copied"
+            return
+        fi
+        retries_left=$(( $retries_left - 1 ))
+        echo "data after boot partition copied but the checksum isn't correct, $retries_left tries left..."
+    done
+
+    echo "copying failed"
+    return 1
+}
+
+copy_the_first_portion_of_disk() {
+    # copy everything else that replaces original boot partition
+    # this part is risky and if it gets interrupted, the system won't recover and a manual action will be required to fix it
+
+    until_sector=`get_start_sector_of_partition "$DISK" "$PLACEHOLDER_PARTITION"`
+    retries_left=3
+
+    echo "copy the beginning of the disk"
+
+    while [ $retries_left -gt 0 ]
+    do
+        dd if="$IMG_FULL_PATH" of="$DISK" bs="$DISK_SECTOR_SIZE" count="$until_sector"
+        sync
+        disk_md5sum=`dd if="$DISK" bs="$DISK_SECTOR_SIZE" count="$until_sector" | md5sum -b`
+        image_md5sum=`dd if="$IMG_FULL_PATH" bs="$DISK_SECTOR_SIZE" count="$until_sector" | md5sum -b`
+        if [ "$disk_md5sum" = "$image_md5sum" ]; then
+            echo "beginning of the disk successfully copied"
+            return
+        fi
+        retries_left=$(( $retries_left - 1 ))
+        echo "beginning of the disk copied but the checksum isn't correct, $retries_left tries left..."
+    done
+
+    echo "copying failed"
+    return 1
+}
+
+copy_whole_img_to_disk_at_once() {
+    image_total_sectors=`get_disk_total_sectors "$IMG_FULL_PATH"`
+    retries_left=3
+
+    echo "copy whole image at once"
+
+    while [ $retries_left -gt 0 ]
+    do
+        dd if="$IMG_FULL_PATH" of="$DISK" bs="$DISK_SECTOR_SIZE"
+        sync
+        disk_md5sum=`dd if="$DISK" bs="$DISK_SECTOR_SIZE" count="$image_total_sectors" | md5sum -b`
+        image_md5sum=`dd if="$IMG_FULL_PATH" bs="$DISK_SECTOR_SIZE" | md5sum -b`
+        if [ "$disk_md5sum" = "$image_md5sum" ]; then
+            echo "image successfully copied"
+            return
+        fi
+        retries_left=$(( $retries_left - 1 ))
+        echo "image copied but the checksum isn't correct, $retries_left tries left..."
+    done
+
+    echo "copying failed"
+    return 1
+}
+
+copy_img_to_disk() {
+  # create placeholder partition to first copy bytes after current boot partition
+  boot_partition_end_sector=`get_end_sector_of_partition $DISK $BOOT_PARTITION`
+  placeholder_first_sector=$(( $boot_partition_end_sector + 1 ))
+  image_total_sectors=`get_disk_total_sectors "$IMG_FULL_PATH"`
+  sync
+
+  if [ $image_total_sectors -gt $placeholder_first_sector ]; then
+    echo "n
+    p
+    $PLACEHOLDER_PARTITION_NUM
+    $placeholder_first_sector
+
+    w
+    " | fdisk "$DISK" -W always
+    sync
+
+    copy_to_disk_what_comes_after_boot_partition
+    IS_PROCESS_AT_THE_POINT_OF_NO_RETURN=1
+    copy_the_first_portion_of_disk
+  else
+    IS_PROCESS_AT_THE_POINT_OF_NO_RETURN=1
+    copy_whole_img_to_disk_at_once
+  fi
+
+  sync
+}
+
+overwrite_system() {
+  is_img_url_valid
+  create_tmp_partition
+  mount_tmp_partition
+  download_image_archive
+  extract_image_archive
+  umount_boot_partition
+  backup_original_disk
+  copy_img_to_disk
+}
+
+if ! overwrite_system; then
+    if [ "$IS_PROCESS_AT_THE_POINT_OF_NO_RETURN" = "1" ]; then
+        recover_from_backup
+    fi
+fi

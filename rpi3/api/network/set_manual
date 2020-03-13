@@ -1,0 +1,108 @@
+#!/usr/bin/env node
+// set manual network settings
+
+const fs = require('fs');
+const { runScript, getAllInterfacesNames, netmaskToCidrNumber } = require('./lib/helper');
+const NetworkInterfaces = require('node-network-interfaces');
+const { ip, cidr } = require('node-cidr');
+
+const NETWORK_INTERFACES_CONFIG_FILE = '/etc/network/interfaces';
+const RESOLV_CONFIG_FILE = '/etc/resolv.conf';
+
+let dryRun = false;
+let iface;
+let address;
+let gateway;
+let netmask;
+let dns;
+
+const args = [...process.argv];
+args.shift(); // node script
+args.shift(); // set_manual script
+while (args.length > 0) {
+	const nextArg = args.shift();
+	switch (nextArg) {
+		case '--dry-run':
+			dryRun = true;
+			break;
+		case '--iface':
+			iface = args.shift();
+			break;
+		case '--address':
+			address = args.shift();
+			break;
+		case '--gateway':
+			gateway = args.shift();
+			break;
+		case '--netmask':
+			netmask = args.shift();
+			break;
+		case '--dns':
+				dns = args.shift().split(',');
+			break;
+		default:
+			throw new Error(`Unknown argument ${nextArg}`);
+	}
+}
+
+if (!iface) {
+	throw new Error(`Argument --iface is required`);
+}
+if (!address) {
+	throw new Error(`Argument --address is required`);
+}
+if (!gateway) {
+	throw new Error(`Argument --gateway is required`);
+}
+if (!netmask) {
+	throw new Error(`Argument --netmask is required`);
+}
+if (!dns) {
+	throw new Error(`Argument --dns is required`);
+}
+
+(async function () {
+	const availableIfacaNames = await getAllInterfacesNames();
+	if (availableIfacaNames.indexOf(iface) === -1) {
+		throw new Error(`Not available interface: ${iface}`);
+	}
+
+	if (ip.validate(address) !== null) {
+		throw new Error(`Given ip address is not IPv4 type (${ip.validate(address)}): ${address}`);
+	}
+
+	if (ip.validate(gateway) !== null) {
+		throw new Error(`Given gateway is not IPv4 type (${ip.validate(gateway)}): ${gateway}`);
+	}
+
+	for (const oneDns of dns) {
+		if (ip.validate(oneDns) !== null) {
+			throw new Error(`Given DNS server is not IPv4 type (${ip.validate(oneDns)}): ${oneDns}`);
+		}
+	}
+
+	const cidrNumber = netmaskToCidrNumber(netmask);
+	const netmaskCidr = gateway + '/' + cidrNumber;
+	if (!cidr.includes(netmaskCidr, address)) {
+		throw new Error(`Given ip address is not in subnet of gateway: ${address} not in ${netmaskCidr}`);
+	}
+
+	const interfaces = new NetworkInterfaces(NETWORK_INTERFACES_CONFIG_FILE);
+	const config = {
+		address,
+		netmask,
+		gateway,
+		dns: '"' + dns.join(' ') + '"',
+	};
+	if (dryRun) {
+		console.log('would apply settings:', iface, config);
+		console.log('would restart network:', `ifdown ${iface}`, `ifup ${iface}`);
+	} else {
+		await interfaces.setConfig(iface, config);
+		const resolvContent = dns.map((oneDns) => `nameserver ${oneDns}`).join('\n');
+		fs.writeFileSync(RESOLV_CONFIG_FILE, resolvContent);
+
+		await runScript('ifdown', [iface]);
+		await runScript('ifup', [iface]);
+	}
+})();

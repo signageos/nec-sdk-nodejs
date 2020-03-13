@@ -1,0 +1,25 @@
+#!/sbin/openrc-run
+
+name=$RC_SVCNAME
+description="Upgrade firmware"
+command="/sbin/signageos-fwupgrade"
+
+depend() {
+    need net localmount
+}
+
+start() {
+    ebegin "upgrade firmware"
+    start-stop-daemon --start \
+        --stdout-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.info'" \
+        --stderr-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.err'" \
+        --background \
+        $command $name
+    eend $? "firmware upgrade failed"
+}
+
+stop() {
+    ebegin "stop upgrade firmware"
+    # do nothing, but this has to be there because system will call "stop" on this service when switching runlevels
+    eend 0
+}

@@ -1,0 +1,8 @@
+#!/bin/sh
+# get pool address if NTP is enabled, otherwise fail
+
+set -e
+
+service chronyd status > /dev/null 2>&1 # if it's not running, it will exit with non-zero code
+
+grep '^pool' /etc/chrony/chrony.conf | sed 's/^pool \([^ ]*\) iburst/\1/'

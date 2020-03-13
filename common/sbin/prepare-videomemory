@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -e
+
+mount -o remount,rw /media/mmcblk0p1 # An update in the first partition is required for the next reboot.
+sed -i 's/^gpu_mem_1024=.*$/gpu_mem_1024=400/' /media/mmcblk0p1/config.txt

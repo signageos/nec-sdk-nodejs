@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# get CPU temperature in degree celsius * 1000
+
+cat /sys/class/thermal/thermal_zone0/temp

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# take screenshot, save it as a temporary file and return it's path
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <destination>"
+    echo "  destination - Where to save screenshot"
+    exit 1
+fi
+
+FILE=$1
+
+raspi2png --compression 1 --pngname "$FILE"

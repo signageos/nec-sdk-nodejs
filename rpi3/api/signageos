@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+VERSION='__version_placeholder__'
+if [[ "$@" = "--version" ]]; then
+    echo $VERSION
+    exit 0
+fi
+
+SCRIPT_PATH=`readlink $0`
+SCRIPT_DIR=`dirname $SCRIPT_PATH`
+
+DIR=$1
+COMMAND=$2
+
+shift 2
+
+COMMAND_FULL=$SCRIPT_DIR/$DIR/$COMMAND
+
+if [ ! -f $COMMAND_FULL ]; then
+    echo "Command $COMMAND doesn't exist"
+    exit 1
+fi
+
+exec $COMMAND_FULL "$@"

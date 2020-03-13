@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# install given version of signageOS Display Linux app
+
+set -e
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <version>"
+    exit 1
+fi
+
+VERSION=`echo $1 | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'`-r0
+
+mkdir -p /tmp/signageos
+echo $VERSION > /tmp/signageos/app_upgrade_version
+
+# switch to app_upgrade runlevel
+# has to be detached because it's parent process (signageos-display-linux-server) will get stopped while switching runlevels
+nohup openrc app_upgrade | /usr/bin/logger -p local0.info &

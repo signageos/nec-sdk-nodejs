@@ -1,0 +1,15 @@
+#!/bin/sh
+# enable NTP if disabled and set pool address
+
+set -e
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <pool>"
+    exit 1
+fi
+
+POOL="$1"
+
+sed -i "s/^pool .*/pool $POOL iburst/" /etc/chrony/chrony.conf # replace the pool address in the config file
+rc-update add chronyd default
+service chronyd restart

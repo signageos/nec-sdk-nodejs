@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+IMG_URL_FILE=/tmp/signageos/overwritesystem_img_url
+if [ ! -f "$IMG_URL_FILE" ]; then
+    reboot
+fi
+
+/sbin/signageos-factoryreset --no-reboot
+mount -o remount,rw /media/mmcblk0p1
+cp "$IMG_URL_FILE" /media/mmcblk0p1/install_img.txt
+reboot

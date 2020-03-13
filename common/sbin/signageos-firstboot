@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -e
+
+is_sysmode_prepared() {
+	grep -q 'root=/dev/mmcblk0p3' /media/mmcblk0p1/cmdline.txt
+}
+
+IMG_URL_FILE=/media/mmcblk0p1/install_img.txt
+
+if [ -f "$IMG_URL_FILE" ]; then
+
+    IMG_URL=`cat "$IMG_URL_FILE"`
+    mount -o remount,rw /media/mmcblk0p1
+    # remove the file that triggers this whole logic before actually doing it so if something goes wrong,
+    # at least it will return to the original app
+    rm "$IMG_URL_FILE"
+    /sbin/signageos-overwritesystem "$IMG_URL"
+
+elif ! is_sysmode_prepared; then
+
+	/sbin/prepare-swap
+	/sbin/prepare-sysmode
+	/sbin/prepare-videomemory
+
+else
+
+	/sbin/prepare-application
+	rc-update del signageos-firstboot default
+
+fi
+
+reboot

@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+const NECPD = require('@signageos/nec-sdk/dist/NECPD').default;
+const Opcode = require('@signageos/nec-sdk/dist/Opcode').default;
+const { ComputeModuleFanMode } = require('@signageos/nec-sdk/dist/constants');
+
+const necPD = new NECPD();
+(async () => {
+	try {
+		await necPD.setParameter(Opcode['COMPUTE_MODULE_FAN_POWER_MODE'], ComputeModuleFanMode['ON']);
+		process.exit(0);
+	} catch (error) {
+		process.stderr.write(error.message);
+		process.exit(1);
+	}
+})();

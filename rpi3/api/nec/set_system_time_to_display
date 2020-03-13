@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+const NECPD = require('@signageos/nec-sdk/dist/NECPD').default;
+
+const necPD = new NECPD();
+(async () => {
+	try {
+		await necPD.setDisplayTimeFromSystem();
+		process.exit(0);
+	} catch (error) {
+		process.stderr.write(error.message);
+		process.exit(1);
+	}
+})();

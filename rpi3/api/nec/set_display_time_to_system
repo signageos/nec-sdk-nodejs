@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+const { exec } = require('child_process');
+const NECPD = require('@signageos/nec-sdk/dist/NECPD').default;
+
+const necPD = new NECPD();
+(async () => {
+	const displayTime = await necPD.getDisplayTime();
+	const year = displayTime.getFullYear();
+	const month = displayTime.getMonth() + 1;
+	const day = displayTime.getDate();
+	const hour = displayTime.getHours();
+	const minute = displayTime.getMinutes();
+	exec(`date -s "${year}-${month}-${day} ${hour}:${minute}"`, (error) => {
+		if (error) {
+			process.stderr.write(error.message);
+			process.exit(1);
+		} else {
+			process.exit(0);
+		}
+	});
+})().catch((error) => {
+	process.stderr.write(error.message);
+	process.exit(1);
+});

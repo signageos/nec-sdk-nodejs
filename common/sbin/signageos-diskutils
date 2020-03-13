@@ -1,0 +1,27 @@
+#!/bin/sh
+
+DISK_SECTOR_SIZE=512
+DISK='/dev/mmcblk0'
+BOOT_PARTITION_NUM=1
+BOOT_PARTITION="${DISK}p${BOOT_PARTITION_NUM}"
+SWAP_PARTITION_NUM=2
+SWAP_PARTITION="${DISK}p${SWAP_PARTITION_NUM}"
+DATA_PARTITION_NUM=3
+DATA_PARTITION="${DISK}p${DATA_PARTITION_NUM}"
+
+partition_exists() {
+    partition=$1
+    lsblk "$partition" > /dev/null 2>&1
+}
+
+get_start_sector_of_partition() {
+  disk="$1"
+  partition="$2"
+  fdisk -l -o device,start "$disk" | grep "^$partition" | sed "s|^$partition *\([0-9]*\).*|\1|"
+}
+
+get_end_sector_of_partition() {
+  disk="$1"
+  partition="$2"
+  fdisk -l -o device,end "$disk" | grep "^$partition" | sed "s|^$partition *\([0-9]*\).*|\1|"
+}

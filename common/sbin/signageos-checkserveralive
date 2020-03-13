@@ -1,0 +1,10 @@
+#!/bin/sh
+
+signageos application is_alive
+response=$?
+
+if [ $response -eq 1 ]; then
+    echo "server appears not to be alive and will be restarted"
+    signageos application notify_stopped
+    service signageos-display-linux-server restart
+fi

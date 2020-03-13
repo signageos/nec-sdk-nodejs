@@ -1,0 +1,4 @@
+#!/bin/sh
+# mark that application is not ready
+
+rm -f /run/sos_ready

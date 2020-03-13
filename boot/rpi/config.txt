@@ -1,0 +1,36 @@
+[pi2]
+kernel=boot/vmlinuz-rpi2
+initramfs boot/initramfs-rpi2
+arm_freq=1000
+gpu_freq=500
+sdram_freq=500
+over_voltage=6
+
+[pi3]
+kernel=boot/vmlinuz-rpi2
+initramfs boot/initramfs-rpi2
+arm_freq=1350
+gpu_freq=500
+sdram_freq=500
+over_voltage=5
+
+[pi3+]
+kernel=boot/vmlinuz-rpi2
+initramfs boot/initramfs-rpi2
+arm_freq=1500
+gpu_freq=500
+sdram_freq=560
+over_voltage=5
+
+[all]
+disable_overscan=1
+display_rotate=0
+lcd_rotate=0
+gpu_mem_256=128
+gpu_mem_512=256
+gpu_mem_1024=256
+disable_splash=1
+dtparam=audio=on
+enable_uart=1
+dtoverlay=uart1
+core_freq=250

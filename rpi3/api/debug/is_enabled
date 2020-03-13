@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# returns 1 if native debug is enabled, otherwise returns 0
+
+TODO implement

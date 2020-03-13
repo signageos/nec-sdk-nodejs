@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -e
+
+mount -o remount,rw /media/mmcblk0p1
+if [ -e /media/mmcblk0p1/boot.diskless ]; then
+    mv -f /media/mmcblk0p1/boot.diskless/* /media/mmcblk0p1/boot
+    rm -rf /media/mmcblk0p1/boot.diskless
+fi
+sed -i 's/^gpu_mem_1024=.*$/gpu_mem_1024=256/' /media/mmcblk0p1/config.txt
+sed -i 's/^root=\/dev\/mmcblk0p3 //' /media/mmcblk0p1/cmdline.txt
+
+signageos nec set_compute_module_fan_on || true # fails if not nec display
+
+if [ "$1" != "--no-reboot" ]; then
+    reboot
+fi

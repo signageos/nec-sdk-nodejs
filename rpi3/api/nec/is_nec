@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# print 1 if this Raspberry Pi is an NEC compute module, else print 0
+
+is_edid_nec() {
+   /opt/vc/bin/tvservice --name | grep '^device_name=NEC' -q
+}
+
+if is_edid_nec; then
+    echo 1
+else
+    echo 0
+fi

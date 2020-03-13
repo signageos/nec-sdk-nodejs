@@ -1,0 +1,2 @@
+# don't rotate, rotation will be performed by logrotate because it can also compress rotated files
+SYSLOGD_OPTS="-t -s 0"

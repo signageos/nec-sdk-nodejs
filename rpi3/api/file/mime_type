@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# get mime type of a file
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <file>"
+    echo "  file - Path to a file"
+    exit 1
+fi
+
+FILE=$1
+
+file --mime-type --brief "$FILE"

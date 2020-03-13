@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# overwrite system with another system
+
+set -e
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <img_url>"
+    exit 1
+fi
+
+IMG_URL="$1"
+
+mkdir -p /tmp/signageos
+echo $IMG_URL > /tmp/signageos/overwritesystem_img_url
+
+# switch to overwrite_system runlevel
+# has to be detached because it's parent process (signageos-display-linux-server) will get stopped while switching runlevels
+nohup openrc overwrite_system | /usr/bin/logger -p local0.info &

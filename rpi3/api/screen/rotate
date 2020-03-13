@@ -1,0 +1,23 @@
+#!/bin/sh
+# rotate screen
+
+set -e
+
+ANGLE="$1"
+
+if [ "$ANGLE" = "0" ]; then
+    DISPLAY_ROTATE=0
+elif [ "$ANGLE" = "90" ]; then
+    DISPLAY_ROTATE=1
+elif [ "$ANGLE" = "180" ]; then
+    DISPLAY_ROTATE=2
+elif [ "$ANGLE" = "270" ]; then
+    DISPLAY_ROTATE=3
+else
+    echo "Usage: $0 <angle>"
+    echo "  angle - 0, 90, 180 or 270"
+fi
+
+mount -o rw,remount /media/mmcblk0p1
+sed -i "s/^display_rotate=.*/display_rotate=$DISPLAY_ROTATE/" /media/mmcblk0p1/config.txt
+mount -o ro,remount /media/mmcblk0p1

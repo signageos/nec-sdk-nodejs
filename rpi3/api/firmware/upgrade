@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# install given version of signageOS firmware
+
+set -e
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <version>"
+    exit 1
+fi
+
+VERSION=`echo $1 | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'`-r0
+
+mkdir -p /tmp/signageos
+echo $VERSION > /tmp/signageos/fw_upgrade_version
+
+# switch to fw_upgrade runlevel
+# has to be detached because it's parent process (signageos-display-linux-server) will get stopped while switching runlevels
+nohup openrc fw_upgrade | /usr/bin/logger -p local0.info &

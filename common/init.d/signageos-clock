@@ -1,0 +1,40 @@
+#!/sbin/openrc-run
+
+name=$RC_SVCNAME
+description="If the device is an NEC display, set it's time as default system time on start and sync system time back to display on stop. If it's not an NEC display, use regular swclock."
+swclock_file="/var/lib/signageos/swclock"
+
+depend() {
+    need localmount
+    provide clock
+}
+
+start() {
+    ebegin "load time from NEC display"
+    IS_NEC=`signageos nec is_nec`
+    if [ "$IS_NEC" = "1" ]; then
+        einfo "Reading time from NEC display"
+        if ! signageos nec set_display_time_to_system > /dev/null 2>&1; then
+            ewarn "Reading time from NEC display failed. Falling back to swclock."
+            /lib/rc/sbin/swclock --warn "$swclock_file"
+        fi
+    else
+        einfo "Reading time from swclock"
+        /lib/rc/sbin/swclock --warn "$swclock_file"
+    fi
+    eend $?
+}
+
+stop() {
+    ebegin "saving system time before shutdown"
+    einfo "saving to swclock"
+    swclock --save "$swclock_file"
+    IS_NEC=`signageos nec is_nec`
+    if [ "$IS_NEC" = "1" ]; then
+        einfo "saving to NEC display"
+        if ! signageos nec set_system_time_to_display > /dev/null 2>&1; then
+            eerror "failed to sync time to NEC display"
+        fi
+    fi
+    eend 0
+}
