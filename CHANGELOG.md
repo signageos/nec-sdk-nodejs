@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Manage compute module fan based on cpu temperature in NEC displays
 - Support Network set manual & DHCP
 - Support open browser window with an optional whitelist/blacklist of domains
+- Handle deprovisioning directly on device
+- New capability to get information about connected monitors
+- Management get application version in front-applet `sos.management.app.getVersion()`
+- Optional videoThumbnailUriTemplate in file properties
+- File system methods copyFile and moveFile allow to optionally overwrite destination path
+- FILE_SYSTEM_LINK capability
 
 ### Fixed
 - Casually not loading of applet after restart app
@@ -25,9 +31,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Proper processing of remote key presses; no more weird delays, ignored key presses in fast succession, etc.
 - Didn't report it's current firmware version
 - Fixed crash when trying to stop same stream multiple times 
+- Test Framework now handles errors properly
+- Ping period issue for open and platform
+- Device Audio test fixed
+- Device test framework malfunctions and misbehaving fixed
+- Applet commands to device (timing commands) for Open builds
+- sandbox embedded browser to prevent hostile JS within iframe affecting parent document
+- First start of display when the applet is bundled inside app (Open)
+- Open app installed to deprovisioned device
+- Bug when collecting temperature and battery status on startup (critical when native methods throws error after boot)
+- Longer deprovisioning timeout before reboot to give the display enough time to delete all cached data and files
 
 ### Changed
 - Updated setting of device DateTime according to changed interface
+- Moved `getNetworkInfo()` as `network.getActiveInfo()`
+
+### Deprecated
+- Open browser in front-applet via method `sos.browser.openLink()`. Replaced by `sos.browser.open()`.
 
 ## [0.4.0] - 2019-06-10
 ### Added
