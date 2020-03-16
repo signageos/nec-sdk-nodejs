@@ -12,7 +12,7 @@ stages:
   - release
 
 cache: &cache
-  key: "$CI_PROJECT_ID"
+  key: "${CI_PROJECT_ID}_node_modules"
   paths:
     - node_modules/
   policy: pull-push
@@ -89,7 +89,10 @@ prebuild:
 
 .build:alpine:
   stage: build
-  cache: {}
+  cache:
+    key: "${CI_PROJECT_ID}_dist_node_modules"
+    paths:
+      - dist/server/node_modules
   dependencies:
     - prepare
     - prebuild

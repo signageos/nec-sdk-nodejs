@@ -14,11 +14,11 @@ TMP_DIR=tmp/apk
 rm -rf "$TMP_DIR"
 mkdir -p "$TMP_DIR"
 
-cp -r dist "$TMP_DIR"
-tools/make-package-json-public.js "$TMP_DIR/dist/server/package.json"
-cd "$TMP_DIR/dist/server"
+tools/make-package-json-public.js dist/server/package.json
+cd dist/server
 npm install
 cd -
+cp -r dist "$TMP_DIR"
 
 cp -r common/* "$TMP_DIR"
 cp -r $TARGET/* "$TMP_DIR"
