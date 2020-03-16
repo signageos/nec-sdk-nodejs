@@ -93,6 +93,8 @@ prebuild:
     key: "${CI_PROJECT_ID}_dist_node_modules"
     paths:
       - dist/server/node_modules
+      - rpi/api/network/node_modules
+      - rpi/api/nec/node_modules
   dependencies:
     - prepare
     - prebuild

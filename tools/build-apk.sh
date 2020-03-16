@@ -20,6 +20,14 @@ npm install
 cd -
 cp -r dist "$TMP_DIR"
 
+cd rpi/api/network
+npm install
+cd -
+
+cd rpi/api/nec
+npm install
+cd -
+
 cp -r common/* "$TMP_DIR"
 cp -r $TARGET/* "$TMP_DIR"
 cp LICENSE "$TMP_DIR"
