@@ -1,6 +1,6 @@
 # Maintainer: signageOS <dev@signageos.io>
-pkgname="signageos-__target__"
-pkgver="__pkg_version_placeholder__"
+pkgname="%PKG_NAME%"
+pkgver="%PKG_VERSION%"
 pkgrel=0
 pkgdesc="SignageOS application"
 url="https://www.signageos.io"

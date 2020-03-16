@@ -32,7 +32,11 @@ cp -r common/* "$TMP_DIR"
 cp -r $TARGET/* "$TMP_DIR"
 cp LICENSE "$TMP_DIR"
 
-sed "s/__pkg_version_placeholder__/${VERSION}/" APKBUILD.dist | sed "s/__target__/$TARGET/" > APKBUILD
+package_name="signageos-$TARGET"
+sed \
+    -e "s/%PKG_VERSION%/${VERSION}/" \
+    -e "s/%PKG_NAME%/${package_name}/" \
+    > APKBUILD
 cp signageos.pre-install "signageos-$TARGET.pre-install"
 cp signageos.post-install "signageos-$TARGET.post-install"
 
