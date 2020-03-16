@@ -5,10 +5,11 @@ services:
 stages:
   - prepare
   - test
-  - prebuild
-  - build
-  - publish:alpine
-  - publish:npm
+  - build:dependencies
+  - build:apk
+  - publish
+  - build:overlay-and-cache
+  - build:image
   - release
 
 cache: &cache
@@ -73,8 +74,8 @@ test:changelog:
   script:
     - ci-test-changelog
 
-prebuild:
-  stage: prebuild
+build:npm:
+  stage: build:dependencies
   cache:
     <<: *cache
     policy: pull
@@ -87,8 +88,30 @@ prebuild:
     paths:
       - dist/
 
+.build:external-apks:
+  stage: build:dependencies
+  cache: {}
+  before_script: []
+  script:
+    - export PRIVATE_KEY_PATH="$ALPINE_PRIVATE_KEY"
+    - export PUBLIC_KEY_FILENAME="$ALPINE_PUBLIC_KEY_FILENAME"
+    - tools/build-external-apks.sh
+  artifacts:
+    when: on_success
+    paths:
+      - external-apks-$TARGET.tar.gz
+
+build:external-apks-rpi:
+  extends: .build:external-apks
+  tags:
+    - alpine
+    - armhf
+  variables:
+    ARCHITECTURE: armhf
+    TARGET: rpi
+
 .build:alpine:
-  stage: build
+  stage: build:apk
   cache:
     key: "${CI_PROJECT_ID}_dist_node_modules"
     paths:
@@ -97,7 +120,7 @@ prebuild:
       - rpi/api/nec/node_modules
   dependencies:
     - prepare
-    - prebuild
+    - build:npm
   before_script: []
   script:
     - sudo apk update
@@ -124,7 +147,7 @@ build:alpine-rpi:
 
 .publish:alpine:
   image: $CI_REGISTRY/signageos/docker-alpine:master
-  stage: publish:alpine
+  stage: publish
   cache: {}
   before_script: []
   script:
@@ -139,15 +162,65 @@ publish:alpine-rpi:
     TARGET: rpi
 
 publish:npm:
-  stage: publish:npm
+  stage: publish
   cache:
     <<: *cache
     policy: pull
   dependencies:
     - prepare
-    - prebuild
+    - build:npm
   script:
     - npm publish --ignore-scripts --tag $TAG
+
+.build:overlay-and-cache:
+  image: $CI_REGISTRY/signageos/docker-alpine/minimal:ma-moreImageTypes # TODO release image and change version
+  stage: build:overlay-and-cache
+  cache: {}
+  retry: 2 # usually the first time it fails because it needs apk from previous job and it takes a moment for it to make it into the repo index
+  tags:
+    - alpine
+    - docker
+  before_script: []
+  script:
+    - export $ARCHITECTURE
+    - export VERSION=`cat ./VERSION | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'`-r0 # omit branch version
+    - tools/build-overlay-and-cache.sh sos.apkovl.tar.gz cache.tar.gz
+  artifacts:
+    when: on_success
+    paths:
+      - sos.apkovl.tar.gz
+      - cache.tar.gz
+
+build:overlay-and-cache-rpi:
+  extends: .build:overlay-and-cache
+  variables:
+    ARCHITECTURE: armhf
+    TARGET: rpi
+
+.build:image:
+  stage: build:image
+  tags:
+    - privileged
+  before_script: []
+  script:
+    - mv external-apks-$TARGET.tar.gz external-apks.tar.gz
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - docker pull $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-$ARCHITECTURE
+    - docker tag $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-$ARCHITECTURE wpewebkit:2.26.4
+    - tools/build-image.sh $ARCHITECTURE alpine-$TARGET.img
+  artifacts:
+    when: on_success
+    paths:
+      - alpine-$TARGET.img
+
+build:image-rpi:
+  extends: .build:image
+  variables:
+    ARCHITECTURE: armhf
+    TARGET: rpi
+  dependencies:
+    - build:external-apks-rpi
+    - build:overlay-and-cache-rpi
 
 release:tag:
   image: $CI_REGISTRY/signageos/docker:master
