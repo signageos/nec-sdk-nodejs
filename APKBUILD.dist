@@ -37,7 +37,12 @@ package() {
 	install -m644 -D loader/loader.mp4 "$pkgdir"/usr/share/signageos/loader.mp4
     install -m644 -D squid/squid.conf.default "$pkgdir"/usr/share/signageos/squid.conf.default
 
-    cp -r sbin "$pkgdir"
+    mkdir -p "$pkgdir"/sbin
+    for file in sbin
+    do
+        filename=`basename $file`
+        sed -e "s/%PKG_NAME%/$pkgname/" $file > "$pkgdir"/sbin/"$filename"
+    done
     chmod 755 "$pkgdir"/sbin/*
 
     install -m600 -D debug/authorized_keys "$pkgdir"/home/debug/.ssh/authorized_keys
