@@ -88,7 +88,6 @@ apk add $apkargs --no-scripts signageos-$TARGET=$VERSION
 
 # create custom runlevels
 create_runlevel app_upgrade
-create_runlevel fw_upgrade
 create_runlevel factory_reset
 create_runlevel overwrite_system
 
@@ -99,12 +98,10 @@ enable_service signageos-firstboot default
 enable_service signageos-usbmountall default
 enable_service crond default
 enable_service signageos-appupgrade app_upgrade
-enable_service signageos-fwupgrade fw_upgrade
 enable_service signageos-factoryreset factory_reset
 enable_service signageos-overwritesystem overwrite_system
 enable_service loader boot
 enable_service loader app_upgrade
-enable_service loader fw_upgrade
 enable_service loader factory_reset
 enable_service loader overwrite_system
 

@@ -95,11 +95,11 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		return await this.systemAPI.getFirmwareVersion();
 	}
 
-	public async firmwareUpgrade(_baseUrl: string, version: string, onProgress: (progress: number) => void) {
+	public async firmwareUpgrade(baseUrl: string, version: string, onProgress: (progress: number) => void) {
 		onProgress(0);
-		await this.systemAPI.upgradeFirmware(version);
+		const imgUrl = `${baseUrl}/signageos/rpi/sos_rpi_${version}.img.zip`;
+		await this.systemAPI.overwriteFirmware(imgUrl);
 		onProgress(100);
-		return () => this.systemReboot();
 	}
 
 	public async getModel(): Promise<string> {
