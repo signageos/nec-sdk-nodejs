@@ -5,10 +5,10 @@ services:
 stages:
   - prepare
   - test
-  - build:dependencies
+  - build:npm
   - build:apk
   - publish
-  - build:overlay-and-cache
+  - build:image-dependencies
   - build:image
   - release
 
@@ -75,7 +75,7 @@ test:changelog:
     - ci-test-changelog
 
 build:npm:
-  stage: build:dependencies
+  stage: build:npm
   cache:
     <<: *cache
     policy: pull
@@ -87,28 +87,6 @@ build:npm:
     when: on_success
     paths:
       - dist/
-
-.build:external-apks:
-  stage: build:dependencies
-  cache: {}
-  before_script: []
-  script:
-    - export PRIVATE_KEY_PATH="$ALPINE_PRIVATE_KEY"
-    - export PUBLIC_KEY_FILENAME="$ALPINE_PUBLIC_KEY_FILENAME"
-    - tools/build-external-apks.sh
-  artifacts:
-    when: on_success
-    paths:
-      - external-apks-$TARGET.tar.gz
-
-build:external-apks-rpi:
-  extends: .build:external-apks
-  tags:
-    - alpine
-    - armhf
-  variables:
-    ARCHITECTURE: armhf
-    TARGET: rpi
 
 .build:alpine:
   stage: build:apk
@@ -172,9 +150,31 @@ publish:npm:
   script:
     - npm publish --ignore-scripts --tag $TAG
 
+.build:external-apks:
+  stage: build:image-dependencies
+  cache: {}
+  before_script: []
+  script:
+    - export PRIVATE_KEY_PATH="$ALPINE_PRIVATE_KEY"
+    - export PUBLIC_KEY_FILENAME="$ALPINE_PUBLIC_KEY_FILENAME"
+    - tools/build-external-apks.sh
+  artifacts:
+    when: on_success
+    paths:
+      - external-apks-$TARGET.tar.gz
+
+build:external-apks-rpi:
+  extends: .build:external-apks
+  tags:
+    - alpine
+    - armhf
+  variables:
+    ARCHITECTURE: armhf
+    TARGET: rpi
+
 .build:overlay-and-cache:
   image: $CI_REGISTRY/signageos/docker-alpine/minimal:ma-moreImageTypes # TODO release image and change version
-  stage: build:overlay-and-cache
+  stage: build:image-dependencies
   cache: {}
   retry: 2 # usually the first time it fails because it needs apk from previous job and it takes a moment for it to make it into the repo index
   tags:
