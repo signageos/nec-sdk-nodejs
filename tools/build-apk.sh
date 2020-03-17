@@ -37,7 +37,7 @@ sed \
     -e "s/%PKG_VERSION%/${VERSION}/" \
     -e "s/%PKG_NAME%/${package_name}/" \
     -e "s/%PLATFORM%/${TARGET}/" \
-    > APKBUILD
+    APKBUILD.dist > APKBUILD
 cp signageos.pre-install "signageos-$TARGET.pre-install"
 cp signageos.post-install "signageos-$TARGET.post-install"
 
