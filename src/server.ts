@@ -92,6 +92,7 @@ if (parameters.raven.enabled) {
 	const servletRunner = new ServletRunner(fileSystem, parameters.paths.servletPidFilesPath);
 
 	const nativeDriver = new ManagementDriver(
+		parameters.platform,
 		parameters.url.socketUri,
 		parameters.server.file_system_url,
 		cache,

@@ -42,6 +42,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	private deviceUid: string;
 
 	constructor(
+		private platform: string,
 		private remoteServerUrl: string,
 		fileSystemUrl: string,
 		private cache: ICache,
@@ -97,7 +98,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 
 	public async firmwareUpgrade(baseUrl: string, version: string, onProgress: (progress: number) => void) {
 		onProgress(0);
-		const imgUrl = `${baseUrl}/signageos/rpi/sos_rpi_${version}.img.zip`;
+		const imgUrl = `${baseUrl}/signageos/${this.platform}/sos_${this.platform}_${version}.img.zip`;
 		await this.systemAPI.overwriteFirmware(imgUrl);
 		onProgress(100);
 	}

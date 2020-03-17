@@ -15,6 +15,7 @@ if (process.env.config_file) {
 }
 
 exports = module.exports = Object.assign({}, parameters, {
+	platform: config.platform,
 	paths: Object.assign({}, parameters.path, {
 		servletPidFilesPath: config.servlet_pid_files_path,
 	}),
