@@ -45,7 +45,7 @@ import { createMonitors } from './Driver/Monitors/monitorsFactory';
 import Network from './Network/Network';
 import { notifyServerAlive, notifyServerStopped } from './Application/serverStatus';
 import ServletRunner from './Servlet/ServletRunner';
-const parameters = require('../config/parameters');
+const parameters = require('../config/server_parameters');
 
 let raven: Raven.Client | undefined = undefined;
 

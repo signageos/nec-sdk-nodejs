@@ -28,7 +28,6 @@ exports = module.exports = Object.assign({}, basicParameters, {
 		rootPath,
 		distPath,
 		packagesPath,
-		servletPidFilesPath: process.env.servlet_pid_files_path,
 	},
 	app: {
 		name,
@@ -62,14 +61,7 @@ exports = module.exports = Object.assign({}, basicParameters, {
 		weinreServerUrl: process.env.weinre_server_url,
 		synchronizerServerUrl: process.env.synchronizer_server_url,
 	},
-	fileSystem: {
-		root: process.env.fs_root_path,
-		tmp: process.env.fs_tmp_path || '/tmp',
-		appFiles: process.env.fs_app_files_path,
-		system: process.env.fs_system_path,
-	},
 	video: {
-		socket_root: '/tmp/signageos_server_' + process.pid,
 		max_count: 4,
 	},
 	bundledApplet: process.env.bundled_applet === '1'
@@ -79,12 +71,6 @@ exports = module.exports = Object.assign({}, basicParameters, {
 			checksum: process.env.bundled_applet_checksum,
 			binaryFile: process.env.bundled_applet_binary_file,
 			frontAppletBinaryFile: process.env.bundled_applet_front_applet_binary_file,
-		}
-		: null,
-	bundledServlet: process.env.bundled_servlet === '1'
-		? {
-			filePath: process.env.bundled_servlet_file_path,
-			env: JSON.parse(process.env.bundled_servlet_env),
 		}
 		: null,
 	autoVerification: process.env.auto_verification_organization_uid

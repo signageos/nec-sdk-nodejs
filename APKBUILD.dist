@@ -54,6 +54,8 @@ package() {
     install -m644 -D udev/vchiq-permissions.rules "$pkgdir"/etc/udev/rules.d/98-signageos-vchiq-permissions.rules
     install -m644 -D udev/automount.rules "$pkgdir"/etc/udev/rules.d/99-signageos-automount.rules
 
+    install -m644 -D etc/signageos/signageos.conf > "$pkgdir"/etc/signageos/signageos.conf
+
     mkdir -p "$pkgdir"/etc/init.d/
     cp init.d/* "$pkgdir"/etc/init.d/
     chmod 755 "$pkgdir"/etc/init.d/*

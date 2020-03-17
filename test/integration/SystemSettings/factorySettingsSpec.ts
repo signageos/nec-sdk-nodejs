@@ -4,7 +4,7 @@ import { performDisplayFactorySettingsIfWasntPerformedYet } from '../../../src/S
 import * as path from "path";
 import * as fs from 'fs-extra';
 
-const parameters = require('../../../config/parameters');
+const parameters = require('../../../config/server_parameters');
 const fileSystemSystemRoot = parameters.fileSystem.system;
 
 function getFlagFilePath() {

@@ -14,7 +14,7 @@ import FileSystem from '../../../src/FileSystem/FileSystem';
 import { ISystemAPI } from '../../../src/API/SystemAPI';
 import { IVideoAPI } from '../../../src/API/VideoAPI';
 
-const parameters = require('../../../config/parameters');
+const parameters = require('../../../config/server_parameters');
 const fileSystemRoot = parameters.fileSystem.root;
 const tmpFileSystemRoot = parameters.fileSystem.tmp;
 const appFilesFileSystemRoot = parameters.fileSystem.appFiles;
