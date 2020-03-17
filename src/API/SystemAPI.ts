@@ -82,7 +82,7 @@ export function createSystemAPI(): ISystemAPI {
 		},
 
 		async restartApplication() {
-			await execApiCommand('application', 'restart_client', [], { asRoot: true });
+			await execApiCommand('application', 'restart_wpewebkit', [], { asRoot: true });
 		},
 
 		async restartServer(): Promise<void> {
