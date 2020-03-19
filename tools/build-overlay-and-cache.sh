@@ -69,13 +69,24 @@ apk add $apkargs --no-scripts eudev
 disable_service hwdrivers sysinit
 disable_service mdev sysinit
 disable_service swclock boot
+enable_service devfs sysinit
+enable_service dmesg sysinit
+enable_service modloop sysinit
 enable_service udev-trigger sysinit
 enable_service udev sysinit
+enable_service bootmisc boot
+enable_service hostname boot
 enable_service networking boot
+enable_service modules boot
+enable_service sysctl boot
+enable_service syslog boot
 enable_service urandom boot
 enable_service chronyd default
 enable_service sshd default
 enable_service udev-postmount default
+enable_service killprocs shutdown
+enable_service mount-ro shutdown
+enable_service savecache shutdown
 
 # ssh server
 ssh-keygen -A -f $ROOTFS_DIR
