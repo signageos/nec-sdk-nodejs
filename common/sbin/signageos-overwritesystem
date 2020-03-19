@@ -103,6 +103,11 @@ extract_image_archive() {
       gunzip -c "$IMG_ARCHIVE_FULL_PATH" > "$IMG_FULL_PATH"
       ;;
   esac
+  if [ ! -f "$IMG_FULL_PATH" ]; then
+    echo "Image file not found. Possibly the name of the file is different from the name of the archive."
+    echo "For example.: if archive name is image.img.zip or image.zip, the name of the image file inside has to be image.img."
+    return 1
+  fi
 }
 
 backup_original_disk() {
