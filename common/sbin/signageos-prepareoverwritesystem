@@ -7,6 +7,12 @@ if [ ! -f "$IMG_URL_FILE" ]; then
     reboot
 fi
 
+IMG_URL=`cat "$IMG_URL_FILE"`
+if ! /sbin/signageos-validateoverwriteimage "$IMG_URL"; then
+    echo "invalid img"
+    reboot
+fi
+
 /sbin/signageos-factoryreset --no-reboot
 mount -o remount,rw /media/mmcblk0p1
 cp "$IMG_URL_FILE" /media/mmcblk0p1/install_img.txt

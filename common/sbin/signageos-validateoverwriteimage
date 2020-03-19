@@ -1,0 +1,50 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <img_url>"
+    exit 1
+fi
+
+IMG_URL="$1"
+IMG_ARCHIVE_FILENAME=`basename $IMG_URL`
+IMG_ARCHIVE_EXTENSION=${IMG_ARCHIVE_FILENAME##*.}
+
+IMG_BASENAME="${IMG_ARCHIVE_FILENAME%.*}"
+if echo "$IMG_BASENAME" | grep -q '\.img$'; then
+    IMG_FILENAME="$IMG_BASENAME"
+else
+    IMG_FILENAME="$IMG_BASENAME.img"
+fi
+
+TMP_DIR=/tmp/validate_overwrite_image
+IMG_ARCHIVE_FULL_PATH="$TMP_DIR/$IMG_ARCHIVE_FILENAME"
+IMG_FULL_PATH="$TMP_DIR/$IMG_FILENAME"
+
+cleanup() {
+    rm -rf "$TMP_DIR"
+}
+
+trap cleanup exit # cleanup files once the script exits
+
+rm -rf "$TMP_DIR"
+mkdir -p "$TMP_DIR"
+wget -O "$IMG_ARCHIVE_FULL_PATH" "$IMG_URL"
+
+case "$IMG_ARCHIVE_EXTENSION" in
+    zip)
+      echo "extracting image"
+      unzip "$IMG_ARCHIVE_FULL_PATH" -d "$TMP_DIR"
+      ;;
+    gz)
+      echo "extracting image"
+      gunzip -c "$IMG_ARCHIVE_FULL_PATH" > "$IMG_FULL_PATH"
+      ;;
+esac
+
+if [ ! -f "$IMG_FULL_PATH" ]; then
+    echo "Image file not found. Possibly the name of the file is different from the name of the archive."
+    echo "For example.: if archive name is image.img.zip or image.zip, the name of the image file inside has to be image.img."
+    exit 1
+fi
