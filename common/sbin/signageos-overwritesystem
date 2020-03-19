@@ -246,8 +246,11 @@ overwrite_system() {
   copy_img_to_disk
 }
 
-if ! overwrite_system; then
-    if [ "$IS_PROCESS_AT_THE_POINT_OF_NO_RETURN" = "1" ]; then
-        recover_from_backup
-    fi
-fi
+rollback_if_failed() {
+  if [ "$?" -ne "0" ] && [ "$IS_PROCESS_AT_THE_POINT_OF_NO_RETURN" = "1" ]; then
+      recover_from_backup
+  fi
+}
+
+trap rollback_if_failed exit
+overwrite_system
