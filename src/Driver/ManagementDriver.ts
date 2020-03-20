@@ -83,7 +83,8 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		}
 
 		const serialNumber = await this.getSerialNumber();
-		this.deviceUid = checksumString(serialNumber);
+		const legacySerialNumber = serialNumber + '\n'; // because of a bug in the past we now have to forever include the newline
+		this.deviceUid = checksumString(legacySerialNumber);
 		return this.deviceUid;
 	}
 
