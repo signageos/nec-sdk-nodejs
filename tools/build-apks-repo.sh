@@ -13,7 +13,7 @@ if [ "$TARGET" = "" ]; then
 fi
 
 REPO_URL='https://signageos-alpine-repository.s3.eu-central-1.amazonaws.com/1.0/main'
-BASE_APKS='alpine-base openssl tzdata chrony openssh eudev'
+BASE_APKS='alpine-base openssl tzdata chrony openssh eudev libstdc++'
 DOCKER_APKS='docker'
 SYSMODE_APKS='acct linux-rpi2'
 ALL_APKS="$BASE_APKS $DOCKER_APKS $SYSMODE_APKS"

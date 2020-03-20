@@ -54,7 +54,7 @@ mkdir $ROOTFS_DIR $CACHE_DIR
 apk add $apkargs $apkaddargs\
     --keys-dir `pwd`/etc/apk/keys \
     --initdb \
-    alpine-base openssl tzdata chrony openssh
+    alpine-base openssl tzdata chrony openssh libstdc++
 cp -r etc/apk/* $ROOTFS_DIR/etc/apk
 ROOT=$ROOTFS_DIR setup-hostname sos
 ROOT=$ROOTFS_DIR setup-timezone -i -z UTC
