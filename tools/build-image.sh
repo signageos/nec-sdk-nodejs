@@ -10,10 +10,11 @@ if [ -z "$TARGET" ]; then
 fi
 
 arch=$1
-output_file=$2
+apks_archive=$2
+output_file=$3
 
-if [ -z "$arch" ] || [ -z "$output_file" ]; then
-    echo "Usage: $0 <arch> <output_file>"
+if [ -z "$arch" ] || [ -z "$apks_archive" ] || [ -z "$output_file" ]; then
+    echo "Usage: $0 <arch> <apks_archive> <output_file>"
     exit 1
 fi
 
@@ -58,7 +59,7 @@ copy_files_to_boot_partition() {
     cp sos.apkovl.tar.gz mnt
     docker save wpewebkit:2.26.4 -o mnt/wpewebkit.2.26.4.tar.gz
     tar -xzf cache.tar.gz -C mnt
-    tar -xzf external-apks.tar.gz -C mnt
+    tar -xzf $apks_archive -C mnt
 }
 
 umount_boot_partition() {

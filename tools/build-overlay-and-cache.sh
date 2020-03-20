@@ -46,15 +46,14 @@ create_runlevel() {
 }
 
 apkargs="--arch $ARCHITECTURE --root $ROOTFS_DIR"
+apkaddargs="--repository `pwd`/apks --no-scripts"
 
 # base
 rm -rf $ROOTFS_DIR $CACHE_DIR
 mkdir $ROOTFS_DIR $CACHE_DIR
-apk add $apkargs \
-    --repositories-file /etc/apk/repositories \
-    --keys-dir /etc/apk/keys \
+apk add $apkargs $apkaddargs\
+    --keys-dir `pwd`/etc/apk/keys \
     --initdb \
-    --no-scripts \
     alpine-base openssl tzdata chrony openssh
 cp -r etc/apk/* $ROOTFS_DIR/etc/apk
 ROOT=$ROOTFS_DIR setup-hostname sos
@@ -62,8 +61,7 @@ ROOT=$ROOTFS_DIR setup-timezone -i -z UTC
 ROOT=$ROOTFS_DIR setup-lbu mmcblk0p1
 ROOT=$ROOTFS_DIR setup-apkcache $CACHE_DIR
 apk update $apkargs
-apk upgrade $apkargs --no-cache --no-scripts
-apk add $apkargs --no-scripts eudev
+apk add $apkargs $apkaddargs eudev
 
 # configure services
 disable_service hwdrivers sysinit

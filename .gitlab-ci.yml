@@ -8,7 +8,8 @@ stages:
   - build:npm
   - build:apk
   - publish
-  - build:image-dependencies
+  - build:apks-repo
+  - build:overlay-and-cache
   - build:image
   - release
 
@@ -151,21 +152,21 @@ publish:npm:
   script:
     - npm publish --ignore-scripts --tag $TAG
 
-.build:external-apks:
-  stage: build:image-dependencies
+.build:apks:
+  stage: build:apks-repo
   cache: {}
   before_script: []
   script:
     - export PRIVATE_KEY_PATH="$ALPINE_PRIVATE_KEY"
     - export PUBLIC_KEY_FILENAME="$ALPINE_PUBLIC_KEY_FILENAME"
-    - tools/build-external-apks.sh
+    - tools/build-apks-repo.sh
   artifacts:
     when: on_success
     paths:
-      - external-apks-$TARGET.tar.gz
+      - apks-$TARGET.tar.gz
 
-build:external-apks-rpi:
-  extends: .build:external-apks
+build:apks-rpi:
+  extends: .build:apks
   tags:
     - alpine
     - armhf
@@ -175,7 +176,7 @@ build:external-apks-rpi:
 
 .build:overlay-and-cache:
   image: $CI_REGISTRY/signageos/docker-alpine/minimal:ma-moreImageTypes # TODO release image and change version
-  stage: build:image-dependencies
+  stage: build:overlay-and-cache
   cache: {}
   retry: 2 # usually the first time it fails because it needs apk from previous job and it takes a moment for it to make it into the repo index
   tags:
@@ -185,6 +186,7 @@ build:external-apks-rpi:
   script:
     - export $ARCHITECTURE
     - export VERSION=`cat ./VERSION | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'`-r0 # omit branch version
+    - tar -xzf apks-$TARGET.tar.gz
     - tools/build-overlay-and-cache.sh sos.apkovl.tar.gz cache.tar.gz
   artifacts:
     when: on_success
@@ -197,6 +199,9 @@ build:overlay-and-cache-rpi:
   variables:
     ARCHITECTURE: armhf
     TARGET: rpi
+  dependencies:
+    - prepare
+    - build:apks-rpi
 
 .build:image:
   stage: build:image
@@ -204,11 +209,10 @@ build:overlay-and-cache-rpi:
     - privileged
   before_script: []
   script:
-    - mv external-apks-$TARGET.tar.gz external-apks.tar.gz
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
     - docker pull $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-$ARCHITECTURE
     - docker tag $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-$ARCHITECTURE wpewebkit:2.26.4
-    - tools/build-image.sh $ARCHITECTURE alpine-$TARGET.img
+    - tools/build-image.sh $ARCHITECTURE apks-$TARGET.tar.gz alpine-$TARGET.img
   artifacts:
     when: on_success
     paths:
@@ -220,7 +224,7 @@ build:image-rpi:
     ARCHITECTURE: armhf
     TARGET: rpi
   dependencies:
-    - build:external-apks-rpi
+    - build:apks-rpi
     - build:overlay-and-cache-rpi
 
 release:tag:
