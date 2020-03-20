@@ -129,7 +129,8 @@ build:alpine-rpi:
   cache: {}
   before_script: []
   script:
-    - aws s3 cp packages/signageos/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos-$TARGET*-r0.apk"
+    - S3_REPO_PATH="s3://signageos-alpine-repository/1.0/sos/$ARCHITECTURE"
+    - aws s3 cp packages/signageos/$ARCHITECTURE "$S3_REPO_PATH" --recursive --exclude "*" --include "signageos-$TARGET*-r0.apk"
 
 publish:alpine-rpi:
   extends: .publish:alpine
