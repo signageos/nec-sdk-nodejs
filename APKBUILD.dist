@@ -9,7 +9,7 @@ pkggroups="signageos debug"
 arch="armhf armv7 aarch64"
 license="custom"
 _coredeps="
-    sudo bash coreutils util-linux e2fsprogs dosfstools unzip file lshw ntfs-3g exfat-utils fuse-exfat nodejs=~10 ffmpeg squid gnupg
+    sudo bash coreutils util-linux e2fsprogs dosfstools unzip file lshw ntfs-3g exfat-utils fuse-exfat nodejs ffmpeg squid gnupg
     nginx logrotate libcec raspberrypi raspi2png vips-dev curl signageos-omxplayer=0.36-r0 signageos-rpi-cec-listener=0.37-r0
     signageos-rpi-overlay-renderer=0.6-r0 signageos-rpi-display-info=0.5-r0
 "
