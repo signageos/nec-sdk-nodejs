@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Open app installed to deprovisioned device
 - Bug when collecting temperature and battery status on startup (critical when native methods throws error after boot)
 - Longer deprovisioning timeout before reboot to give the display enough time to delete all cached data and files
+- Use smaller resolution videos in acceptance tests that play multiple videos side by side because some platforms struggle to process more than one full HD video at a time
 
 ### Changed
 - Updated setting of device DateTime according to changed interface
