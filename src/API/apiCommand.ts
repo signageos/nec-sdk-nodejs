@@ -9,13 +9,14 @@ export interface IOptions {
 	verbose?: boolean;
 }
 
-export function execApiCommand(
+export async function execApiCommand(
 	namespace: string,
 	command: string,
 	args: string[] = [],
 	options: IOptions = {},
 ) {
-	return execCommand(SOS_COMMAND, [namespace, command, ...args], options);
+	const result = await execCommand(SOS_COMMAND, [namespace, command, ...args], options);
+	return result.trim();
 }
 
 export function execGetApiVersion() {

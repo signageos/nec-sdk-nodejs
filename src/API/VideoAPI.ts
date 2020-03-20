@@ -157,7 +157,7 @@ export function createVideoAPI(): IVideoAPI {
 			if (!codec) {
 				throw new Error('Failed to get video codec, got NaN');
 			}
-			return codec.trim();
+			return codec;
 		},
 
 		prepareStream(
