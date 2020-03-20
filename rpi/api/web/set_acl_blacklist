@@ -1,0 +1,21 @@
+#!/bin/sh
+# blacklist some domains from internet communication
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <domain1> [<domain2>] [<domain3>]..."
+    exit 1
+fi
+
+cp /usr/share/signageos/squid.conf.default /tmp/squid.conf
+
+for domain in "$@"
+do
+    echo "acl blacklist dstdomain .$domain" >> /tmp/squid.conf
+done
+
+echo 'http_access deny blacklist' >> /tmp/squid.conf
+echo 'http_access allow all' >> /tmp/squid.conf
+
+mv /tmp/squid.conf /etc/squid/squid.conf
+
+service squid reload

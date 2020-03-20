@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# set screen on
+
+/opt/vc/bin/vcgencmd display_power 1

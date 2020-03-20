@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ]; then
+    echo "Usage: $0 <my_private_key_file> <recipient_public_key> <destination_path>"
+fi
+
+service loader start
+
+{
+    PRIVATE_KEY_FILE="$1"
+    PUBLIC_KEY_FILE="$2"
+    DESTINATION="$3"
+
+    rm -rf ~/.gnupg # cleanup after previous runs of this script just in case
+
+    gpg --import "$PRIVATE_KEY_FILE"
+    gpg --import "$PUBLIC_KEY_FILE"
+
+    tar -czf /tmp/logs.tar.gz /var/log
+
+    gpg --encrypt --sign -r dev@signageos.io --trust-model always /tmp/logs.tar.gz
+    mv /tmp/logs.tar.gz.gpg "$DESTINATION"
+    sync
+
+    # cleanup
+    rm /tmp/logs.tar.gz
+    rm -rf ~/.gnupg
+} || {
+    >&2 echo "dump logs failed"
+}
+
+service loader stop

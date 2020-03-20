@@ -4,7 +4,7 @@ import * as fs from 'fs-extra';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import FSSystemSettings from '../../../src/SystemSettings/FSSystemSettings';
 
-const parameters = require('../../../config/parameters');
+const parameters = require('../../../config/server_parameters');
 const fileSystemRoot = parameters.fileSystem.system;
 const systemSettingsFilePath = path.join(fileSystemRoot, 'system_settings.json');
 

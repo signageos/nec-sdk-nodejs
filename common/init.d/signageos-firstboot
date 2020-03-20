@@ -1,0 +1,25 @@
+#!/sbin/openrc-run
+
+name=$RC_SVCNAME
+description="First boot"
+command="/sbin/signageos-firstboot"
+
+depend() {
+    need localmount
+}
+
+start() {
+    ebegin "start firstboot"
+    start-stop-daemon --start \
+        --stdout-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.info'" \
+        --stderr-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.err'" \
+        --background \
+        $command
+    eend 0
+}
+
+stop() {
+    ebegin "stop firstboot"
+    # do nothing, but this has to be there
+    eend 0
+}

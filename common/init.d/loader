@@ -1,0 +1,22 @@
+#!/sbin/openrc-run
+
+name=$RC_SVCNAME
+description="Show loader animation on the screen"
+command="/sbin/show-loader"
+pidfile="/run/$name.pid"
+
+depend() {
+    need localmount
+}
+
+start() {
+    ebegin "start loader"
+    start-stop-daemon --start --background --pidfile $pidfile --make-pidfile $command
+    eend $? "failed to start loader"
+}
+
+stop() {
+    ebegin "stopping loader"
+    start-stop-daemon --stop --pidfile $pidfile
+    eend $? "failed to stop loader"
+}

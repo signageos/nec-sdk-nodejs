@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# get storage status in KB in format "<used_space>,<available_space>"
+
+df --sync | grep /dev/mmcblk0p3 | awk '{print "internal,"$3","$4}'
+df --sync | grep -v /dev/mmcblk0p | grep /media/ | awk '{print $6","$3","$4}' | sed -e 's!^/media/!!'

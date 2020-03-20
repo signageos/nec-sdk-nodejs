@@ -1,0 +1,1 @@
+*	*	*	*	*	/sbin/signageos-checkserveralive 2>&1 | /usr/bin/logger --tag signageos-checkserveralive

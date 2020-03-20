@@ -1,0 +1,16 @@
+#!/bin/sh
+# disable NTP and set manual datetime
+
+set -e
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <datetime>"
+    echo "  datetime - in UTC, in following format: YYYY-MM-DD HH:MM:SS"
+    exit 1
+fi
+
+DATETIME="$1"
+
+rc-update del chronyd default -q || true
+service chronyd stop -q
+date --utc -s "$DATETIME"

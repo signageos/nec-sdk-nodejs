@@ -1,0 +1,71 @@
+#!/sbin/openrc-run
+
+name=$RC_SVCNAME
+description="signageOS client"
+pidfile="/run/$name.pid"
+configfile="/etc/signageos/signageos.conf"
+command="/usr/bin/node"
+command_args="/usr/share/signageos/server/server.js"
+command_user="signageos"
+command_group="signageos"
+stopsig=TERM
+
+extra_started_commands="reload_storage_units"
+
+depend() {
+    need localmount loopback
+    use udev logger
+}
+
+reload_storage_units() {
+    pid=`cat $pidfile`
+    if [ -n "$pid" ]; then
+        kill -USR2 $pid
+        eend $? "failed to reload storage units"
+    else
+        eend 1 "pidfile not found"
+    fi
+}
+
+_ensure_pidfiles_path() {
+    source "$configfile"
+    mkdir -p "$servlet_pid_files_path"
+    chown $command_user:$command_group "$servlet_pid_files_path"
+}
+
+_stop_all_servlets() {
+    source "$configfile"
+    # attempt to gracefully stop servlets, sigkill after 5s
+    for pidfile in `ls "$servlet_pid_files_path"`; do
+        pidfile_path="$servlet_pid_files_path/$pidfile"
+        start-stop-daemon --stop --pidfile "$pidfile_path" --signal TERM --retry 5
+    done
+    # finally remove entire servlet directory
+    rm -rf "$servlet_pid_files_path"
+}
+
+start() {
+    ebegin "starting signageOS server"
+    _ensure_pidfiles_path
+    start-stop-daemon --start \
+        --pidfile $pidfile \
+        --make-pidfile \
+        --user $command_user \
+        --group $command_group \
+        --env config_file=$configfile \
+        --stdout-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.info'" \
+        --stderr-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.err'" \
+        --background \
+        $command -- $command_args
+    eend $? "failed to start signageOS server"
+}
+
+stop() {
+    ebegin "stopping signageOS server"
+    start-stop-daemon --stop \
+        --pidfile $pidfile \
+        --signal $stopsig \
+        --retry 10
+    _stop_all_servlets
+    eend $? "failed to stop signageOS server"
+}

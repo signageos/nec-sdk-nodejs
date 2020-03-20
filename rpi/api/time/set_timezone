@@ -1,0 +1,15 @@
+#!/bin/sh
+# set timezone
+
+set -e
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <timezone>"
+    echo "  timezone - string format, i.e. UTC, Europe/Prague, etc."
+    exit 1
+fi
+
+TIMEZONE="$1"
+
+setup-timezone -i -z "$TIMEZONE"
+cp -P /etc/localtime /etc/signageos/time/localtime # this has to be here to apply timezone change inside wpewebkit container as well

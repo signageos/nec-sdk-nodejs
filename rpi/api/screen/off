@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# set screen off
+
+/opt/vc/bin/vcgencmd display_power 0

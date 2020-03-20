@@ -13,7 +13,6 @@ export interface ISystemAPI {
 	restartServer(): Promise<void>;
 	upgradeApp(version: string): Promise<void>;
 	getFirmwareVersion(): Promise<string>;
-	upgradeFirmware(sourceUrl: string): Promise<void>;
 	overwriteFirmware(imgUrl: string): Promise<void>;
 	factoryReset(): Promise<void>;
 	enableNativeDebug(): Promise<void>;
@@ -83,7 +82,7 @@ export function createSystemAPI(): ISystemAPI {
 		},
 
 		async restartApplication() {
-			await execApiCommand('application', 'restart_client', [], { asRoot: true });
+			await execApiCommand('application', 'restart_wpewebkit', [], { asRoot: true });
 		},
 
 		async restartServer(): Promise<void> {
@@ -96,10 +95,6 @@ export function createSystemAPI(): ISystemAPI {
 
 		async getFirmwareVersion() {
 			return await execGetApiVersion();
-		},
-
-		async upgradeFirmware(version: string) {
-			await execApiCommand('firmware', 'upgrade', [version], { asRoot: true, verbose: true });
 		},
 
 		async overwriteFirmware(imgUrl: string) {

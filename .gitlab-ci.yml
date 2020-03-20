@@ -5,16 +5,18 @@ services:
 stages:
   - prepare
   - test
-  - prebuild
-  - build
-  - publish:alpine
-  - publish:npm
+  - build:npm
+  - build:apk
+  - publish
+  - build:image-dependencies
+  - build:image
   - release
 
-cache:
-  key: "$CI_PROJECT_ID"
+cache: &cache
+  key: "${CI_PROJECT_ID}_node_modules"
   paths:
     - node_modules/
+  policy: pull-push
 
 before_script:
   - npm config set unsafe-perm true
@@ -27,6 +29,7 @@ before_script:
 prepare:
   image: $CI_REGISTRY/signageos/docker:master
   stage: prepare
+  cache: {}
   before_script: []
   script:
     - ci-prepare
@@ -44,9 +47,15 @@ test:general:
     fs_system_path: /test_system_fs
   script:
     - npm test
+  cache:
+    <<: *cache
+    policy: pull
 
 test:lint:
   stage: test
+  cache:
+    <<: *cache
+    policy: pull
   except:
     - tags
   script:
@@ -56,14 +65,20 @@ test:lint:
 test:changelog:
   image: $CI_REGISTRY/signageos/docker:master
   stage: test
+  cache:
+    <<: *cache
+    policy: pull
   except:
     - tags
   allow_failure: true
   script:
     - ci-test-changelog
 
-prebuild:
-  stage: prebuild
+build:npm:
+  stage: build:npm
+  cache:
+    <<: *cache
+    policy: pull
   dependencies:
     - prepare
   script:
@@ -73,27 +88,17 @@ prebuild:
     paths:
       - dist/
 
-build:raspbian:
-  stage: build
-  image: $CI_REGISTRY/signageos/docker-node:8.9.0-debian-build
-  dependencies:
-    - prepare
-    - prebuild
-  before_script: []
-  script:
-    - export VERSION=`cat ./VERSION`
-    - npx @signageos/lib@just-tools version-upgrade $VERSION
-    - make raspbian
-  artifacts:
-    when: on_success
-    paths:
-      - signageos-display-linux.deb
-
 .build:alpine:
-  stage: build
+  stage: build:apk
+  cache:
+    key: "${CI_PROJECT_ID}_dist_node_modules"
+    paths:
+      - dist/server/node_modules
+      - rpi/api/network/node_modules
+      - rpi/api/nec/node_modules
   dependencies:
     - prepare
-    - prebuild
+    - build:npm
   before_script: []
   script:
     - sudo apk update
@@ -101,82 +106,126 @@ build:raspbian:
     - export VERSION=`cat ./VERSION`
     - npx @signageos/lib@just-tools version-upgrade $VERSION
     - export VERSION=`echo $VERSION | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'` # omit branch version
-    - make apk
-    - mkdir -p packages/signageos-display-linux/$ARCHITECTURE
-    - cp ~/packages/dist/$ARCHITECTURE/signageos-display-linux*-$VERSION-r0.apk packages/signageos-display-linux/$ARCHITECTURE
+    - tools/build-apk.sh $TARGET $VERSION
+    - mkdir -p packages/signageos/$ARCHITECTURE
+    - cp ~/packages/signageos/$ARCHITECTURE/signageos*-$VERSION-r0.apk packages/signageos/$ARCHITECTURE
   artifacts:
     when: on_success
     paths:
-      - packages/signageos-display-linux/$ARCHITECTURE
+      - packages/signageos/$ARCHITECTURE
 
-build:alpine-armhf:
+build:alpine-rpi:
   extends: .build:alpine
   tags:
     - alpine
     - armhf
   variables:
     ARCHITECTURE: armhf
-
-build:alpine-armv7:
-  allow_failure: true
-  extends: .build:alpine
-  tags:
-    - alpine
-    - armv7
-  variables:
-    ARCHITECTURE: armv7
-
-build:alpine-aarch64:
-  allow_failure: true
-  extends: .build:alpine
-  tags:
-    - alpine
-    - aarch64
-  variables:
-    ARCHITECTURE: aarch64
+    TARGET: rpi
 
 .publish:alpine:
   image: $CI_REGISTRY/signageos/docker-alpine:master
-  stage: publish:alpine
+  stage: publish
+  cache: {}
   before_script: []
   script:
-    - aws s3 cp packages/signageos-display-linux/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos-display-linux*-r0.apk"
+    - aws s3 cp packages/signageos/$ARCHITECTURE "$AWS_ALPINE_REPO_S3_PATH/$ARCHITECTURE" --recursive --exclude "*" --include "signageos-$TARGET*-r0.apk"
 
-publish:alpine-armhf:
+publish:alpine-rpi:
   extends: .publish:alpine
   dependencies:
-    - build:alpine-armhf
+    - build:alpine-rpi
   variables:
     ARCHITECTURE: armhf
-
-publish:alpine-armv7:
-  allow_failure: true
-  extends: .publish:alpine
-  dependencies:
-    - build:alpine-armv7
-  variables:
-    ARCHITECTURE: armv7
-
-publish:alpine-aarch64:
-  allow_failure: true
-  extends: .publish:alpine
-  dependencies:
-    - build:alpine-aarch64
-  variables:
-    ARCHITECTURE: aarch64
+    TARGET: rpi
 
 publish:npm:
-  stage: publish:npm
+  stage: publish
+  cache:
+    <<: *cache
+    policy: pull
   dependencies:
     - prepare
-    - prebuild
-    - build:raspbian
+    - build:npm
   script:
     - npm publish --ignore-scripts --tag $TAG
+
+.build:external-apks:
+  stage: build:image-dependencies
+  cache: {}
+  before_script: []
+  script:
+    - export PRIVATE_KEY_PATH="$ALPINE_PRIVATE_KEY"
+    - export PUBLIC_KEY_FILENAME="$ALPINE_PUBLIC_KEY_FILENAME"
+    - tools/build-external-apks.sh
+  artifacts:
+    when: on_success
+    paths:
+      - external-apks-$TARGET.tar.gz
+
+build:external-apks-rpi:
+  extends: .build:external-apks
+  tags:
+    - alpine
+    - armhf
+  variables:
+    ARCHITECTURE: armhf
+    TARGET: rpi
+
+.build:overlay-and-cache:
+  image: $CI_REGISTRY/signageos/docker-alpine/minimal:ma-moreImageTypes # TODO release image and change version
+  stage: build:image-dependencies
+  cache: {}
+  retry: 2 # usually the first time it fails because it needs apk from previous job and it takes a moment for it to make it into the repo index
+  tags:
+    - alpine
+    - docker
+  before_script: []
+  script:
+    - export $ARCHITECTURE
+    - export VERSION=`cat ./VERSION | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'`-r0 # omit branch version
+    - tools/build-overlay-and-cache.sh sos.apkovl.tar.gz cache.tar.gz
+  artifacts:
+    when: on_success
+    paths:
+      - sos.apkovl.tar.gz
+      - cache.tar.gz
+
+build:overlay-and-cache-rpi:
+  extends: .build:overlay-and-cache
+  variables:
+    ARCHITECTURE: armhf
+    TARGET: rpi
+
+.build:image:
+  stage: build:image
+  tags:
+    - privileged
+  before_script: []
+  script:
+    - mv external-apks-$TARGET.tar.gz external-apks.tar.gz
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    - docker pull $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-$ARCHITECTURE
+    - docker tag $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-$ARCHITECTURE wpewebkit:2.26.4
+    - tools/build-image.sh $ARCHITECTURE alpine-$TARGET.img
+  artifacts:
+    when: on_success
+    paths:
+      - alpine-$TARGET.img
+
+build:image-rpi:
+  extends: .build:image
+  variables:
+    ARCHITECTURE: armhf
+    TARGET: rpi
+  dependencies:
+    - build:external-apks-rpi
+    - build:overlay-and-cache-rpi
 
 release:tag:
   image: $CI_REGISTRY/signageos/docker:master
   stage: release
+  cache: {}
   only:
     - master
   when: manual
@@ -188,6 +237,9 @@ release:tag:
 release:notes:
   image: $CI_REGISTRY/signageos/docker:master
   stage: release
+  cache:
+    <<: *cache
+    policy: pull
   only:
     - tags
   script:

@@ -1,0 +1,51 @@
+#!/usr/bin/env node
+// set DHCP network settings
+
+const { runScript, getAllInterfacesNames } = require('./lib/helper');
+const NetworkInterfaces = require('node-network-interfaces');
+
+const NETWORK_INTERFACES_CONFIG_FILE = '/etc/network/interfaces';
+
+let dryRun = false;
+
+const args = [...process.argv];
+args.shift(); // node script
+args.shift(); // set_dhcp script
+while (args.length > 0) {
+	const nextArg = args.shift();
+	switch (nextArg) {
+		case '--dry-run':
+			dryRun = true;
+			break;
+		case '--iface':
+			iface = args.shift();
+			break;
+		default:
+			throw new Error(`Unknown argument ${nextArg}`);
+	}
+}
+
+if (!iface) {
+	throw new Error(`Argument --iface is required`);
+}
+
+(async function () {
+	const availableIfacaNames = await getAllInterfacesNames();
+	if (availableIfacaNames.indexOf(iface) === -1) {
+		throw new Error(`Not available interface: ${iface}`);
+	}
+
+	const interfaces = new NetworkInterfaces(NETWORK_INTERFACES_CONFIG_FILE);
+	const config = {
+		mode: 'dhcp',
+	};
+	if (dryRun) {
+		console.log('would apply settings:', iface, config);
+		console.log('would restart network:', `ifdown ${iface}`, `ifup ${iface}`);
+	} else {
+		await interfaces.setConfig(iface, config);
+
+		await runScript('ifdown', [iface]);
+		await runScript('ifup', [iface]);
+	}
+})();

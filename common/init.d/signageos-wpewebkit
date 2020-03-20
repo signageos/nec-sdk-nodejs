@@ -1,0 +1,24 @@
+#!/sbin/openrc-run
+
+name=$RC_SVCNAME
+description="WPE Webkit"
+
+depend() {
+    need localmount loopback nginx docker
+    use signageos-server
+}
+
+start() {
+    ebegin "starting signageOS WPE Webkit"
+    einfo "wait for docker to start"
+    while ! docker info > /dev/null 2>&1; do sleep 0.01; done # if try to connect to docker too fast, it's not ready yet so gotta wait until it's ready
+    einfo "starting the container now"
+    docker start wpewebkit
+    eend $? "failed to start WPE Webkit"
+}
+
+stop() {
+    ebegin "stopping signageOS WPE Webkit"
+    docker stop wpewebkit
+    eend $? "failed to stop signageOS WPE Webkit"
+}

@@ -1,0 +1,4 @@
+#!/bin/sh
+# get timezone
+
+ls -l /etc/localtime | sed 's/.*-> \/usr\/share\/zoneinfo\/\(.*\)/\1/'

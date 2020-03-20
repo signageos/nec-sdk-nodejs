@@ -45,7 +45,7 @@ import { createMonitors } from './Driver/Monitors/monitorsFactory';
 import Network from './Network/Network';
 import { notifyServerAlive, notifyServerStopped } from './Application/serverStatus';
 import ServletRunner from './Servlet/ServletRunner';
-const parameters = require('../config/parameters');
+const parameters = require('../config/server_parameters');
 
 let raven: Raven.Client | undefined = undefined;
 
@@ -92,6 +92,7 @@ if (parameters.raven.enabled) {
 	const servletRunner = new ServletRunner(fileSystem, parameters.paths.servletPidFilesPath);
 
 	const nativeDriver = new ManagementDriver(
+		parameters.platform,
 		parameters.url.socketUri,
 		parameters.server.file_system_url,
 		cache,

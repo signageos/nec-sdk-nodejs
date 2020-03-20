@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# show a picture as an overlay over the video
+
+exec overlay_renderer $@

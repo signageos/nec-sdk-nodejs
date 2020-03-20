@@ -64,15 +64,13 @@ function spawnChildProcess(
 	}
 	const [commandName, ...commandArgs] = fullCommand;
 	const spawnedChildProcess = childProcess.spawn(commandName, commandArgs);
-	if (fullOptions.verbose) {
-		spawnedChildProcess.stdout.on('data', (chunk: any) => console.log(fullCommand.join(' '), chunk.toString()));
-		spawnedChildProcess.stderr.on('data', (chunk: any) => {
-			if (fullOptions.verbose) {
-				console.error(fullCommand.join(' '), chunk.toString());
-			} else {
-				debug(`spawnApiCommandChildProcess`, commandName, commandArgs, chunk.toString());
-			}
-		});
-	}
+	spawnedChildProcess.stdout.on('data', (chunk: any) => {
+		const logFunction = fullOptions.verbose ? console.log : debug;
+		logFunction(fullCommand.join(' '), chunk.toString());
+	});
+	spawnedChildProcess.stderr.on('data', (chunk: any) => {
+		const logFunction = fullOptions.verbose ? console.error : debug;
+		logFunction(fullCommand.join(' '), chunk.toString());
+	});
 	return spawnedChildProcess;
 }

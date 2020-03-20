@@ -1,0 +1,90 @@
+#!/bin/sh
+
+set -e
+
+# this script is intended to be called from udev rule to auto mount/unmount a USB storage device
+
+usage()
+{
+    echo "Usage: $0 {add|remove} device_name (e.g. sdb1)"
+    exit 1
+}
+
+if [ $# -ne 2 ]; then
+    usage
+    exit 1
+fi
+
+ACTION=$1
+DEVBASE=$2
+DEVICE="/dev/${DEVBASE}"
+MOUNT_POINT="/media/${DEVBASE}"
+
+notify_server() {
+    if ! service signageos-server reload_storage_units; then
+        >&2 echo "failed to notify server"
+    fi
+}
+
+dump_logs_if_contains_special_file() {
+    if [ -f "$MOUNT_POINT/dumplogs.tar.gz" ]; then
+        mkdir -p /tmp/dumplogs
+        tar -xzf "$MOUNT_POINT/dumplogs.tar.gz" -C /tmp/dumplogs
+        /sbin/signageos-dumplogs /tmp/dumplogs/own_private.pgp /tmp/dumplogs/recipient_public.pgp "$MOUNT_POINT"
+        rm -rf /tmp/dumplogs
+    fi
+}
+
+do_mount()
+{
+    FSTYPE=`/sbin/blkid $DEVICE | sed 's/.*[[:blank:]]TYPE="\([^"]*\)".*/\1/g; s/[[:blank:]]*//g;'`
+
+    /bin/mkdir -p ${MOUNT_POINT}
+
+    # Global mount options
+    OPTS="async,noatime"
+
+    # File system type specific mount options
+    case "${FSTYPE}" in
+
+        vfat|exfat|ntfs)
+            OPTS="$OPTS,fmask=111,uid=signageos,gid=signageos,utf8"
+            ;;
+    esac
+
+    if ! /bin/mount -o ${OPTS} ${DEVICE} ${MOUNT_POINT}; then
+        >&2 echo "Error mounting ${DEVICE} (status = $?)"
+        /bin/rmdir ${MOUNT_POINT}
+        exit 1
+    fi
+
+    echo "**** Mounted ${DEVICE} at ${MOUNT_POINT} ****"
+    notify_server
+    dump_logs_if_contains_special_file
+}
+
+do_unmount()
+{
+    if [ -z ${MOUNT_POINT} ]; then
+        >&2 echo "Warning: ${DEVICE} is not mounted"
+    else
+        /bin/umount -l ${MOUNT_POINT}
+        echo "**** Unmounted ${DEVICE}"
+    fi
+
+    /bin/rmdir ${MOUNT_POINT}
+    notify_server
+}
+
+case "${ACTION}" in
+    add)
+        do_mount
+        ;;
+    remove)
+        do_unmount
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac

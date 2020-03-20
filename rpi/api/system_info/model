@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+lshw | grep product | head -1 | cut -c 14-

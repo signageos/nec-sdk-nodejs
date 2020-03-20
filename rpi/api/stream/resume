@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <pid>"
+    echo "  window - ID of the running video process"
+    exit 1
+fi
+
+PID=$1
+
+kill -s SIGRTMIN+6 "$PID"

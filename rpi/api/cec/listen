@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <socket_path>"
+    echo "  socket path - Path to a unix socket where the key presses will be sent"
+    exit 1
+fi
+
+SOCKET=$1
+
+exec cec_listener "Raspberry Pi" "$SOCKET"

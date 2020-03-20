@@ -1,0 +1,13 @@
+{
+  "name": "@signageos/linux-alpine-api-network",
+  "version": "1.0.0",
+  "scripts": {
+    "clean": "yarn autoclean --force"
+  },
+  "author": "signageOS Inc.",
+  "license": "ISC",
+  "dependencies": {
+    "node-cidr": "1.0.0",
+    "node-network-interfaces": "0.1.3"
+  }
+}

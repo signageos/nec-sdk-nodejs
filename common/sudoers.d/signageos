@@ -1,0 +1,2 @@
+# allow signageos user to run signageos command as root
+signageos ALL=(root) NOPASSWD: /usr/bin/signageos

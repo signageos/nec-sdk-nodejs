@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+if [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ]; then
+    echo "Usage: $0 <window> <rotation> <event_socket> <stream_url> [<volume>]"
+    echo "  window - Window location and size; format: x1,y1,x2,y2"
+    echo "  rotation - Rotation angle of the video (0, 90, 180 or 270)"
+    echo "  event_socket - Path to a unix socket where the video will send events"
+    echo "  stream_url - Stream URL"
+    echo "  volume - Stream URL"
+    exit 1
+fi
+
+WINDOW=$1
+ROTATION=$2
+EVENT_SOCKET=$3
+STREAM_URL=$4
+VOLUME=$5
+VOLUME=${VOLUME:-100}
+
+exec omxplayer \
+	--threshold 1 \
+	--no-osd \
+	--aspect-mode letterbox \
+	--vol "$VOLUME" \
+	--win "$WINDOW" \
+	--orientation "$ROTATION" \
+	--event_socket "$EVENT_SOCKET" \
+	--play-manual \
+	--live \
+	"$STREAM_URL"

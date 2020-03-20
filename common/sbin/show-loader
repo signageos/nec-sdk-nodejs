@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+SCREEN_RESOLUTION=`display-info`
+SCREEN_WIDTH=${SCREEN_RESOLUTION%x*}
+SCREEN_HEIGHT=${SCREEN_RESOLUTION#*x}
+
+LOADER_WIDTH=250
+LOADER_HEIGHT=30
+
+x1=$(( ($SCREEN_WIDTH / 2) - ( $LOADER_WIDTH / 2 ) ))
+y1=$(( ($SCREEN_HEIGHT / 2) - ( $LOADER_HEIGHT / 2 ) ))
+x2=$(( $x1 + $LOADER_WIDTH ))
+y2=$(( $y1 + $LOADER_HEIGHT ))
+
+BACKGROUND_COLOR=0xFF18182C
+
+exec omxplayer --layer 10 --loop --no-osd --blank=$BACKGROUND_COLOR --win "$x1,$y1,$x2,$y2" /usr/share/signageos/loader.mp4

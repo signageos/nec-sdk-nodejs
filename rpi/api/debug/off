@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# disables native debug
+
+TODO implement
+exit 1

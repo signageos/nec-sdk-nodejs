@@ -4,3 +4,7 @@ cache/*
 !.gitkeep
 config/env.*.json
 !config/env.{environment}.json
+/tmp/
+/APKBUILD
+/signageos-rpi.pre-install
+/signageos-rpi.post-install

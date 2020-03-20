@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -e
+
+VAR_UPPER_DIR='/media/mmcblk0p3/var'
+VAR_WORK_DIR='/media/mmcblk0p3/.work_var'
+USR_UPPER_DIR='/media/mmcblk0p3/usr'
+USR_WORK_DIR='/media/mmcblk0p3/.work_usr'
+
+mount -a
+
+mkdir -p "$VAR_UPPER_DIR"
+mkdir -p "$VAR_WORK_DIR"
+mkdir -p "$USR_UPPER_DIR"
+mkdir -p "$USR_WORK_DIR"
+
+# before the overlay is mounted, move any syslogs to it from RAM so they're persistent
+mkdir -p "$VAR_UPPER_DIR/log"
+cat /var/log/messages >> "$VAR_UPPER_DIR/log/messages"
+# then delete the original syslogs to prevent duplicates on multiple runs of this script
+rm /var/log/messages
+
+mount -t overlay overlay -o lowerdir=/var,upperdir=$VAR_UPPER_DIR,workdir=$VAR_WORK_DIR /var
+mount -t overlay overlay -o lowerdir=/usr,upperdir=$USR_UPPER_DIR,workdir=$USR_WORK_DIR /usr
+
+service syslog restart

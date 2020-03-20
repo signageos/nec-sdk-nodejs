@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# reboot device
+
+service loader start
+reboot

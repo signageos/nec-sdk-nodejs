@@ -1,0 +1,16 @@
+#!/bin/sh
+# get screen rotation angle
+
+set -e
+
+DISPLAY_ROTATE=`grep '^display_rotate=' /media/mmcblk0p1/config.txt | sed 's/^display_rotate=\(.*\)/\1/'`
+
+if [ "$DISPLAY_ROTATE" = "1" ]; then
+    echo 90
+elif [ "$DISPLAY_ROTATE" = "2" ]; then
+    echo 180
+elif [ "$DISPLAY_ROTATE" = "3" ]; then
+    echo 270
+else
+    echo 0
+fi

@@ -1,0 +1,5 @@
+# whenever a USB device is connected, call usb-mount service to mount it
+KERNEL=="sd[a-z][0-9]" ACTION=="add" SUBSYSTEMS=="usb" RUN+="/sbin/start-stop-daemon --background --stdout-logger '/usr/bin/logger --tag automount -p local0.info' --stderr-logger '/usr/bin/logger --tag automount -p local0.err' /sbin/signageos-usbmount add %k"
+
+# whenever a USB device is disconnected, call usb-mount service to unmount it
+KERNEL=="sd[a-z][0-9]" ACTION=="remove" SUBSYSTEMS=="usb" RUN+="/sbin/start-stop-daemon --background --stdout-logger '/usr/bin/logger --tag automount -p local0.info' --stderr-logger '/usr/bin/logger --tag automount -p local0.err' /sbin/signageos-usbmount remove %k"

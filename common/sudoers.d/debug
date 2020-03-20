@@ -1,0 +1,2 @@
+# allow debug user to run bash as root
+debug ALL=(root) NOPASSWD: /bin/bash

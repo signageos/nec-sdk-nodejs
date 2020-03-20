@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+sync
+umount /usr
+# syslog has to be stopped because it writes into /var/log/messages
+# so it wouldn't be possible to unmount /var if the file is open
+service syslog stop
+umount /var
+service syslog start

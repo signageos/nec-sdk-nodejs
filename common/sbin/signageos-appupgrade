@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+
+source /etc/signageos/signageos.conf
+
+VERSION_FILE='/tmp/signageos/app_upgrade_version'
+
+upgrade_app() {
+    VERSION=`cat "$VERSION_FILE"`
+    rm -rf "$VERSION_FILE"
+    apk update
+    apk add "signageos-$platform=$VERSION"
+}
+
+if [ -f "$VERSION_FILE" ]; then
+    upgrade_app || true
+fi
+
+reboot

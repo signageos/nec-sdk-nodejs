@@ -1,0 +1,10 @@
+#!/bin/sh
+# clear ACL rules for internet communication
+
+cp /usr/share/signageos/squid.conf.default /tmp/squid.conf
+echo 'http_access allow all' >> /tmp/squid.conf
+mv /tmp/squid.conf /etc/squid/squid.conf
+
+if [ "$1" != "--no-reload" ]; then
+    service squid reload
+fi
