@@ -14,34 +14,34 @@ describe('CPUFanManager.cpuFanManager', function () {
 
 		it('should set fan on when cpu is hot', async function () {
 			const display = createMockDisplay();
-			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 60);
+			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 70);
 			display.cpuFanOn.callCount.should.equal(1);
 		});
 
 		it('should set fan off when cpu is not hot', async function () {
 			const display = createMockDisplay();
-			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 35);
+			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 45);
 			display.cpuFanOff.callCount.should.equal(1);
 		});
 
 		it('shouldn\'t do anything when cpu is hot but it was already turned on', async function () {
 			const display = createMockDisplay();
-			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 60);
-			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 60);
+			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 70);
+			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 70);
 			display.cpuFanOn.callCount.should.equal(1);
 		});
 
 		it('shouldn\'t do anything when cpu is not hot but it was already turned off', async function () {
 			const display = createMockDisplay();
-			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 35);
-			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 35);
+			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 45);
+			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 45);
 			display.cpuFanOff.callCount.should.equal(1);
 		});
 
 		it('shouldn\'t do anything when cpu temperature is in the tolerance zone', async function () {
 			const display = createMockDisplay();
-			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 59);
-			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 46);
+			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 69);
+			await checkCpuTemperatureAndSetFanOnOff(display as any, async () => 56);
 			display.cpuFanOn.callCount.should.equal(0);
 			display.cpuFanOff.callCount.should.equal(0);
 		});

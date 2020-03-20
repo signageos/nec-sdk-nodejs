@@ -51,7 +51,7 @@ export function createSystemAPI(): ISystemAPI {
 
 		async getStorageStatus(): Promise<IStorageUnit[]> {
 			const result = await execApiCommand('system_info', 'storage');
-			const linesSplit = result.trim().split("\n");
+			const linesSplit = result.split("\n");
 			return linesSplit.map((line: string) => {
 				const [type, usedSpace, availableSpace] = line.split(',');
 				return {
@@ -122,8 +122,7 @@ export function createSystemAPI(): ISystemAPI {
 		},
 
 		async getDatetime() {
-			const result = await execApiCommand('time', 'get_datetime');
-			return result.trim();
+			return await execApiCommand('time', 'get_datetime');
 		},
 
 		async setDatetime(datetime: string) {
@@ -131,8 +130,7 @@ export function createSystemAPI(): ISystemAPI {
 		},
 
 		async getTimezone() {
-			const result = await execApiCommand('time', 'get_timezone');
-			return result.trim();
+			return await execApiCommand('time', 'get_timezone');
 		},
 
 		async setTimezone(timezone: string) {
@@ -156,8 +154,7 @@ export function createSystemAPI(): ISystemAPI {
 		},
 
 		async getFileMimeType(filePath: string) {
-			const mimeType = await execApiCommand('file', 'mime_type', [filePath]);
-			return mimeType.trim();
+			return await execApiCommand('file', 'mime_type', [filePath]);
 		},
 
 		async setWebACLWhitelist(acl: string[]): Promise<void> {

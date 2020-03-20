@@ -59,8 +59,8 @@ export async function checkCpuTemperatureAndSetFanOnOff(
 }
 
 function getFanDesiredState(cpuTemperature: number): FanDesiredState {
-	const LOW_THRESHOLD = 45;
-	const HIGH_THRESHOLD = 60;
+	const LOW_THRESHOLD = 55;
+	const HIGH_THRESHOLD = 70;
 	if (cpuTemperature <= LOW_THRESHOLD) {
 		return FanDesiredState.OFF;
 	} else if (cpuTemperature >= HIGH_THRESHOLD) {

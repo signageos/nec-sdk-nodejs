@@ -83,11 +83,15 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		}
 
 		const serialNumber = await this.getSerialNumber();
-		this.deviceUid = checksumString(serialNumber);
+		const legacySerialNumber = serialNumber + '\n'; // because of a bug in the past we now have to forever include the newline
+		this.deviceUid = checksumString(legacySerialNumber);
 		return this.deviceUid;
 	}
 
-	public async appUpgrade(_baseUrl: string, version: string) {
+	public async appUpgrade(_baseUrl: string, version?: string) {
+		if (!version) {
+			throw new Error('App upgrade from absolute URL isn\'t supported at the moment');
+		}
 		await this.systemAPI.upgradeApp(version);
 		return () => this.systemReboot();
 	}
@@ -96,11 +100,20 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		return await this.systemAPI.getFirmwareVersion();
 	}
 
-	public async firmwareUpgrade(baseUrl: string, version: string, onProgress: (progress: number) => void) {
-		onProgress(0);
-		const imgUrl = `${baseUrl}/signageos/${this.platform}/sos_${this.platform}_${version}.img.zip`;
+	public async firmwareUpgrade(baseUrl: string, version?: string, onProgress?: (progress: number) => void) {
+		if (onProgress) {
+			onProgress(0);
+		}
+		let imgUrl: string;
+		if (version) {
+			imgUrl = `${baseUrl}/signageos/${this.platform}/sos_${this.platform}_${version}.img.zip`;
+		} else {
+			imgUrl = baseUrl;
+		}
 		await this.systemAPI.overwriteFirmware(imgUrl);
-		onProgress(100);
+		if (onProgress) {
+			onProgress(100);
+		}
 	}
 
 	public async getModel(): Promise<string> {

@@ -115,23 +115,22 @@ export async function setDHCP(networkInterface: NetworkInterface) {
 }
 
 export async function getDefaultGateway() {
-	const result = await execApiCommand('network', 'gateway');
-	return result.trim();
+	return await execApiCommand('network', 'gateway');
 }
 
 export async function getDNSSettings() {
 	const dnsSettings = await execApiCommand('network', 'dns');
-	return dnsSettings.trim().split("\n");
+	return dnsSettings.split("\n");
 }
 
 export async function isWifiSupported() {
 	const result = await execApiCommand('wifi', 'is_supported');
-	return result.trim() === '1';
+	return result === '1';
 }
 
 export async function isWifiEnabled() {
 	const result = await execApiCommand('wifi', 'is_enabled');
-	return result.trim() === '1';
+	return result === '1';
 }
 
 export async function enableWifi() {
@@ -156,12 +155,12 @@ export async function disconnectFromWifi() {
 
 export async function getConnectedToWifi() {
 	const ssid = await execApiCommand('wifi', 'get_connected_to');
-	return ssid.trim() || null;
+	return ssid || null;
 }
 
 export async function getWifiCountryCode() {
 	const countryCode = await execApiCommand('wifi', 'get_country');
-	return countryCode.trim() || null;
+	return countryCode || null;
 }
 
 export async function setWifiCountryCode(countryCode: string) {
