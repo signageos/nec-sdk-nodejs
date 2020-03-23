@@ -106,7 +106,6 @@ build:npm:
     - rm -rf ~/packages
     - export VERSION=`cat ./VERSION`
     - npx @signageos/lib@just-tools version-upgrade $VERSION
-    - export VERSION=`echo $VERSION | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'` # omit branch version
     - tools/build-apk.sh $TARGET $VERSION
     - mkdir -p packages/signageos/$ARCHITECTURE
     - cp ~/packages/signageos/$ARCHITECTURE/signageos*-$VERSION-r0.apk packages/signageos/$ARCHITECTURE

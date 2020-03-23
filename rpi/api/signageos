@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION='__version_placeholder__'
+VERSION='%VERSION%'
 if [[ "$@" = "--version" ]]; then
     echo $VERSION
     exit 0

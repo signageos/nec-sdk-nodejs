@@ -31,10 +31,12 @@ cd -
 cp -r common/* "$TMP_DIR"
 cp -r $TARGET/* "$TMP_DIR"
 cp LICENSE "$TMP_DIR"
+sed -i "s/%VERSION%/${VERSION}/" "${TMP_DIR}/api/signageos"
 
 package_name="signageos-$TARGET"
+package_version=`echo $VERSION | sed -r 's/-[^.]+//g' | sed -r 's/\+.+//g'` # omit branch version
 sed \
-    -e "s/%PKG_VERSION%/${VERSION}/" \
+    -e "s/%PKG_VERSION%/${package_version}/" \
     -e "s/%PKG_NAME%/${package_name}/" \
     -e "s/%PLATFORM%/${TARGET}/" \
     APKBUILD.dist > APKBUILD
