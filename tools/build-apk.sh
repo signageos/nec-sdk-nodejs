@@ -4,8 +4,9 @@ set -e
 
 TARGET=$1
 VERSION=$2
-if [ -z "$TARGET" ] || [ -z "$VERSION" ]; then
-    echo "Usage: $0 <target> <version>"
+REPO=$3
+if [ -z "$TARGET" ] || [ -z "$VERSION" ] || [ -z "$REPO" ]; then
+    echo "Usage: $0 <target> <version> <dest_repository>"
     exit 1
 fi
 
@@ -44,4 +45,4 @@ cp signageos.pre-install "signageos-$TARGET.pre-install"
 cp signageos.post-install "signageos-$TARGET.post-install"
 
 abuild checksum
-abuild -r
+abuild -r -P "$REPO"

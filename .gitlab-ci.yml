@@ -103,12 +103,10 @@ build:npm:
   before_script: []
   script:
     - sudo apk update
-    - rm -rf ~/packages
     - export VERSION=`cat ./VERSION`
     - npx @signageos/lib@just-tools version-upgrade $VERSION
-    - tools/build-apk.sh $TARGET $VERSION
-    - mkdir -p packages/signageos/$ARCHITECTURE
-    - cp ~/packages/signageos/$ARCHITECTURE/signageos*-$VERSION-r0.apk packages/signageos/$ARCHITECTURE
+    - REPO=`pwd`/packages
+    - tools/build-apk.sh $TARGET $VERSION $REPO
   artifacts:
     when: on_success
     paths:
@@ -130,7 +128,7 @@ build:alpine-rpi:
   before_script: []
   script:
     - S3_REPO_PATH="s3://signageos-alpine-repository/1.0/sos/$ARCHITECTURE"
-    - aws s3 cp packages/signageos/$ARCHITECTURE "$S3_REPO_PATH" --recursive --exclude "*" --include "signageos-$TARGET*-r0.apk"
+    - aws s3 cp packages/signageos/$ARCHITECTURE "$S3_REPO_PATH" --recursive --exclude "*" --include "*.apk"
 
 publish:alpine-rpi:
   extends: .publish:alpine
