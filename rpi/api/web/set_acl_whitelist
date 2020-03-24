@@ -1,21 +1,4 @@
 #!/bin/sh
 # whitelist some domains for internet communication
 
-if [ "$1" = "" ]; then
-    echo "Usage: $0 <domain1> [<domain2>] [<domain3>]..."
-    exit 1
-fi
-
-cp /usr/share/signageos/squid.conf.default /tmp/squid.conf
-
-for domain in "$@"
-do
-    echo "acl whitelist dstdomain .$domain" >> /tmp/squid.conf
-done
-
-echo 'http_access allow whitelist' >> /tmp/squid.conf
-echo 'http_access deny all' >> /tmp/squid.conf
-
-mv /tmp/squid.conf /etc/squid/squid.conf
-
-service squid reload
+exit 0 # TODO reimplement

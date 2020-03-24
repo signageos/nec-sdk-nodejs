@@ -40,8 +40,6 @@ if ! is_wpe_webkit_container_ok; then
 			-v /usr/share/signageos/server/package.json:/tmp/signageos-version-file \
 			-e WPE_BCMRPI_TOUCH=1 \
 			-e WEBKIT_INSPECTOR_SERVER='0.0.0.0:9998' \
-			-e http_proxy='http://127.0.0.1:3128' \
-			-e no_proxy="127.0.0.1;localhost;$NO_PROXY_DOMAINS" \
 			"$DOCKER_IMAGE_NAME" \
 			/usr/bin/wpe 'http://127.0.0.1:8082/index.html?v=$(md5sum /tmp/signageos-version-file | awk '"'"'{print $1}'"'"')'
 	echo 'WPE Webkit container created'
@@ -50,6 +48,5 @@ fi
 rc-update add cgroups default
 rc-update add docker default
 rc-update add swap default
-rc-update add squid default
 rc-update add signageos-server default
 rc-update add signageos-wpewebkit default
