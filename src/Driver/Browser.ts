@@ -1,4 +1,3 @@
-import wait from '@signageos/lib/dist/Timer/wait';
 import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 import { IOpenLinkOptions } from '@signageos/front-display/es6/NativeDevice/IBrowser';
 import BridgeClient, { MessageType } from '../Bridge/BridgeClient';
@@ -21,8 +20,6 @@ export default class Browser extends ProprietaryBrowser {
 		} else {
 			await this.clearACL();
 		}
-
-		await wait(1e3); // wait to allow squid to reload fully and start accepting connections
 		await super.open(uri, options);
 	}
 

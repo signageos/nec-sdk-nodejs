@@ -9,7 +9,7 @@ pkggroups="signageos debug"
 arch="armhf armv7 aarch64"
 license="custom"
 _coredeps="
-    sudo bash coreutils util-linux e2fsprogs dosfstools unzip file lshw ntfs-3g exfat-utils fuse-exfat nodejs ffmpeg squid gnupg
+    sudo bash coreutils util-linux e2fsprogs dosfstools unzip file lshw ntfs-3g exfat-utils fuse-exfat nodejs ffmpeg gnupg
     nginx logrotate libcec raspberrypi raspi2png vips-dev curl signageos-omxplayer=0.36-r0 signageos-rpi-cec-listener=0.37-r0
     signageos-rpi-overlay-renderer=0.6-r0 signageos-rpi-display-info=0.5-r0
 "
@@ -36,7 +36,6 @@ package() {
 	cp -r dist/client "$pkgdir"/usr/share/signageos
 	cp -r dist/server "$pkgdir"/usr/share/signageos
 	install -m644 -D loader/loader.mp4 "$pkgdir"/usr/share/signageos/loader.mp4
-    install -m644 -D squid/squid.conf.default "$pkgdir"/usr/share/signageos/squid.conf.default
 
     cp -r sbin "$pkgdir"
     chmod 755 "$pkgdir"/sbin/*

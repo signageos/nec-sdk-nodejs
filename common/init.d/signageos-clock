@@ -5,7 +5,6 @@ description="If the device is an NEC display, set it's time as default system ti
 swclock_file="/var/lib/signageos/swclock"
 
 depend() {
-    need localmount
     provide clock
 }
 
