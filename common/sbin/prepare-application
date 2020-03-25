@@ -40,8 +40,9 @@ if ! is_wpe_webkit_container_ok; then
 			-v /usr/share/signageos/server/package.json:/tmp/signageos-version-file \
 			-e WPE_BCMRPI_TOUCH=1 \
 			-e WEBKIT_INSPECTOR_SERVER='0.0.0.0:9998' \
+			-e VERSION_FILE=/tmp/signageos-version-file \
 			"$DOCKER_IMAGE_NAME" \
-			/usr/bin/wpe 'http://127.0.0.1:8082/index.html?v=$(md5sum /tmp/signageos-version-file | awk '"'"'{print $1}'"'"')'
+			/usr/bin/wpe 'http://127.0.0.1:8082/index.html'
 	echo 'WPE Webkit container created'
 fi
 
