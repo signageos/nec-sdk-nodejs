@@ -58,6 +58,7 @@ mount -o remount,rw /media/mmcblk0p1 # An update in the first partition is requi
 
 rm -rf /media/mmcblk0p1/boot.diskless # just in case there are some remnants of incomplete factory reset or something
 mkdir -p /media/mmcblk0p1/boot.diskless
+rm -rf /media/mmcblk0p1/boot/dtbs-rpi2 # files possibly injected by linux-rpi2 package during previous sysmode setup, can't be there
 cp /media/mmcblk0p1/boot/* /media/mmcblk0p1/boot.diskless/
 cd /mnt # We are in the second partition
 rm boot/boot # Drop the unused symbolink link

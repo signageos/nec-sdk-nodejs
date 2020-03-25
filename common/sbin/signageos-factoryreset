@@ -4,6 +4,7 @@ set -e
 
 mount -o remount,rw /media/mmcblk0p1
 if [ -e /media/mmcblk0p1/boot.diskless ]; then
+    rm -rf /media/mmcblk0p1/boot/dtbs-rpi2 # files injected by linux-rpi2 package during sysmode setup, can't be there
     mv -f /media/mmcblk0p1/boot.diskless/* /media/mmcblk0p1/boot
     rm -rf /media/mmcblk0p1/boot.diskless
 fi
