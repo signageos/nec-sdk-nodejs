@@ -3,6 +3,7 @@ import { promisify } from 'util';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as checksum from 'checksum';
+import { exec } from 'child_process';
 import { IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { ICopyFileOptions, IMoveFileOptions } from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
@@ -185,11 +186,6 @@ export default class FileSystem implements IFileSystem {
 			throw new Error('Can\'t move root directory');
 		}
 
-		const destinationExists = await this.exists(destinationFilePath);
-		if (!options.overwrite && destinationExists) {
-			throw new Error('Trying to move to an existing destination');
-		}
-
 		const destinationParentDirectoryFilePath = this.getParentDirectoryFilePath(destinationFilePath);
 		if (!(await this.exists(destinationParentDirectoryFilePath))) {
 			throw new Error('Can\'t move file to a non-existent directory');
@@ -198,9 +194,26 @@ export default class FileSystem implements IFileSystem {
 			throw new Error('Trying to move file but the destination is a file, not a directory');
 		}
 
+		const destinationExists = await this.exists(destinationFilePath);
+		if (destinationExists) {
+			if (options.overwrite) {
+				await this.deleteFile(destinationFilePath, true);
+			} else {
+				throw new Error('Trying to move to an existing destination');
+			}
+		}
+
 		const sourceAbsolutePath = this.getAbsolutePath(sourceFilePath);
 		const destinationAbsolutePath = this.getAbsolutePath(destinationFilePath);
-		await fs.copy(sourceAbsolutePath, destinationAbsolutePath, { overwrite: options.overwrite });
+		await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
+			exec(`cp -r ${sourceAbsolutePath} ${destinationAbsolutePath}`, (error: Error) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve();
+				}
+			});
+		});
 	}
 
 	public async moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, options: IMoveFileOptions = {}) {
