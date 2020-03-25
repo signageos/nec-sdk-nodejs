@@ -41,6 +41,7 @@ prepare_data() {
     if partitition_exists "$DATA_PARTITION"; then
         delete_data_partition
         reboot
+        exit 0
     else
         create_and_initialize_data_partition
     fi
