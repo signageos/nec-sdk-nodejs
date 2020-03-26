@@ -23,7 +23,7 @@ import { IFileDetails } from './IFileDetails';
 import { downloadFile } from './downloadFile';
 import { uploadFile } from './uploadFile';
 import { unzip } from './archive';
-import { trimSlashesAndDots } from './helper';
+import { trimSlashesAndDots, escapeShellPath } from './helper';
 import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 import { IVideoAPI } from '../API/VideoAPI';
 
@@ -203,10 +203,10 @@ export default class FileSystem implements IFileSystem {
 			}
 		}
 
-		const sourceAbsolutePath = this.getAbsolutePath(sourceFilePath);
-		const destinationAbsolutePath = this.getAbsolutePath(destinationFilePath);
+		const sourceAbsolutePathEscaped = escapeShellPath(this.getAbsolutePath(sourceFilePath));
+		const destinationAbsolutePathEscaped = escapeShellPath(this.getAbsolutePath(destinationFilePath));
 		await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-			exec(`cp -r ${sourceAbsolutePath} ${destinationAbsolutePath}`, (error: Error) => {
+			exec(`cp -r ${sourceAbsolutePathEscaped} ${destinationAbsolutePathEscaped}`, (error: Error) => {
 				if (error) {
 					reject(error);
 				} else {
