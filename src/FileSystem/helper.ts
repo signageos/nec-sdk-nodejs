@@ -29,7 +29,3 @@ export function pipeFileToResponse(absolutePath: string, res: express.Response) 
 		throw error;
 	}
 }
-
-export function escapeShellPath(filePath: string) {
-	return `'${filePath.replace(/'/g, `'\\''`)}'`;
-}
