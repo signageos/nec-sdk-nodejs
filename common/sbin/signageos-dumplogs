@@ -18,7 +18,13 @@ service loader start
     gpg --import "$PRIVATE_KEY_FILE"
     gpg --import "$PUBLIC_KEY_FILE"
 
-    tar -czf /tmp/logs.tar.gz /var/log
+    rc-status -a > /var/log/signageos/rc-status
+    df -h > /var/log/signageos/df
+
+    tar -czf /tmp/logs.tar.gz /var/log /etc /run
+
+    rm /var/log/signageos/rc-status
+    rm /var/log/signageos/df
 
     gpg --encrypt --sign -r dev@signageos.io --trust-model always /tmp/logs.tar.gz
     mv /tmp/logs.tar.gz.gpg "$DESTINATION"
