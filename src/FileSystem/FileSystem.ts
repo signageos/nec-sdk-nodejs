@@ -3,7 +3,6 @@ import { promisify } from 'util';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as checksum from 'checksum';
-import { exec } from 'child_process';
 import { IFilePath, IHeaders, IStorageUnit } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { ICopyFileOptions, IMoveFileOptions } from '@signageos/front-display/es6/NativeDevice/IFileSystem';
 import HashAlgorithm from '@signageos/front-display/es6/NativeDevice/HashAlgorithm';
@@ -23,7 +22,7 @@ import { IFileDetails } from './IFileDetails';
 import { downloadFile } from './downloadFile';
 import { uploadFile } from './uploadFile';
 import { unzip } from './archive';
-import { trimSlashesAndDots, escapeShellPath } from './helper';
+import { trimSlashesAndDots } from './helper';
 import { generateUniqueHash } from '@signageos/lib/dist/Hash/generator';
 import { IVideoAPI } from '../API/VideoAPI';
 
@@ -186,6 +185,11 @@ export default class FileSystem implements IFileSystem {
 			throw new Error('Can\'t move root directory');
 		}
 
+		const destinationExists = await this.exists(destinationFilePath);
+		if (!options.overwrite && destinationExists) {
+			throw new Error('Trying to move to an existing destination');
+		}
+
 		const destinationParentDirectoryFilePath = this.getParentDirectoryFilePath(destinationFilePath);
 		if (!(await this.exists(destinationParentDirectoryFilePath))) {
 			throw new Error('Can\'t move file to a non-existent directory');
@@ -194,26 +198,9 @@ export default class FileSystem implements IFileSystem {
 			throw new Error('Trying to move file but the destination is a file, not a directory');
 		}
 
-		const destinationExists = await this.exists(destinationFilePath);
-		if (destinationExists) {
-			if (options.overwrite) {
-				await this.deleteFile(destinationFilePath, true);
-			} else {
-				throw new Error('Trying to move to an existing destination');
-			}
-		}
-
-		const sourceAbsolutePathEscaped = escapeShellPath(this.getAbsolutePath(sourceFilePath));
-		const destinationAbsolutePathEscaped = escapeShellPath(this.getAbsolutePath(destinationFilePath));
-		await new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-			exec(`cp -r ${sourceAbsolutePathEscaped} ${destinationAbsolutePathEscaped}`, (error: Error) => {
-				if (error) {
-					reject(error);
-				} else {
-					resolve();
-				}
-			});
-		});
+		const sourceAbsolutePath = this.getAbsolutePath(sourceFilePath);
+		const destinationAbsolutePath = this.getAbsolutePath(destinationFilePath);
+		await fs.copy(sourceAbsolutePath, destinationAbsolutePath, { overwrite: options.overwrite });
 	}
 
 	public async moveFile(sourceFilePath: IFilePath, destinationFilePath: IFilePath, options: IMoveFileOptions = {}) {
