@@ -53,6 +53,7 @@ start() {
         --user $command_user \
         --group $command_group \
         --env config_file=$configfile \
+        --env NODE_ENV=production \
         --stdout-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.info'" \
         --stderr-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.err'" \
         --background \
