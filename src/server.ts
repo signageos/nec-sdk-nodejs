@@ -45,7 +45,11 @@ import { createMonitors } from './Driver/Monitors/monitorsFactory';
 import Network from './Network/Network';
 import { notifyServerAlive, notifyServerStopped } from './Application/serverStatus';
 import ServletRunner from './Servlet/ServletRunner';
+import * as Debug from 'debug';
 const parameters = require('../config/server_parameters');
+const debug = Debug('@signageos/display-linux:server');
+
+debug('application started');
 
 let raven: Raven.Client | undefined = undefined;
 
@@ -74,12 +78,16 @@ if (parameters.raven.enabled) {
 	const fileDetailsProvider = new FileDetailsProvider(fileSystem, videoAPI, fileMetadataCache, imageResizer, videoThumbnailExtractor);
 	const cache = new FileSystemCache(fileSystem);
 	await cache.initialize();
+	debug('cache initialized');
 	const systemSettings = new FSSystemSettings(parameters.fileSystem.system);
 	const overlayRenderer = new OverlayRenderer(fileSystem);
 	const necPD = new NECPD();
 	const display = await createDisplay(necPD, systemSettings, systemAPI);
+	debug('display created');
 	const sensors = await createSensors(necPD);
+	debug('sensors created');
 	const monitors = await createMonitors(necPD);
+	debug('monitors created');
 	const network = new Network();
 
 	const createVideo = (key: string) => {
@@ -149,6 +157,7 @@ if (parameters.raven.enabled) {
 		},
 		autoVerification,
 	);
+	debug('management started');
 
 	const cecListener = new CECListener(display, parameters.video.socket_root, systemAPI);
 	const bridgeServer = new BridgeServer(
@@ -187,21 +196,29 @@ if (parameters.raven.enabled) {
 		throw error;
 	});
 
+	debug('starting cec listener');
 	const cecListenPromise = cecListener.listen()
+		.then(() => debug('cec listener started'))
 		.catch((error: Error) => console.error('CEC initialization failed', error));
 
+	debug('starting bridge server');
 	await bridgeServer.start();
+	debug('bridge server started');
 	await notifyServerAlive(systemAPI);
+	debug('notified server alive');
 
 	await videoPlayer.initialize()
 		.catch((error: Error) => console.error('initialize video player failed', error));
+	debug('video player initialized');
 
 	await cecListenPromise;
 
 	manageCpuFan(display, systemAPI);
 
+	debug('gonna perform display factory settings if not performed');
 	await performDisplayFactorySettingsIfWasntPerformedYet(display, parameters.fileSystem.system)
 		.catch((error: Error) => console.error('perform factory settings failed', error));
+	debug('display factory settings performed');
 
 	async function syncDatetimeToDisplay() {
 		try {
@@ -211,7 +228,9 @@ if (parameters.raven.enabled) {
 		}
 	}
 
+	debug('gonna sync datetime to display');
 	await syncDatetimeToDisplay();
+	debug('datetime synced to display');
 	// sync every 10 mins when it's a whole minute, because setting time to NEC display only sets hours and minutes
 	const syncTimeJob = new CronJob('0 */10 * * * *', () => syncDatetimeToDisplay());
 	syncTimeJob.start();
