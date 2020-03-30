@@ -2,4 +2,4 @@
 # mark that application is ready and do all things necessary that require the application to be ready first
 
 touch /run/sos_ready
-service loader stop -q
+service loader stop -q --ifstarted
