@@ -1,4 +1,4 @@
-import { execGetApiVersion, execApiCommand, spawnApiCommandChildProcess } from './apiCommand';
+import { execApiCommand, spawnApiCommandChildProcess } from './apiCommand';
 import { ChildProcess } from 'child_process';
 
 export interface ISystemAPI {
@@ -94,7 +94,7 @@ export function createSystemAPI(): ISystemAPI {
 		},
 
 		async getFirmwareVersion() {
-			return await execGetApiVersion();
+			return await execApiCommand('firmware', 'version');
 		},
 
 		async overwriteFirmware(imgUrl: string) {
