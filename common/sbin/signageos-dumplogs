@@ -20,11 +20,13 @@ service loader start
 
     rc-status -a > /var/log/signageos/rc-status
     df -h > /var/log/signageos/df
+    docker logs -t wpewebkit > /var/log/signageos/wpewebkit.log 2>&1
 
     tar -czf /tmp/logs.tar.gz /var/log /etc /run
 
     rm /var/log/signageos/rc-status
     rm /var/log/signageos/df
+    rm /var/log/signageos/wpewebkit.log
 
     gpg --encrypt --sign -r dev@signageos.io --trust-model always /tmp/logs.tar.gz
     mv /tmp/logs.tar.gz.gpg "$DESTINATION"
