@@ -34,3 +34,4 @@ dtparam=audio=on
 enable_uart=1
 dtoverlay=uart1
 core_freq=250
+force_turbo=1
