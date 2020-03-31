@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# get firmware version
+
+cat /media/mmcblk0p1/sos_version

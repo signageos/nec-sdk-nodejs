@@ -206,10 +206,11 @@ build:overlay-and-cache-rpi:
     - privileged
   before_script: []
   script:
+    - VERSION=`cat ./VERSION`
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
     - docker pull $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-$ARCHITECTURE
     - docker tag $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-$ARCHITECTURE wpewebkit:2.26.4
-    - tools/build-image.sh $ARCHITECTURE apks-$TARGET.tar.gz alpine-$TARGET.img
+    - tools/build-image.sh $ARCHITECTURE $VERSION apks-$TARGET.tar.gz alpine-$TARGET.img
   artifacts:
     when: on_success
     paths:
@@ -221,6 +222,7 @@ build:image-rpi:
     ARCHITECTURE: armhf
     TARGET: rpi
   dependencies:
+    - prepare
     - build:apks-rpi
     - build:overlay-and-cache-rpi
 

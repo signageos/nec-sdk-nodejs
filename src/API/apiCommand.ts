@@ -19,10 +19,6 @@ export async function execApiCommand(
 	return result.trim();
 }
 
-export function execGetApiVersion() {
-	return execCommand(SOS_COMMAND, ['--version']);
-}
-
 export function spawnApiCommandChildProcess(
 	namespace: string,
 	command: string,
