@@ -32,6 +32,7 @@ if ! is_wpe_webkit_container_ok; then
 	echo 'create WPE Webkit container'
 	docker rm -f "$DOCKER_CONTAINER_NAME" || true
 	docker create --name "$DOCKER_CONTAINER_NAME" --privileged --net=host \
+			--log-driver syslog --log-opt tag=wpewebkit \
 			-v /dev/input:/dev/input:ro \
 			-v /run/udev:/run/udev:ro \
 			-v /tmp:/tmp \
