@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# get video details
+# framerate returns example: "30000/1001" that means approximetly 30fps
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <video_file>"
+    echo "  video_file - Path to the video file"
+    exit 1
+fi
+
+VIDEO=$1
+
+ffprobe \
+    -v quiet \
+    -of default=noprint_wrappers=1 \
+    -select_streams v:0 \
+    -show_entries stream=width,height,bit_rate,r_frame_rate,duration,codec_name \
+    "$VIDEO"

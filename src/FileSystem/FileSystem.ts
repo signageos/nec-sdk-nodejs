@@ -122,8 +122,8 @@ export default class FileSystem implements IFileSystem {
 		try {
 			mimeType = await this.systemAPI.getFileMimeType(absolutePath);
 			if (mimeType === 'image/x-tga') {
-				const mediaCodec = await this.videoAPI.getVideoCodec(absolutePath);
-				if (mediaCodec === 'mpeg2video') {
+				const videoDetails = await this.videoAPI.getVideoDetails(absolutePath);
+				if (videoDetails.codec === 'mpeg2video') {
 					mimeType = 'video/mpeg';
 				}
 			}

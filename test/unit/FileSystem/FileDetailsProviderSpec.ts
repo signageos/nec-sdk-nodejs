@@ -2,6 +2,7 @@ import * as sinon from 'sinon';
 import FileDetailsProvider from '../../../src/FileSystem/FileDetailsProvider';
 import { IFilePath } from '@signageos/front-display/es6/NativeDevice/fileSystem';
 import { getFilePath } from './filePathHelper';
+import { IVideoDetails } from '../../../src/API/VideoAPI';
 
 describe('FileSystem.FileDetailsProvider', function () {
 
@@ -68,20 +69,15 @@ describe('FileSystem.FileDetailsProvider', function () {
 					},
 				};
 				const videoApi = {
-					async getVideoDurationMs() {
-						return 4000;
-					},
-					async getVideoResolution() {
-						return { width: 1920, height: 1080 };
-					},
-					async getVideoFramerate() {
-						return 30;
-					},
-					async getVideoBitrate() {
-						return 24000;
-					},
-					async getVideoCodec() {
-						return 'h264';
+					async getVideoDetails(): Promise<IVideoDetails> {
+						return {
+							width: 1920,
+							height: 1080,
+							durationMs: 4000,
+							framerate: 30,
+							bitrate: 24000,
+							codec: 'h264',
+						};
 					},
 				};
 				const fileMetadataCache = {
@@ -139,20 +135,15 @@ describe('FileSystem.FileDetailsProvider', function () {
 					},
 				};
 				const videoApi = {
-					async getVideoDurationMs() {
-						return 4000;
-					},
-					async getVideoResolution() {
-						return { width: 1920, height: 1080 };
-					},
-					async getVideoFramerate() {
-						return 30;
-					},
-					async getVideoBitrate() {
-						return 24000;
-					},
-					async getVideoCodec() {
-						return 'h264';
+					async getVideoDetails(): Promise<IVideoDetails> {
+						return {
+							width: 1920,
+							height: 1080,
+							durationMs: 4000,
+							framerate: 30,
+							bitrate: 24000,
+							codec: 'h264',
+						};
 					},
 				};
 				const fileMetadataCache = {
