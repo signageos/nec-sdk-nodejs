@@ -102,34 +102,42 @@ export default class FileDetailsProvider implements IFileDetailsProvider {
 			const extendedFileDetails: IVideoFileDetails = {};
 			const fileAbsolutePath = this.fileSystem.getAbsolutePath(filePath);
 			try {
-				const videoDurationMs = await this.videoAPI.getVideoDurationMs(fileAbsolutePath);
-				extendedFileDetails.videoDurationMs = videoDurationMs;
+				const videoDetails = await this.videoAPI.getVideoDetails(fileAbsolutePath);
+
+				if (typeof videoDetails.width !== 'undefined' && typeof videoDetails.height !== 'undefined') {
+					extendedFileDetails.videoResolution = {
+						width: videoDetails.width,
+						height: videoDetails.height,
+					};
+				} else {
+					console.warn('get extended file details videoResolution failed');
+				}
+
+				if (typeof videoDetails.durationMs !== 'undefined') {
+					extendedFileDetails.videoDurationMs = videoDetails.durationMs;
+				} else {
+					console.warn('get extended file details videoDurationMs failed');
+				}
+
+				if (typeof videoDetails.framerate !== 'undefined') {
+					extendedFileDetails.videoFramerate = videoDetails.framerate;
+				} else {
+					console.warn('get extended file details videoFramerate failed');
+				}
+
+				if (typeof videoDetails.bitrate !== 'undefined') {
+					extendedFileDetails.videoBitrate = videoDetails.bitrate;
+				} else {
+					console.warn('get extended file details videoBitrate failed');
+				}
+
+				if (typeof videoDetails.codec !== 'undefined') {
+					extendedFileDetails.videoCodec = videoDetails.codec;
+				} else {
+					console.warn('get extended file details videoCodec failed');
+				}
 			} catch (error) {
-				console.warn('Get extended file details videoDurationMs failed', error);
-			}
-			try {
-				const videoResolution = await this.videoAPI.getVideoResolution(fileAbsolutePath);
-				extendedFileDetails.videoResolution = videoResolution;
-			} catch (error) {
-				console.warn('Get extended file details videoResolution failed', error);
-			}
-			try {
-				const videoFramerate = await this.videoAPI.getVideoFramerate(fileAbsolutePath);
-				extendedFileDetails.videoFramerate = videoFramerate;
-			} catch (error) {
-				console.warn('Get extended file details videoFramerate failed', error);
-			}
-			try {
-				const videoBitrate = await this.videoAPI.getVideoBitrate(fileAbsolutePath);
-				extendedFileDetails.videoBitrate = videoBitrate;
-			} catch (error) {
-				console.warn('Get extended file details videoBitrate failed', error);
-			}
-			try {
-				const videoCodec = await this.videoAPI.getVideoCodec(fileAbsolutePath);
-				extendedFileDetails.videoCodec = videoCodec;
-			} catch (error) {
-				console.warn('Get extended file details videoCodec failed', error);
+				console.warn('get extended video details failed', error);
 			}
 
 			return extendedFileDetails;

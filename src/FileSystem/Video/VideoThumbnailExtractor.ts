@@ -61,8 +61,8 @@ export default class VideoThumbnailExtractor {
 
 	private async getFirstFrameTime(originalFilePath: string) {
 		try {
-			const videoDurationMs = await this.videoAPI.getVideoDurationMs(originalFilePath);
-			if (videoDurationMs > 1e3) {
+			const videoDetails = await this.videoAPI.getVideoDetails(originalFilePath);
+			if (typeof videoDetails.durationMs !== 'undefined' && videoDetails.durationMs > 1e3) {
 				return '00:00:01.000'; // take picture of first second frame
 			}
 		} catch (error) {

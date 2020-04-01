@@ -6,9 +6,13 @@ import {
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
 
-export type IResolution = {
-	width: number;
-	height: number;
+export type IVideoDetails = {
+	width?: number;
+	height?: number;
+	durationMs?: number;
+	framerate?: number;
+	bitrate?: number;
+	codec?: string;
 };
 
 export interface IVideoAPI {
@@ -26,11 +30,7 @@ export interface IVideoAPI {
 	pauseVideo(videoProcess: ChildProcess): Promise<void>;
 	resumeVideo(videoProcess: ChildProcess): Promise<void>;
 	stopVideo(videoProcess: ChildProcess): Promise<void>;
-	getVideoDurationMs(filePath: string): Promise<number>;
-	getVideoResolution(filePath: string): Promise<IResolution>;
-	getVideoFramerate(filePath: string): Promise<number>;
-	getVideoBitrate(filePath: string): Promise<number>;
-	getVideoCodec(filePath: string): Promise<string>;
+	getVideoDetails(filePath: string): Promise<IVideoDetails>;
 	prepareStream(
 		filePath: string,
 		x: number,
@@ -111,53 +111,52 @@ export function createVideoAPI(): IVideoAPI {
 			await stoppedPromise;
 		},
 
-		async getVideoDurationMs(filePath: string): Promise<number> {
-			const durationSecString = await execApiCommand('video', 'duration', [filePath]);
-			const durationSec = parseFloat(durationSecString);
-			if (isNaN(durationSec)) {
-				throw new Error('Failed to get video duration, got NaN');
+		async getVideoDetails(filePath: string): Promise<IVideoDetails> {
+			const videoDetailsRaw = await execApiCommand('video', 'details', [filePath]);
+			const videoDetails: IVideoDetails = {};
+			for (let line of videoDetailsRaw.split('\n')) {
+				const [key, value] = line.split('=');
+				switch (key) {
+					case 'width':
+						const width = parseFloat(value);
+						if (!isNaN(width)) {
+							videoDetails.width = width;
+						}
+						break;
+					case 'height':
+						const height = parseFloat(value);
+						if (!isNaN(height)) {
+							videoDetails.height = height;
+						}
+						break;
+					case 'duration':
+						const durationSec = parseFloat(value);
+						if (!isNaN(durationSec)) {
+							videoDetails.durationMs = Math.trunc(durationSec * 1000);
+						}
+						break;
+					case 'r_frame_rate':
+						const [highString, lowString] = value.split('/');
+						const high = parseFloat(highString);
+						const low = parseFloat(lowString);
+						if (!isNaN(high) && !isNaN(low)) {
+							videoDetails.framerate = Math.round(high / low);
+						}
+						break;
+					case 'bit_rate':
+						const bitrate = parseFloat(value);
+						if (!isNaN(bitrate)) {
+							videoDetails.bitrate = Math.trunc(bitrate);
+						}
+						break;
+					case 'codec_name':
+						videoDetails.codec = value;
+						break;
+					default:
+						console.warn(`unexpected video details key ${line}`);
+				}
 			}
-			const durationMs = durationSec * 1000;
-			return Math.trunc(durationMs);
-		},
-
-		async getVideoResolution(filePath: string): Promise<IResolution> {
-			const resolutionString = await execApiCommand('video', 'resolution', [filePath]);
-			const [widthString, heightString] = resolutionString.split('x');
-			const width = parseFloat(widthString);
-			const height = parseFloat(heightString);
-			if (isNaN(width) || isNaN(height)) {
-				throw new Error('Failed to get video resolution, got NaN');
-			}
-			return { width, height };
-		},
-
-		async getVideoFramerate(filePath: string): Promise<number> {
-			const framerateString = await execApiCommand('video', 'framerate', [filePath]);
-			const [highString, lowString] = framerateString.split('/');
-			const high = parseFloat(highString);
-			const low = parseFloat(lowString);
-			if (isNaN(high) || isNaN(low)) {
-				throw new Error('Failed to get video framerate, got NaN');
-			}
-			return Math.round(high / low);
-		},
-
-		async getVideoBitrate(filePath: string): Promise<number> {
-			const bitrateString = await execApiCommand('video', 'bitrate', [filePath]);
-			const bitrate = parseFloat(bitrateString);
-			if (isNaN(bitrate)) {
-				throw new Error('Failed to get video bitrate, got NaN');
-			}
-			return Math.trunc(bitrate);
-		},
-
-		async getVideoCodec(filePath: string): Promise<string> {
-			const codec = await execApiCommand('video', 'codec', [filePath]);
-			if (!codec) {
-				throw new Error('Failed to get video codec, got NaN');
-			}
-			return codec;
+			return videoDetails;
 		},
 
 		prepareStream(

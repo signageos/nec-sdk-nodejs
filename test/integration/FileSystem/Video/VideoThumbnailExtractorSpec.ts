@@ -54,7 +54,7 @@ describe('FileSystem.Video.VideoThumbnailExtractor', function () {
 			},
 		} as ISystemAPI;
 		const videoAPI = {
-			getVideoDurationMs: async (_filePath: string) => mockVideoDurationMs,
+			getVideoDetails: async (_filePath: string) => ({ durationMs: mockVideoDurationMs }),
 		} as IVideoAPI;
 		const fileSystem = new FileSystem(FILE_SYSTEM_BASE_PATH, TMP_BASE_PATH, '/app', 'SIGUSR2', systemAPI, {} as IVideoAPI);
 		const thumbnailRequestHandler = new ThumbnailRequestHandler(FILE_SYSTEM_URL, expressApp, fileSystem);
