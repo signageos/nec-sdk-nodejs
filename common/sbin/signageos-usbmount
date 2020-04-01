@@ -6,17 +6,25 @@ set -e
 
 usage()
 {
-    echo "Usage: $0 {add|remove} device_name (e.g. sdb1)"
+    echo "Usage: $0 [--dont-notify] {add|remove} device_name (e.g. sdb1)"
     exit 1
 }
 
-if [ $# -ne 2 ]; then
+if [ "$1" = "--dont-notify" ]; then
+    ACTION=$2
+    DEVBASE=$3
+    NOTIFY=0
+else
+    ACTION=$1
+    DEVBASE=$2
+    NOTIFY=1
+fi
+
+if [ -z "$ACTION" ] || [ -z "$DEVBASE" ]; then
     usage
     exit 1
 fi
 
-ACTION=$1
-DEVBASE=$2
 DEVICE="/dev/${DEVBASE}"
 MOUNT_POINT="/media/${DEVBASE}"
 
@@ -59,7 +67,9 @@ do_mount()
     fi
 
     echo "**** Mounted ${DEVICE} at ${MOUNT_POINT} ****"
-    notify_server
+    if [ "$NOTIFY" = "1" ]; then
+        notify_server
+    fi
     dump_logs_if_contains_special_file
 }
 
@@ -73,7 +83,9 @@ do_unmount()
     fi
 
     /bin/rmdir ${MOUNT_POINT}
-    notify_server
+    if [ "$NOTIFY" = "1" ]; then
+        notify_server
+    fi
 }
 
 case "${ACTION}" in

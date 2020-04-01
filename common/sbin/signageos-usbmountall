@@ -1,5 +1,5 @@
 #!/bin/sh
 
 /sbin/blkid | grep /dev/sd | sed -e 's!^/dev/\([^:]\+\).*!\1!' | while read device; do
-    /sbin/signageos-usbmount add $device
+    /sbin/signageos-usbmount --dont-notify add $device
 done
