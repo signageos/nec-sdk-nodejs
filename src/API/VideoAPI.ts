@@ -5,6 +5,7 @@ import {
 } from './apiCommand';
 import Orientation from '@signageos/front-display/es6/NativeDevice/Orientation';
 import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
+import { locked } from '@signageos/front-display/es6/Lock/lockedDecorator';
 
 export type IVideoDetails = {
 	width?: number;
@@ -111,6 +112,7 @@ export class VideoAPI implements IVideoAPI {
 		await stoppedPromise;
 	}
 
+	@locked('VideoAPI_getVideoDetails')
 	public async getVideoDetails(filePath: string): Promise<IVideoDetails> {
 		const videoDetailsRaw = await execApiCommand('video', 'details', [filePath]);
 		const videoDetails: IVideoDetails = {};
