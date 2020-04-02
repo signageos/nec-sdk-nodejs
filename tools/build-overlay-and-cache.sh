@@ -101,7 +101,6 @@ create_runlevel factory_reset
 create_runlevel overwrite_system
 
 # configure signageos services
-enable_service settermblank sysinit
 enable_service set-ondemand-cpu-governor boot
 enable_service signageos-clock boot
 enable_service signageos-firstboot default
