@@ -40,6 +40,7 @@ if (parameters.raven.enabled) {
 
 	const { frontDriver, managementDriver } = createFrontDrivers(
 		window,
+		parameters.app.version,
 		parameters.server.bridge_url,
 		parameters.server.file_system_url,
 		parameters.frontApplet.prefix,
