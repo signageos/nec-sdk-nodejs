@@ -9,7 +9,7 @@ over_voltage=6
 [pi3]
 kernel=boot/vmlinuz-rpi2
 initramfs boot/initramfs-rpi2
-arm_freq=1350
+arm_freq=1000
 gpu_freq=500
 sdram_freq=500
 over_voltage=5
@@ -17,7 +17,7 @@ over_voltage=5
 [pi3+]
 kernel=boot/vmlinuz-rpi2
 initramfs boot/initramfs-rpi2
-arm_freq=1500
+arm_freq=1200
 gpu_freq=500
 sdram_freq=560
 over_voltage=5
