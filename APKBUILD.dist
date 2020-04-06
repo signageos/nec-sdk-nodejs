@@ -57,7 +57,9 @@ package() {
     chmod 755 "$pkgdir"/etc/init.d/*
 
 	install -m644 -D etc/nginx/conf.d/signageos.conf "$pkgdir"/etc/nginx/conf.d/signageos.conf
+
     install -m644 -D etc/logrotate.d/syslog "$pkgdir"/etc/logrotate.d/syslog
+    install -m644 -D etc/logrotate.d/signageos-monitorcpu "$pkgdir"/etc/logrotate.d/signageos-monitorcpu
 
 	install -m644 -D LICENSE "$pkgdir"/usr/share/licenses/signageos/LICENSE
 

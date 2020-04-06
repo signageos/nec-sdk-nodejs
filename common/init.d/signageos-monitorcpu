@@ -1,0 +1,25 @@
+#!/sbin/openrc-run
+
+name=$RC_SVCNAME
+description="Upgrade app"
+command="/sbin/signageos-monitorcpu"
+
+depend() {
+    need localmount
+}
+
+start() {
+    ebegin "monitor cpu"
+    start-stop-daemon --start \
+        --stdout-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.info'" \
+        --stderr-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.err'" \
+        --background \
+        $command
+    eend $? "monitoring cpu failed"
+}
+
+stop() {
+    ebegin "stop monitoring cpu"
+    # do nothing
+    eend 0
+}
