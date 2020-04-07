@@ -12,7 +12,7 @@ if [ "$TARGET" = "" ]; then
     exit 1
 fi
 
-REPO_URL='https://signageos-alpine-repository.s3.eu-central-1.amazonaws.com/1.0/main'
+REPO_URL='https://alpine-repository.signageos.io/1.0/main'
 BASE_APKS='alpine-base openssl tzdata chrony openssh eudev libstdc++'
 DOCKER_APKS='docker'
 SYSMODE_APKS='acct linux-rpi2'
