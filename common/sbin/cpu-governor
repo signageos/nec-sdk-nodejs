@@ -1,0 +1,46 @@
+#!/bin/sh
+
+GOVERNOR_FILE=/sys/devices/system/cpu/cpufreq/policy0/scaling_governor
+
+ONDEMAND_THRESHOLD_FILE=/sys/devices/system/cpu/cpufreq/ondemand/up_threshold
+ONDEMAND_THRESHOLD=60
+
+TEMPERATURE_THRESHOLD=70
+
+current_governor=
+
+get_current_temp() {
+    local temp=$(cat /sys/class/thermal/thermal_zone0/temp)
+    echo $((temp/1000))
+}
+
+set_ondemand_governor() {
+    if [ "$current_governor" != "ondemand" ]
+    then
+        echo "switching to ondemand scaling governor"
+        echo ondemand > "$GOVERNOR_FILE"
+        echo "$ONDEMAND_THRESHOLD" > "$ONDEMAND_THRESHOLD_FILE"
+        current_governor=ondemand
+    fi
+}
+
+set_powersave_governor() {
+    if [ "$current_governor" != "powersave" ]
+    then
+        echo "switching to powersave scaling governor"
+        echo powersave > "$GOVERNOR_FILE"
+        current_governor=powersave
+    fi
+}
+
+while true
+do
+    temp=$(get_current_temp)
+    if [ $temp -ge $TEMPERATURE_THRESHOLD ]
+    then
+        set_powersave_governor
+    else
+        set_ondemand_governor
+    fi
+    sleep 5
+done

@@ -1,0 +1,26 @@
+#!/sbin/openrc-run
+# https://putokaz.wordpress.com/2015/03/01/overclocking-raspberry-pi-set-scaling_governor-on-raspbian-boot/
+# https://megakemp.com/2013/02/26/adventures-in-overclocking-a-raspberry-pi/
+
+name=$RC_SVCNAME
+description="CPU governor control"
+command="/sbin/cpu-governor"
+pidfile="/run/$name.pid"
+
+start() {
+    ebegin "start cpu governor"
+    start-stop-daemon --start \
+        --pidfile $pidfile \
+        --make-pidfile \
+        --stdout-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.info'" \
+        --stderr-logger "/bin/sh -c '/usr/bin/logger --tag $name -p local0.err'" \
+        --background \
+        $command
+    eend $? "cpu governor failed"
+}
+
+stop() {
+    ebegin "stopping cpu governor"
+    start-stop-daemon --stop --pidfile $pidfile
+    eend $? "failed to stop cpu governor"
+}
