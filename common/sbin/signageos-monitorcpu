@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+
+while true
+do
+    date=$(date)
+    echo "$date | $(/opt/vc/bin/vcgencmd measure_temp)" >> /var/log/signageos/temp.log
+    echo "$date | $(/opt/vc/bin/vcgencmd measure_volts)" >> /var/log/signageos/volts.log
+
+    freq=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)
+    freq=$(($freq/1000))
+    echo "$date | freq=${freq}MHz" >> /var/log/signageos/freq.log
+    sleep 5
+done
