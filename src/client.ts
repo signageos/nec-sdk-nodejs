@@ -29,6 +29,7 @@ if (parameters.raven.enabled) {
 		const socket = createAutoReconnectingSocket(
 			parameters.server.bridge_url,
 			() => {
+				console.log('Bridge socket connected');
 				socketEventEmitter.emit('connected');
 				resolve(socket);
 			},
