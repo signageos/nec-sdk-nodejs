@@ -107,7 +107,6 @@ enable_service signageos-clock boot
 enable_service signageos-firstboot default
 enable_service signageos-usbmountall default
 enable_service signageos-monitorcpu default
-enable_service crond default
 enable_service signageos-appupgrade app_upgrade
 enable_service signageos-factoryreset factory_reset
 enable_service signageos-overwritesystem overwrite_system
