@@ -28,7 +28,6 @@ cleanup() {
 generate_logs() {
     rc-status -a > /var/log/signageos/rc-status
     df -h > /var/log/signageos/df
-    docker logs -t wpewebkit > /var/log/signageos/wpewebkit.log 2>&1
 }
 
 service loader start
