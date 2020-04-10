@@ -19,9 +19,9 @@ makedepends="npm"
 options="!check"
 subpackages="$pkgname-openrc $pkgname-doc"
 install="$pkgname.pre-install $pkgname.post-install"
-source=""
-builddir="tmp/apk"
 platform="%PLATFORM%"
+source="$pkgname.tar.gz"
+builddir="$srcdir/$pkgname"
 
 package() {
     mkdir -p "$pkgdir"/usr/lib/signageos/bin
@@ -33,8 +33,8 @@ package() {
     ln -s /usr/lib/signageos/bin/signageos "$pkgdir"/usr/bin/signageos
 
 	mkdir -p "$pkgdir"/usr/share/signageos
-	cp -r dist/client "$pkgdir"/usr/share/signageos
-	cp -r dist/server "$pkgdir"/usr/share/signageos
+	cp -r client "$pkgdir"/usr/share/signageos
+	cp -r server "$pkgdir"/usr/share/signageos
 	install -m644 -D loader/loader.mp4 "$pkgdir"/usr/share/signageos/loader.mp4
 
     cp -r sbin "$pkgdir"

@@ -6,6 +6,7 @@ stages:
   - prepare
   - test
   - build:npm
+  - build:apk-files
   - build:apk
   - publish
   - build:apks-repo
@@ -88,31 +89,53 @@ build:npm:
     paths:
       - dist/
 
-.build:alpine:
-  stage: build:apk
-  cache:
-    key: "${CI_PROJECT_ID}_dist_node_modules"
-    paths:
-      - dist/server/node_modules
-      - rpi/api/network/node_modules
-      - rpi/api/nec/node_modules
+.build:apk-files:
+  stage: build:apk-files
   dependencies:
     - prepare
     - build:npm
   before_script: []
   script:
-    - sudo apk update
-    - export VERSION=`cat ./VERSION`
-    - npx @signageos/lib@just-tools version-upgrade $VERSION
-    - REPO=`pwd`/packages
-    - tools/build-apk.sh $TARGET $VERSION $REPO
+    - VERSION=`cat ./VERSION`
+    - tools/prepare-apkbuild.sh $TARGET $VERSION
   artifacts:
     when: on_success
     paths:
-      - packages/signageos/$ARCHITECTURE
+      - dist/$TARGET
+
+build:apk-files-rpi:
+  extends: .build:apk-files
+  cache:
+    key: "${CI_PROJECT_ID}_dist_node_modules_rpi"
+    paths:
+      - dist/server/node_modules
+      - rpi/api/network/node_modules
+      - rpi/api/nec/node_modules
+  tags:
+    - alpine
+    - armhf
+  variables:
+    TARGET: rpi
+
+.build:alpine:
+  stage: build:apk
+  cache: {}
+  before_script: []
+  script:
+    - sudo apk update
+    - REPO=`pwd`/packages
+    - tools/build-apk.sh $TARGET $REPO
+  artifacts:
+    when: on_success
+    paths:
+      - packages/dist/$ARCHITECTURE
 
 build:alpine-rpi:
   extends: .build:alpine
+  dependencies:
+    - prepare
+    - build:npm
+    - build:apk-files-rpi
   tags:
     - alpine
     - armhf
@@ -127,7 +150,7 @@ build:alpine-rpi:
   before_script: []
   script:
     - S3_REPO_PATH="s3://signageos-alpine-repository/1.0/sos/$ARCHITECTURE"
-    - aws s3 cp packages/signageos/$ARCHITECTURE "$S3_REPO_PATH" --recursive --exclude "*" --include "*.apk"
+    - aws s3 cp packages/dist/$ARCHITECTURE "$S3_REPO_PATH" --recursive --exclude "*" --include "*.apk"
 
 publish:alpine-rpi:
   extends: .publish:alpine
@@ -145,6 +168,7 @@ publish:npm:
   dependencies:
     - prepare
     - build:npm
+    - build:apk-files-rpi
   script:
     - npm publish --ignore-scripts --tag $TAG
 
