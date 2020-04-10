@@ -28,6 +28,9 @@ cleanup() {
 generate_logs() {
     rc-status -a > /var/log/signageos/rc-status
     df -h > /var/log/signageos/df
+    lshw > /var/log/signageos/hardware.txt
+    lshw -html > /var/log/signageos/hardware.html
+    cat /proc/cpuinfo > /var/log/signageos/cpuinfo
 }
 
 service loader start
