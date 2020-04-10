@@ -102,7 +102,7 @@ create_runlevel overwrite_system
 
 # configure signageos services
 enable_service settermblank sysinit # necessary to be always turned on to reduce video memory demand
-enable_service cpu-governor boot
+#enable_service cpu-governor boot todo tweak overclocking settings to maintain stability first
 enable_service signageos-clock boot
 enable_service signageos-firstboot default
 enable_service signageos-usbmountall default
