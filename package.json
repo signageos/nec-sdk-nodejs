@@ -25,9 +25,9 @@
   },
   "author": "signageOS.io <dev@signageos.io>",
   "devDependencies": {
-    "@signageos/front-display": "7.1.2-master.3594",
+    "@signageos/front-display": "7.2.0-master.3637",
     "@signageos/front-osd": "^0.1.0",
-    "@signageos/lib": "3.0.0-master.750",
+    "@signageos/lib": "3.0.0-master.770",
     "@signageos/nec-sdk": "0.0.0-master.26",
     "@types/async-lock": "0.0.19",
     "@types/checksum": "^0.1.30",
@@ -49,7 +49,6 @@
     "@types/sharp": "0.23.0",
     "@types/sinon": "^4.3.0",
     "@types/socket.io-client": "^1.4.32",
-    "@types/ws": "^6.0.0",
     "awesome-typescript-loader": "^3.4.1",
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
@@ -104,7 +103,6 @@
     "node-fetch": "^2.3.0",
     "raven": "^1.2.1",
     "serialport": "^8.0.5",
-    "sharp": "0.23.2",
-    "ws": "^6.0.0"
+    "sharp": "0.23.2"
   }
 }
