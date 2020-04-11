@@ -7,6 +7,7 @@ const {
 } = require('./webpack.common.config');
 
 module.exports = {
+	mode: !process.env.NODE_ENV || process.env.NODE_ENV === 'test' ? 'development' : 'production',
 	name: 'server',
 	entry: './src/server',
 	target: 'node',
@@ -38,7 +39,6 @@ module.exports = {
 	},
 	module: {
 		rules: [
-			{ test: /\.json$/, loader: 'json-loader' },
 			{
 				test: /\.tsx?$/,
 				loader: 'awesome-typescript-loader',
@@ -58,15 +58,4 @@ module.exports = {
 		(result, key) => ({ ...result, [key]: 'commonjs ' + key }),
 		{},
 	),
-}
-
-switch (parameters.environment) {
-	case 'production':
-		break;
-	case 'test':
-		break;
-	case 'dev':
-		break;
-	default:
-		console.warn('Unknown environment ' + environment);
 }

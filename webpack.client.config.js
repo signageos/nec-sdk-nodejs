@@ -8,6 +8,7 @@ const {
 } = require('./webpack.common.config');
 
 module.exports = {
+	mode: !process.env.NODE_ENV ? 'development' : 'production',
 	name: 'client',
 	entry: {
 		bundle: ['babel-polyfill', './src/client'],
@@ -38,8 +39,7 @@ module.exports = {
 		extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.js', '.json']
 	},
 	module: {
-		loaders: [
-			{ test: /\.json$/, loader: 'json-loader' },
+		rules: [
 			{ test: /\.tsx?$/, loader: 'awesome-typescript-loader?useCache&forceIsolatedModules&cacheDirectory=cache' },
 			{ test: /\.sass$/, use: ExtractTextPlugin.extract({
 				fallback: 'style-loader',
@@ -63,16 +63,4 @@ module.exports = {
 			{ test: /\.(png|woff|woff2|eot|ttf)$/, loader: 'url-loader?limit=100000' },
 		],
 	}
-}
-
-switch (parameters.environment) {
-	case 'production':
-		module.exports.plugins.push(new webpack.optimize.UglifyJsPlugin());
-		break;
-	case 'test':
-		break;
-	case 'dev':
-		break;
-	default:
-		console.warn('Unknown environment ' + environment);
 }
