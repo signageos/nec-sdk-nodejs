@@ -77,9 +77,6 @@ test:changelog:
 
 build:npm:
   stage: build:npm
-  cache:
-    <<: *cache
-    policy: pull
   dependencies:
     - prepare
   script:
