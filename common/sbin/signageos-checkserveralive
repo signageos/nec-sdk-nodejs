@@ -3,8 +3,9 @@
 signageos application is_alive
 response=$?
 
-if [ $response -eq 1 ]; then
+if [ $response -ne 0 ]; then
     echo "server appears not to be alive and will be restarted"
     signageos application notify_stopped
     service signageos-server restart
+    echo "server has been restarted"
 fi

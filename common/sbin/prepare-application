@@ -50,5 +50,6 @@ fi
 rc-update add cgroups default
 rc-update add docker default
 rc-update add swap default
+rc-update add crond default
 rc-update add signageos-server default
 rc-update add signageos-wpewebkit default

@@ -4,39 +4,47 @@ set -e
 
 if [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ]; then
     echo "Usage: $0 <my_private_key_file> <recipient_public_key> <destination_path>"
+    exit 1
 fi
+
+PRIVATE_KEY_FILE="$1"
+PUBLIC_KEY_FILE="$2"
+DESTINATION="$3"
+
+import_gpg_key() {
+    rm -rf ~/.gnupg # cleanup after previous runs of this script just in case
+    gpg --import "$PRIVATE_KEY_FILE"
+    gpg --import "$PUBLIC_KEY_FILE"
+}
+
+cleanup() {
+    rm -f /var/log/signageos/rc-status
+    rm -f /var/log/signageos/df
+    rm -f /var/log/signageos/wpewebkit.log
+    rm -f /tmp/logs.tar.gz
+    rm -rf ~/.gnupg
+}
+
+generate_logs() {
+    rc-status -a > /var/log/signageos/rc-status
+    df -h > /var/log/signageos/df
+    lshw > /var/log/signageos/hardware.txt
+    lshw -html > /var/log/signageos/hardware.html
+    cat /proc/cpuinfo > /var/log/signageos/cpuinfo
+}
 
 service loader start
 
 {
-    PRIVATE_KEY_FILE="$1"
-    PUBLIC_KEY_FILE="$2"
-    DESTINATION="$3"
-
-    rm -rf ~/.gnupg # cleanup after previous runs of this script just in case
-
-    gpg --import "$PRIVATE_KEY_FILE"
-    gpg --import "$PUBLIC_KEY_FILE"
-
-    rc-status -a > /var/log/signageos/rc-status
-    df -h > /var/log/signageos/df
-    docker logs -t wpewebkit > /var/log/signageos/wpewebkit.log 2>&1
-
+    import_gpg_key
+    generate_logs
     tar -czf /tmp/logs.tar.gz /var/log /etc /run
-
-    rm /var/log/signageos/rc-status
-    rm /var/log/signageos/df
-    rm /var/log/signageos/wpewebkit.log
-
     gpg --encrypt --sign -r dev@signageos.io --trust-model always /tmp/logs.tar.gz
     mv /tmp/logs.tar.gz.gpg "$DESTINATION"
     sync
-
-    # cleanup
-    rm /tmp/logs.tar.gz
-    rm -rf ~/.gnupg
 } || {
     >&2 echo "dump logs failed"
 }
 
+cleanup
 service loader stop
