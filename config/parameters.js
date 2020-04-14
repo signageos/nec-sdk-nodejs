@@ -21,6 +21,27 @@ try {
 
 const ravenEnabled = typeof process.env.raven_enabled !== 'undefined' ? !!parseInt(process.env.raven_enabled) : false;
 
+let bundledApplet;
+let autoVerification;
+if (typeof window !== 'undefined') {
+	if (typeof window.__SOS_BUNDLED_APPLET !== 'undefined') {
+		bundledApplet = window.__SOS_BUNDLED_APPLET;
+	}
+	if (typeof window.__SOS_AUTO_VERIFICATION !== 'undefined') {
+		autoVerification = window.__SOS_AUTO_VERIFICATION;
+	}
+} else {
+	try {
+		// if I don't use eval, webpack will replace it with something like "throw new Error('Cannot find module \"./applet.json\"')"
+		const bundledAppletConfig = eval("require('./applet.json')");
+		bundledApplet = bundledAppletConfig.applet;
+		autoVerification = bundledAppletConfig.autoVerification;
+	} catch (error) {
+		bundledApplet = process.env.bundledApplet ? JSON.parse(process.env.bundledApplet) : undefined;
+		autoVerification = process.env.autoVerification ? JSON.parse(process.env.autoVerification) : undefined;
+	}
+}
+
 exports = module.exports = Object.assign({}, basicParameters, {
 	environment,
 	paths: {
@@ -64,18 +85,6 @@ exports = module.exports = Object.assign({}, basicParameters, {
 	video: {
 		max_count: 4,
 	},
-	bundledApplet: process.env.bundled_applet === '1'
-		? {
-			version: process.env.bundled_applet_version,
-			frontAppletVersion: process.env.bundled_applet_front_applet_version,
-			checksum: process.env.bundled_applet_checksum,
-			binaryFile: process.env.bundled_applet_binary_file,
-			frontAppletBinaryFile: process.env.bundled_applet_front_applet_binary_file,
-		}
-		: null,
-	autoVerification: process.env.auto_verification_organization_uid
-		? {
-			organizationUid: process.env.auto_verification_organization_uid,
-		}
-		: null,
+	bundledApplet,
+	autoVerification,
 });
