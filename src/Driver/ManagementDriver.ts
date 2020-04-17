@@ -93,7 +93,6 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 			throw new Error('App upgrade from absolute URL isn\'t supported at the moment');
 		}
 		await this.systemAPI.upgradeApp(version);
-		return () => this.systemReboot();
 	}
 
 	public async firmwareGetVersion(): Promise<string> {
