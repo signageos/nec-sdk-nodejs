@@ -11,6 +11,7 @@ import {
 	SetNTPTimeWithTimezone,
 	ResetSettings,
 	FactoryReset,
+	AppUpgrade,
 } from './bridgeSystemMessages';
 import * as FirmwareMessages from './bridgeFirmwareMessages';
 import * as NetworkMessages from './bridgeNetworkMessages';
@@ -55,6 +56,7 @@ export default async function handleMessage(
 		SetNTPTimeWithTimezone |
 		ResetSettings |
 		FactoryReset |
+		AppUpgrade |
 		ScreenMessages.SetOrientation |
 		PowerMessages.AppRestart |
 		PowerMessages.SystemReboot |
@@ -147,6 +149,10 @@ export default async function handleMessage(
 
 		case FactoryReset:
 			await nativeDriver.factoryReset();
+			return {};
+
+		case AppUpgrade:
+			await nativeDriver.appUpgrade(message.baseUrl, message.version);
 			return {};
 
 		case ScreenMessages.GetOrientation:
