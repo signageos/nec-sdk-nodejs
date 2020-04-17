@@ -246,21 +246,23 @@ export default class FrontManagementDriver implements IManagementDriver {
 	}
 
 	public async setManualTimeWithTimezone(timestampMs: number, timezone: string): Promise<void> {
+		const connectedPromise = this.waitUntilServerConnected();
 		await this.bridge.invoke<SetManualTimeWithTimezone, {}>({
 			type: SetManualTimeWithTimezone,
 			timestampMs,
 			timezone,
 		});
-		await this.waitUntilServerConnected(); // server is restarted in the process
+		await connectedPromise; // server is restarted in the process
 	}
 
 	public async setNTPTimeWithTimezone(ntpServer: string, timezone: string): Promise<void> {
+		const connectedPromise = this.waitUntilServerConnected();
 		await this.bridge.invoke<SetNTPTimeWithTimezone, {}>({
 			type: SetNTPTimeWithTimezone,
 			ntpServer,
 			timezone,
 		});
-		await this.waitUntilServerConnected(); // server is restarted in the process
+		await connectedPromise; // server is restarted in the process
 	}
 
 	public async setDebug(enabled: boolean): Promise<void> {
