@@ -45,12 +45,20 @@ get_disk_last_sector() {
 }
 
 is_img_url_valid() {
-    if wget --spider "$IMG_URL"; then
-        echo "URL valid"
-    else
-        echo "URL invalid"
-        return 1
-    fi
+    # try multiple times because it might fail at first because of wrong datetime if NTP client takes time to connect
+    local tries_left=5
+    while [ $tries_left -gt 0 ]
+    do
+        tries_left=$(($tries_left - 1))
+        if wget --spider "$IMG_URL"; then
+            echo "URL valid"
+            return 0
+        else
+            sleep 10
+        fi
+    done
+    echo "URL invalid"
+    return 1
 }
 
 create_tmp_partition() {
