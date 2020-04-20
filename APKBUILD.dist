@@ -74,6 +74,8 @@ package() {
 
 	ln -sfT /media $pkgdir/var/lib/signageos/fs/external
 
+	touch "$pkgdir"/var/lib/signageos/swclock
+
 	mkdir -p "$pkgdir"/lib
 	ln -s /opt/vc/lib/libbcm_host.so "$pkgdir"/lib/libbcm_host.so
 }
