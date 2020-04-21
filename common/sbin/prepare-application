@@ -40,7 +40,6 @@ if ! is_wpe_webkit_container_ok; then
 			-v /etc/signageos/time:/etc/time:ro \
 			-v /usr/share/signageos/server/package.json:/tmp/signageos-version-file \
 			-e WPE_BCMRPI_TOUCH=1 \
-			-e WEBKIT_INSPECTOR_SERVER='0.0.0.0:9998' \
 			-e VERSION_FILE=/tmp/signageos-version-file \
 			"$DOCKER_IMAGE_NAME" \
 			/usr/bin/wpe 'http://127.0.0.1:8082/index.html'
