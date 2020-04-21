@@ -26,7 +26,7 @@ is_data_partition_valid() {
 }
 
 prepare_data() {
-    if partitition_exists "$DATA_PARTITION"; then
+    if partition_exists "$DATA_PARTITION"; then
         delete_data_partition
         reboot
         exit 0
