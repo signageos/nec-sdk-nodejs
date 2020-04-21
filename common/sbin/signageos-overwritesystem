@@ -61,6 +61,21 @@ is_img_url_valid() {
     return 1
 }
 
+delete_old_partitions() {
+    echo "deleting old partitions if they exist"
+    if partition_exists "$SWAP_PARTITION"; then
+        echo "deleting swap partition"
+        delete_partition "$DISK" "$SWAP_PARTITION_NUM"
+        echo "swap partition deleted"
+    fi
+    if partition_exists "$DATA_PARTITION"; then
+        echo "deleting data partition"
+        delete_partition "$DISK" "$DATA_PARTITION_NUM"
+        echo "data partition deleted"
+    fi
+    echo "old partitions deleted"
+}
+
 create_tmp_partition() {
   tmp_partition_size=$(( 4 * 1024 * 1024 * 1024 )) # 4GBi
   tmp_partition_sectors=$(( $tmp_partition_size / $DISK_SECTOR_SIZE ))
@@ -233,6 +248,7 @@ copy_img_to_disk() {
 
 overwrite_system() {
   is_img_url_valid
+  delete_old_partitions
   create_tmp_partition
   mount_tmp_partition
   download_image_archive
