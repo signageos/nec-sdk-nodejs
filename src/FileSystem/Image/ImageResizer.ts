@@ -10,6 +10,7 @@ export default class ImageResizer {
 		private thumbnailRequestHandler: ThumbnailRequestHandler,
 	) {
 		this.thumbnailRequestHandler.routeThumbnail(FILE_TYPE, this.generateImageThumbnail);
+		sharp.cache(false);
 	}
 
 	public getSupportedMimeTypes() {
