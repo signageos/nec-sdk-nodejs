@@ -7,34 +7,18 @@ set -e
 SWAP_PARTITION_FIRST_SECTOR=1050624
 SWAP_PARTITION_LAST_SECTOR=3147775
 
-create_and_initialize_swap_partition() {
-    echo 'creating swap partition'
-    sync
-    echo "n
-    p
-    $SWAP_PARTITION_NUM
-    $SWAP_PARTITION_FIRST_SECTOR
-    $SWAP_PARTITION_LAST_SECTOR
-    t
-    $SWAP_PARTITION_NUM
-    82
-    w
-    " | fdisk "$DISK" -W always > /dev/null
-    sync
-    mkswap "$SWAP_PARTITION"
-    echo 'swap partition created and initialized'
-}
-
-delete_swap_partition() {
-    echo 'deleting swap partition'
-    delete_partition "$DISK" "$SWAP_PARTITION_NUM"
-    echo 'swap partition deleted'
-}
-
-if ! partition_exists "$SWAP_PARTITION"; then
-    # swap was never initialized so initialize
-    create_and_initialize_swap_partition
-else
-    delete_swap_partition
-    create_and_initialize_swap_partition
-fi
+echo 'creating swap partition'
+sync
+echo "n
+p
+$SWAP_PARTITION_NUM
+$SWAP_PARTITION_FIRST_SECTOR
+$SWAP_PARTITION_LAST_SECTOR
+t
+$SWAP_PARTITION_NUM
+82
+w
+" | fdisk "$DISK" -W always > /dev/null
+sync
+mkswap "$SWAP_PARTITION"
+echo 'swap partition created and initialized'

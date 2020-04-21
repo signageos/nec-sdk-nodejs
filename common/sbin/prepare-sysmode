@@ -14,31 +14,9 @@ create_and_initialize_data_partition() {
     echo 'data partition created and initialized'
 }
 
-delete_data_partition() {
-    echo 'deleting data partition'
-    delete_partition "$DISK" "$DATA_PARTITION_NUM"
-    echo 'data partition deleted'
-}
-
-is_data_partition_valid() {
-    data_partition_start_sector=`get_start_sector_of_partition $DISK $DATA_PARTITION`
-    test "$data_partition_start_sector" = "$DATA_PARTITION_FIRST_SECTOR"
-}
-
-prepare_data() {
-    if partition_exists "$DATA_PARTITION"; then
-        delete_data_partition
-        reboot
-        exit 0
-    else
-        create_and_initialize_data_partition
-    fi
-}
-
-
 # =========== DO IT =============
 
-prepare_data
+create_and_initialize_data_partition
 
 mount "$DATA_PARTITION" /mnt # The second partition, in ext4 format, where Alpine Linux is installing in sys mode
 signageos-setupdisk -m sys -k rpi2 /mnt
