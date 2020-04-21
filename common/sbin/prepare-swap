@@ -19,7 +19,7 @@ create_and_initialize_swap_partition() {
     $SWAP_PARTITION_NUM
     82
     w
-    " | fdisk "$DISK" -W always
+    " | fdisk "$DISK" -W always > /dev/null
     sync
     mkswap "$SWAP_PARTITION"
     echo 'swap partition created and initialized'
