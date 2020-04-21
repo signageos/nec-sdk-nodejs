@@ -77,7 +77,7 @@ delete_old_partitions() {
 }
 
 create_tmp_partition() {
-  tmp_partition_size=$(( 4 * 1024 * 1024 * 1024 )) # 4GBi
+  tmp_partition_size=$(( 8 * 1024 * 1024 * 1024 )) # 8GBi
   tmp_partition_sectors=$(( $tmp_partition_size / $DISK_SECTOR_SIZE ))
   tmp_last_sector=`get_disk_last_sector "$DISK"`
   tmp_first_sector=$(( $tmp_last_sector - $tmp_partition_sectors ))
