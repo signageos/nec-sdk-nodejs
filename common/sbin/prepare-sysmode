@@ -8,27 +8,15 @@ DATA_PARTITION_FIRST_SECTOR=3147776
 
 create_and_initialize_data_partition() {
     echo 'create data partition'
-    sync
-    echo "n
-    p
-    $DATA_PARTITION_NUM
-    $DATA_PARTITION_FIRST_SECTOR
-
-    w
-    " | fdisk "$DISK" -W always
-    sync
+    create_partition "$DISK" "$DATA_PARTITION_NUM" "$DATA_PARTITION_FIRST_SECTOR"
+    echo 'data partition created, formatting...'
     mkfs.ext4 -F "$DATA_PARTITION"
     echo 'data partition created and initialized'
 }
 
 delete_data_partition() {
     echo 'deleting data partition'
-    sync
-    echo "d
-    $DATA_PARTITION_NUM
-    w
-    " | fdisk "$DISK" -W always
-    sync
+    delete_partition "$DISK" "$DATA_PARTITION_NUM"
     echo 'data partition deleted'
 }
 

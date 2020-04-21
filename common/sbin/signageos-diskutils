@@ -25,3 +25,33 @@ get_end_sector_of_partition() {
   partition="$2"
   fdisk -l -o device,end "$disk" | grep "^$partition" | sed "s|^$partition *\([0-9]*\).*|\1|"
 }
+
+create_partition() {
+    local disk="$1"
+    local partition="$2"
+    local first_sector="$3" # empty string for default value
+    local last_sector="$4" # empty string for default value
+    echo "creating partition $partition on disk $disk"
+    sync
+    echo "n
+    p
+    $partition
+    $first_sector
+    $last_sector
+    w
+    " | fdisk "$DISK" -W always > /dev/null
+    echo "partition $partition created"
+}
+
+delete_partition() {
+    local disk="$1"
+    local partition="$2"
+    echo "deleting partition $partition on disk $disk"
+    sync
+    echo "d
+    $partition
+    w
+    " | fdisk "$disk" -W always > /dev/null
+    sync
+    echo "partition $partition deleted"
+}

@@ -27,12 +27,7 @@ create_and_initialize_swap_partition() {
 
 delete_swap_partition() {
     echo 'deleting swap partition'
-    sync
-    echo "d
-    $SWAP_PARTITION_NUM
-    w
-    " | fdisk "$DISK" -W always
-    sync
+    delete_partition "$DISK" "$SWAP_PARTITION_NUM"
     echo 'swap partition deleted'
 }
 
