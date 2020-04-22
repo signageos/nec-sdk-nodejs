@@ -29,11 +29,6 @@ cp /media/mmcblk0p1/boot/* /media/mmcblk0p1/boot.diskless/
 cd /mnt # We are in the second partition
 rm boot/boot # Drop the unused symbolink link
 
-mv -f boot/* /media/mmcblk0p1/boot/
-rm -Rf boot
-mkdir media/mmcblk0p1 # It's the mount point for the first partition on the next reboot
-
-ln -s media/mmcblk0p1/boot boot
 
 rm etc/apk/cache # we don't want cache in sys mode
 
@@ -42,5 +37,20 @@ echo "$BOOT_PARTITION /media/mmcblk0p1 vfat ro 0 0" >> etc/fstab
 echo "$SWAP_PARTITION none swap sw 0 0" >> etc/fstab
 echo "$DATA_PARTITION / ext4 rw,relatime,errors=remount-ro 0 1" >> etc/fstab
 
-cd /media/mmcblk0p1
+# WARNING: FROM HERE IT THE DANGEROUS PART STARTS
+#
+# - replacing diskless boot binaries (kernel, initramfs, etc.) with sysmode versions
+# - changing cmdline.txt to mount root file system from disk
+#
+# These operations have to be performed all together.
+# If there was a crash in the middle it would end up in the device not being able to boot anymore
+# and would require a manual intervention.
+# Therefore, these operations have to be done as fast and minimal as possible.
+# That way, the possible window when it could break by, for example unplugging the power, is only a split second.
+
+mv -f boot/* /media/mmcblk0p1/boot/ # replace diskless kernel and supporting binaries with sysmode version
+rm -Rf boot
+mkdir media/mmcblk0p1 # It's the mount point for the first partition on the next reboot
+ln -s media/mmcblk0p1/boot boot
 sed -i 's/^/root=\/dev\/mmcblk0p3 /' /media/mmcblk0p1/cmdline.txt
+sync
