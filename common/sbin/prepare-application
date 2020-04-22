@@ -16,7 +16,6 @@ is_wpe_webkit_container_ok() {
     docker inspect wpewebkit > /dev/null
 }
 
-apk add --no-network --repository /media/mmcblk0p1/external-apks docker
 service cgroups start # cgroups is docker dependency but for some reason it sometimes fails to start so we have to start it manually just in case
 service docker start
 while ! docker info > /dev/null 2>&1; do sleep 0.01; done # if try to connect to docker too fast, it's not ready yet so gotta wait until it's ready

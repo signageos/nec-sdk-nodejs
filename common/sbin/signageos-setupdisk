@@ -105,7 +105,7 @@ install_mounted_root() {
 
 	local apkflags="--no-network --initdb --quiet --clean-protected"
 	local pkgs=$(cat "$mnt"/etc/apk/world "$mnt"/var/lib/apk/world 2>/dev/null)
-	pkgs="$pkgs acct linux-$KERNEL_FLAVOR alpine-base"
+	pkgs="$pkgs acct linux-$KERNEL_FLAVOR alpine-base docker"
 	local repos=$(sed -e 's/\#.*//' /etc/apk/repositories)
 	local repoflags=
 	for i in $repos; do
