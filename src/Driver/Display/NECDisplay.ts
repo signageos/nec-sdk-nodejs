@@ -192,6 +192,13 @@ export default class NECDisplay implements IDisplay {
 			console.error('failed to enable compute module auto power on');
 		}
 		try {
+			// set OSD orientation to landscape
+			await this.necPD.setParameter(Opcode.OSD_ROTATION, OSDOrientation.LANDSCAPE);
+			console.log('OSD orientation set to landscape');
+		} catch (error) {
+			console.error('failed to set OSD orientation to landscape');
+		}
+		try {
 			await this.necPD.unlockComputeModuleSettings();
 			try {
 				// disable compute module watchdog
