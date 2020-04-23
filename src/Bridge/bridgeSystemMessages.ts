@@ -1,10 +1,5 @@
 import ManagementCapability from "@signageos/front-display/es6/NativeDevice/Management/ManagementCapability";
 
-export const NotifyApplicationAlive = 'Application.NotifyAlive';
-export interface NotifyApplicationAlive {
-	type: typeof NotifyApplicationAlive;
-}
-
 export const GetDeviceUid = 'System.GetDeviceUid';
 export interface GetDeviceUid {
 	type: typeof GetDeviceUid;

@@ -100,5 +100,5 @@ if (parameters.raven.enabled) {
 		autoVerification,
 	);
 
-	notifyClientAlive(socketClient);
+	await notifyClientAlive(parameters.server.bridge_url);
 })().catch((error: any) => console.error(error));
