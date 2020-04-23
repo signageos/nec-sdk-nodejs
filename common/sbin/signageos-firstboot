@@ -32,6 +32,17 @@ clear_old_partitions() {
     fi
 }
 
+# if NEC display, make sure that compute module watchdog is disabled so that it doesn't reboot the compute module before firstboot is done
+IS_NEC=`signageos nec is_nec`
+if [ "$IS_NEC" = "1" ]; then
+    echo "disable NEC compute module watchdog"
+    if signageos nec disable_compute_module_watchdog; then
+        echo "NEC compute module watchdog disabled"
+    else
+        echo "failed to disable NEC compute module watchdog"
+    fi
+fi
+
 IMG_URL_FILE=/media/mmcblk0p1/install_img.txt
 
 if [ -f "$IMG_URL_FILE" ]; then

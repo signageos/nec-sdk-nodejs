@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+const NECPD = require('@signageos/nec-sdk/dist/NECPD').default;
+const Opcode = require('@signageos/nec-sdk/dist/Opcode').default;
+const { ComputeModuleWatchdogStatus } = require('@signageos/nec-sdk/dist/constants');
+
+const necPD = new NECPD();
+(async () => {
+	try {
+		await necPD.unlockComputeModuleSettings();
+		await necPD.setParameter(Opcode['COMPUTE_MODULE_WATCHDOG_TIMER_ENABLE'], ComputeModuleWatchdogStatus['DISABLED']);
+		await necPD.lockComputeModuleSettings();
+		process.exit(0);
+	} catch (error) {
+		process.stderr.write(error.message);
+		process.exit(1);
+	}
+})();
