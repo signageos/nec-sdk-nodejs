@@ -26,6 +26,7 @@ export default function socketHandleMessage(
 	clientWatchdog: ClientWatchdog,
 ) {
 	socket.bindMessage('message.' + MessageType.GENERIC, async (message: IBridgeMessage<any>) => {
+		debug('bridge message', message);
 		clientWatchdog.notifyPendingTask();
 		try {
 			const response = await handleMessage(
