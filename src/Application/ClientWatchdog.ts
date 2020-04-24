@@ -6,54 +6,49 @@ const debug = Debug('@signageos/display-linux:Application/ClientWatchdog');
 
 export default class ClientWatchdog {
 
-	private timeout: any = null;
+	private lastAlive: number = new Date().valueOf();
 	private pendingTasks: number = 0;
 
 	constructor(private systemAPI: ISystemAPI) {
-		this.initTimeout();
+		this.initInterval();
 	}
 
 	public notifyAlive() {
 		debug('application alive');
-		if (this.timeout) {
-			clearTimeout(this.timeout);
-			this.timeout = null;
-		}
-		if (!this.isPaused()) {
-			debug('resetting timer');
-			this.initTimeout();
-		} else {
-			debug(`watchdog paused because there are ${this.pendingTasks} pending tasks`);
-		}
+		this.restartTimer();
 	}
 
 	public notifyPendingTask() {
-		if (this.timeout) {
-			clearTimeout(this.timeout);
-			this.timeout = null;
-		}
 		this.pendingTasks++;
+		debug(`there's ${this.pendingTasks} pending tasks`);
 	}
 
 	public notifyPendingTaskFinished() {
-		this.pendingTasks--;
-		if (!this.isPaused()) {
-			this.initTimeout();
-		}
+		this.pendingTasks = Math.max(0, this.pendingTasks - 1); // prevent negative numbers
+		debug(`there's ${this.pendingTasks} pending tasks`);
 	}
 
-	private isPaused() {
-		return this.pendingTasks > 0;
-	}
-
-	private initTimeout() {
-		const RESTART_TIMEOUT = 60 * SECOND_IN_MS;
-		this.timeout = setTimeout(
+	private initInterval() {
+		setInterval(
 			async () => {
-				debug('application not responding, restarting now');
-				await this.systemAPI.restartApplication();
+				if (this.isApplicationDead() && this.pendingTasks === 0) {
+					debug('application not responding, restarting now');
+					this.restartTimer();
+					await this.systemAPI.restartApplication();
+				}
 			},
-			RESTART_TIMEOUT,
+			1e3,
 		);
+	}
+
+	private restartTimer() {
+		this.lastAlive = new Date().valueOf();
+	}
+
+	private isApplicationDead() {
+		const RESTART_AFTER_MS = 60 * SECOND_IN_MS;
+		const now = new Date().valueOf();
+		const lastAliveMsAgo = now - this.lastAlive;
+		return lastAliveMsAgo >= RESTART_AFTER_MS;
 	}
 }
