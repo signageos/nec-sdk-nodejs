@@ -29,23 +29,26 @@ export default function socketHandleMessage(
 		debug('bridge message', message);
 		clientWatchdog.notifyPendingTask();
 		try {
-			const response = await handleMessage(
-				fileSystem,
-				fileDetailsProvider,
-				nativeDriver,
-				display,
-				systemSettings,
-				overlayRenderer,
-				systemAPI,
-				message.message,
-			);
+			let response: any;
+			try {
+				response = await handleMessage(
+					fileSystem,
+					fileDetailsProvider,
+					nativeDriver,
+					display,
+					systemSettings,
+					overlayRenderer,
+					systemAPI,
+					message.message,
+				);
+			} finally {
+				clientWatchdog.notifyPendingTaskFinished();
+			}
 			debug('bridge message success', message);
 			await socket.sendMessage(message.invocationUid, { success: true, response });
 		} catch (error) {
 			debug('bridge message error', message);
 			await socket.sendMessage(message.invocationUid, { success: false });
-		} finally {
-			clientWatchdog.notifyPendingTaskFinished();
 		}
 	});
 }
