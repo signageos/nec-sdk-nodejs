@@ -250,15 +250,21 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async systemReboot(): Promise<void> {
-		await this.systemAPI.reboot();
+		setTimeout(
+			() => this.systemAPI.reboot(),
+			2e3,
+		);
 	}
 
 	public async appRestart() {
 		await Promise.all([
-			this.systemAPI.restartApplication(),
 			this.videoPlayer.clearAll(),
 			this.overlayRenderer.hideAll(),
 		]);
+		setTimeout(
+			() => this.systemAPI.restartApplication(),
+			2e3,
+		);
 	}
 
 	public displayIsPowerOn(): Promise<boolean> {
