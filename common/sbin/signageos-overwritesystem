@@ -44,23 +44,6 @@ get_disk_last_sector() {
   echo $(( $disk_sectors_count - 1 ))
 }
 
-is_img_url_valid() {
-    # try multiple times because it might fail at first because of wrong datetime if NTP client takes time to connect
-    local tries_left=5
-    while [ $tries_left -gt 0 ]
-    do
-        tries_left=$(($tries_left - 1))
-        if wget --spider "$IMG_URL"; then
-            echo "URL valid"
-            return 0
-        else
-            sleep 10
-        fi
-    done
-    echo "URL invalid"
-    return 1
-}
-
 create_tmp_partition() {
   tmp_partition_size=$(( 8 * 1024 * 1024 * 1024 )) # 8GBi
   tmp_partition_sectors=$(( $tmp_partition_size / $DISK_SECTOR_SIZE ))
@@ -84,8 +67,21 @@ umount_tmp_partition() {
 }
 
 download_image_archive() {
-  echo "downloading image"
-  wget -O "$IMG_ARCHIVE_FULL_PATH" "$IMG_URL"
+  # Keep trying until it's successful.
+  # Before this whole process starts, the application validates that the URL is valid and contains an actual valid image.
+  # Therefore, if it gets here, the URL is correct and if it fails anyway, there must be a problem with the network or something.
+  # Since we have nothing better to do at this point,
+  # let's just keep trying forever until it either works or the user manually reboots the device.
+  while true
+  do
+    echo "downloading image"
+    if wget -O "$IMG_ARCHIVE_FULL_PATH" "$IMG_URL"; then
+        echo "image downloaded"
+        return 0
+    fi
+    echo "failed to download image"
+    sleep 10
+  done
 }
 
 extract_image_archive() {
@@ -232,7 +228,6 @@ copy_img_to_disk() {
 }
 
 overwrite_system() {
-  is_img_url_valid
   create_tmp_partition
   mount_tmp_partition
   download_image_archive
