@@ -44,38 +44,17 @@ get_disk_last_sector() {
   echo $(( $disk_sectors_count - 1 ))
 }
 
-is_img_url_valid() {
-    if wget --spider "$IMG_URL"; then
-        echo "URL valid"
-    else
-        echo "URL invalid"
-        return 1
-    fi
-}
-
 create_tmp_partition() {
-  tmp_partition_size=$(( 4 * 1024 * 1024 * 1024 )) # 4GBi
+  tmp_partition_size=$(( 8 * 1024 * 1024 * 1024 )) # 8GBi
   tmp_partition_sectors=$(( $tmp_partition_size / $DISK_SECTOR_SIZE ))
   tmp_last_sector=`get_disk_last_sector "$DISK"`
   tmp_first_sector=$(( $tmp_last_sector - $tmp_partition_sectors ))
-
+  echo "creating tmp partition"
+  create_partition "$DISK" "$TMP_PARTITION_NUM" "$tmp_first_sector"
+  echo "tmp partition created, formatting..."
+  mkfs.ext4 -F "$TMP_PARTITION" > /dev/null
+  echo "tmp partition formated"
   sync
-  echo "n
-  p
-  $TMP_PARTITION_NUM
-  $tmp_first_sector
-
-  w
-  " | fdisk "$DISK" -W always
-  mkfs.ext4 -F "$TMP_PARTITION"
-  sync
-}
-
-delete_tmp_partition() {
-  echo "d
-  $TMP_PARTITION_NUM
-  w
-  " | fdisk "$DISK" -W always
 }
 
 mount_tmp_partition() {
@@ -88,8 +67,21 @@ umount_tmp_partition() {
 }
 
 download_image_archive() {
-  echo "downloading image"
-  wget -O "$IMG_ARCHIVE_FULL_PATH" "$IMG_URL"
+  # Keep trying until it's successful.
+  # Before this whole process starts, the application validates that the URL is valid and contains an actual valid image.
+  # Therefore, if it gets here, the URL is correct and if it fails anyway, there must be a problem with the network or something.
+  # Since we have nothing better to do at this point,
+  # let's just keep trying forever until it either works or the user manually reboots the device.
+  while true
+  do
+    echo "downloading image"
+    if wget -O "$IMG_ARCHIVE_FULL_PATH" "$IMG_URL"; then
+        echo "image downloaded"
+        return 0
+    fi
+    echo "failed to download image"
+    sleep 10
+  done
 }
 
 extract_image_archive() {
@@ -141,12 +133,12 @@ copy_to_disk_what_comes_after_boot_partition() {
     sectors_copied=$(( $image_total_sectors - $first_sector ))
     retries_left=3
 
-    echo "copy data that come after boot partition"
-
     while [ $retries_left -gt 0 ]
     do
+        echo "copy data that come after boot partition"
         dd if="$IMG_FULL_PATH" of="$PLACEHOLDER_PARTITION" bs="$DISK_SECTOR_SIZE" skip="$first_sector"
         sync
+        echo "check that checksum of the copied data is correct"
         disk_md5sum=`dd if="$PLACEHOLDER_PARTITION" bs="$DISK_SECTOR_SIZE" count="$sectors_copied" | md5sum -b`
         image_md5sum=`dd if="$IMG_FULL_PATH" bs="$DISK_SECTOR_SIZE" skip="$first_sector" | md5sum -b`
         if [ "$disk_md5sum" = "$image_md5sum" ]; then
@@ -168,12 +160,12 @@ copy_the_first_portion_of_disk() {
     until_sector=`get_start_sector_of_partition "$DISK" "$PLACEHOLDER_PARTITION"`
     retries_left=3
 
-    echo "copy the beginning of the disk"
-
     while [ $retries_left -gt 0 ]
     do
+        echo "copy the beginning of the disk"
         dd if="$IMG_FULL_PATH" of="$DISK" bs="$DISK_SECTOR_SIZE" count="$until_sector"
         sync
+        echo "check that checksum of the copied data is correct"
         disk_md5sum=`dd if="$DISK" bs="$DISK_SECTOR_SIZE" count="$until_sector" | md5sum -b`
         image_md5sum=`dd if="$IMG_FULL_PATH" bs="$DISK_SECTOR_SIZE" count="$until_sector" | md5sum -b`
         if [ "$disk_md5sum" = "$image_md5sum" ]; then
@@ -192,12 +184,12 @@ copy_whole_img_to_disk_at_once() {
     image_total_sectors=`get_disk_total_sectors "$IMG_FULL_PATH"`
     retries_left=3
 
-    echo "copy whole image at once"
-
     while [ $retries_left -gt 0 ]
     do
+        echo "copy whole image at once"
         dd if="$IMG_FULL_PATH" of="$DISK" bs="$DISK_SECTOR_SIZE"
         sync
+        echo "check that checksum of the copied data is correct"
         disk_md5sum=`dd if="$DISK" bs="$DISK_SECTOR_SIZE" count="$image_total_sectors" | md5sum -b`
         image_md5sum=`dd if="$IMG_FULL_PATH" bs="$DISK_SECTOR_SIZE" | md5sum -b`
         if [ "$disk_md5sum" = "$image_md5sum" ]; then
@@ -220,14 +212,9 @@ copy_img_to_disk() {
   sync
 
   if [ $image_total_sectors -gt $placeholder_first_sector ]; then
-    echo "n
-    p
-    $PLACEHOLDER_PARTITION_NUM
-    $placeholder_first_sector
-
-    w
-    " | fdisk "$DISK" -W always
-    sync
+    echo "creating placeholder partition"
+    create_partition "$DISK" "$PLACEHOLDER_PARTITION_NUM" "$placeholder_first_sector"
+    echo "placeholder partition created"
 
     copy_to_disk_what_comes_after_boot_partition
     IS_PROCESS_AT_THE_POINT_OF_NO_RETURN=1
@@ -241,7 +228,6 @@ copy_img_to_disk() {
 }
 
 overwrite_system() {
-  is_img_url_valid
   create_tmp_partition
   mount_tmp_partition
   download_image_archive

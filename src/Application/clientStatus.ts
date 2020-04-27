@@ -1,16 +1,14 @@
-import ISocket from '@signageos/lib/dist/WebSocket/Client/ISocket';
 import { SECOND_IN_MS } from '@signageos/lib/dist/DateTime/millisecondConstants';
-import { NotifyApplicationAlive } from '../Bridge/bridgeSystemMessages';
 
-export function notifyClientAlive(socketClient: ISocket) {
+export async function notifyClientAlive(serverUri: string) {
 	const NOTIFY_ALIVE_INTERVAL = 10 * SECOND_IN_MS;
-	setNotifyAliveToSocket(socketClient);
+	await setNotifyAliveToSocket(serverUri);
 	setInterval(
-		() => setNotifyAliveToSocket(socketClient),
+		() => setNotifyAliveToSocket(serverUri),
 		NOTIFY_ALIVE_INTERVAL,
 	);
 }
 
-function setNotifyAliveToSocket(socketClient: ISocket) {
-	socketClient.emit(NotifyApplicationAlive, {});
+async function setNotifyAliveToSocket(serverUri: string) {
+	await fetch(serverUri + '/client-alive', { method: 'POST' });
 }

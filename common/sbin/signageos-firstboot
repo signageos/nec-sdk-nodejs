@@ -2,14 +2,52 @@
 
 set -e
 
+. /sbin/signageos-diskutils
+
 is_sysmode_prepared() {
 	grep -q 'root=/dev/mmcblk0p3' /media/mmcblk0p1/cmdline.txt
 }
+
+# there are real issues with system sometimes using these partitions if they exist even though it shouldn't use them
+# the only safe solution is to make sure they are totally deleted and then reboot one more time just in case
+clear_old_partitions() {
+    local reboot=0
+    echo "deleting old partitions if they exist"
+    if partition_exists "$SWAP_PARTITION"; then
+        echo "deleting swap partition"
+        delete_partition "$DISK" "$SWAP_PARTITION_NUM"
+        echo "swap partition deleted"
+        reboot=1
+    fi
+    if partition_exists "$DATA_PARTITION"; then
+        echo "deleting data partition"
+        delete_partition "$DISK" "$DATA_PARTITION_NUM"
+        echo "data partition deleted"
+        reboot=1
+    fi
+    echo "old partitions deleted"
+    if [ "$reboot" = "1" ]; then
+        reboot
+        exit 0
+    fi
+}
+
+# if NEC display, make sure that compute module watchdog is disabled so that it doesn't reboot the compute module before firstboot is done
+IS_NEC=`signageos nec is_nec`
+if [ "$IS_NEC" = "1" ]; then
+    echo "disable NEC compute module watchdog"
+    if signageos nec disable_compute_module_watchdog; then
+        echo "NEC compute module watchdog disabled"
+    else
+        echo "failed to disable NEC compute module watchdog"
+    fi
+fi
 
 IMG_URL_FILE=/media/mmcblk0p1/install_img.txt
 
 if [ -f "$IMG_URL_FILE" ]; then
 
+    clear_old_partitions
     IMG_URL=`cat "$IMG_URL_FILE"`
     mount -o remount,rw /media/mmcblk0p1
     # remove the file that triggers this whole logic before actually doing it so if something goes wrong,
@@ -19,6 +57,7 @@ if [ -f "$IMG_URL_FILE" ]; then
 
 elif ! is_sysmode_prepared; then
 
+	clear_old_partitions
 	/sbin/prepare-swap
 	/sbin/prepare-sysmode
 	/sbin/prepare-videomemory

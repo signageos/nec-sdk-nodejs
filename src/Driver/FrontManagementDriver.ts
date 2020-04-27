@@ -134,13 +134,12 @@ export default class FrontManagementDriver implements IManagementDriver {
 		});
 	}
 
-	public async appUpgrade(baseUrl: string, version: string): Promise<() => Promise<void>> {
+	public async appUpgrade(baseUrl: string, version: string) {
 		await this.bridge.invoke<AppUpgrade, void>({
 			type: AppUpgrade,
 			baseUrl,
 			version,
 		});
-		return () => this.systemReboot();
 	}
 
 	public async getCurrentTemperature(): Promise<number> {
@@ -162,13 +161,12 @@ export default class FrontManagementDriver implements IManagementDriver {
 		baseUrl: string,
 		version: string,
 		_onProgress: (progress: number) => void,
-	): Promise<() => Promise<void>> {
+	) {
 		await this.bridge.invoke<FirmwareMessages.Upgrade, void>({
 			type: FirmwareMessages.Upgrade,
 			baseUrl,
 			version,
 		});
-		return () => this.systemReboot();
 	}
 
 	public async firmwareGetVersion(): Promise<string> {
@@ -280,7 +278,7 @@ export default class FrontManagementDriver implements IManagementDriver {
 		videoOrientation?: VideoOrientation,
 	): Promise<() => Promise<void> | Promise<void>> {
 		await this.systemSettings.setScreenOrientation(orientation, videoOrientation);
-		return () => this.systemReboot();
+		return () => this.appRestart();
 	}
 
 	public async getSerialNumber(): Promise<string> {

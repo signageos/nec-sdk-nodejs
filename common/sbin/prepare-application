@@ -5,47 +5,34 @@ set -e
 WPE_WEBKIT_FILENAME='wpewebkit.2.26.4.tar.gz'
 DOCKER_IMAGE_NAME='wpewebkit:2.26.4'
 DOCKER_CONTAINER_NAME='wpewebkit'
-NO_PROXY_DOMAINS='signageos.io;hugstatic.blob.core.windows.net;signageos-public.s3.eu-central-1.amazonaws.com'
 
-is_wpe_webkit_image_ok() {
-    checksum=$(docker inspect --format "{{.Id}}" "$DOCKER_IMAGE_NAME")
-    test "$checksum" = "sha256:233d9f6190804bb94be2d2142e236ad4fe9e457821657f2b9a9942ae8781ff64"
-}
+# if the process failed before in the middle (for example due to power loss), first clear all unfinished results and start over
+service docker stop
+rm -rf /var/lib/docker
 
-is_wpe_webkit_container_ok() {
-    docker inspect wpewebkit > /dev/null
-}
-
-apk add --no-network --repository /media/mmcblk0p1/external-apks docker
+# now start over
 service cgroups start # cgroups is docker dependency but for some reason it sometimes fails to start so we have to start it manually just in case
 service docker start
 while ! docker info > /dev/null 2>&1; do sleep 0.01; done # if try to connect to docker too fast, it's not ready yet so gotta wait until it's ready
 
-if ! is_wpe_webkit_image_ok; then
-	echo 'load WPE Webkit image'
-	docker rmi "$DOCKER_IMAGE_NAME" || true
-	docker load -i /media/mmcblk0p1/$WPE_WEBKIT_FILENAME
-	echo 'WPE Webkit image loaded'
-fi
+echo 'load WPE Webkit image'
+docker load -i /media/mmcblk0p1/$WPE_WEBKIT_FILENAME
+echo 'WPE Webkit image loaded'
 
-if ! is_wpe_webkit_container_ok; then
-	echo 'create WPE Webkit container'
-	docker rm -f "$DOCKER_CONTAINER_NAME" || true
-	docker create --name "$DOCKER_CONTAINER_NAME" --privileged --net=host \
-			--log-driver syslog --log-opt tag=wpewebkit \
-			-v /dev/input:/dev/input:ro \
-			-v /run/udev:/run/udev:ro \
-			-v /tmp:/tmp \
-			-v /usr/share/fonts:/usr/share/fonts \
-			-v /etc/signageos/time:/etc/time:ro \
-			-v /usr/share/signageos/server/package.json:/tmp/signageos-version-file \
-			-e WPE_BCMRPI_TOUCH=1 \
-			-e WEBKIT_INSPECTOR_SERVER='0.0.0.0:9998' \
-			-e VERSION_FILE=/tmp/signageos-version-file \
-			"$DOCKER_IMAGE_NAME" \
-			/usr/bin/wpe 'http://127.0.0.1:8082/index.html'
-	echo 'WPE Webkit container created'
-fi
+echo 'create WPE Webkit container'
+docker create --name "$DOCKER_CONTAINER_NAME" --privileged --net=host \
+        --log-driver syslog --log-opt tag=wpewebkit \
+        -v /dev/input:/dev/input:ro \
+        -v /run/udev:/run/udev:ro \
+        -v /tmp:/tmp \
+        -v /usr/share/fonts:/usr/share/fonts \
+        -v /etc/signageos/time:/etc/time:ro \
+        -v /usr/share/signageos/server/package.json:/tmp/signageos-version-file \
+        -e WPE_BCMRPI_TOUCH=1 \
+        -e VERSION_FILE=/tmp/signageos-version-file \
+        "$DOCKER_IMAGE_NAME" \
+        /usr/bin/wpe 'http://127.0.0.1:8082/index.html'
+echo 'WPE Webkit container created'
 
 rc-update add cgroups default
 rc-update add docker default

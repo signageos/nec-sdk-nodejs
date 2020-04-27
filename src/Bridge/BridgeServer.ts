@@ -11,7 +11,6 @@ import socketHandleMessage from './socketHandleMessage';
 import socketHandleVideo from './socketHandleVideo';
 import socketHandleBrowser from './socketHandleBrowser';
 import socketHandleCEC from './socketHandleCEC';
-import socketHandleApplication from './socketHandleApplication';
 import socketHandleStorageUnitsChanged from './socketHandleStorageUnitsChanged';
 import socketHandleSensors from './socketHandleSensors';
 import IFileSystem from '../FileSystem/IFileSystem';
@@ -28,6 +27,7 @@ export default class BridgeServer {
 
 	private readonly httpServer: http.Server;
 	private readonly socketServer: ISocketServerWrapper;
+	private readonly clientWatchdog: ClientWatchdog;
 
 	constructor(
 		private expressApp: express.Application,
@@ -45,6 +45,7 @@ export default class BridgeServer {
 	) {
 		this.httpServer = http.createServer(this.expressApp);
 		this.socketServer = this.createSocketServer(this.httpServer);
+		this.clientWatchdog = new ClientWatchdog(this.systemAPI);
 		this.defineHttpRoutes();
 		this.handleSocketMessage();
 	}
@@ -79,6 +80,10 @@ export default class BridgeServer {
 		this.expressApp.use(bodyParser.json());
 
 		const rawBody = bodyParser.raw({ inflate: true, limit: '100mb', type: '*/*' });
+		this.expressApp.post('/client-alive', async (_request: express.Request, response: express.Response) => {
+			this.clientWatchdog.notifyAlive();
+			response.sendStatus(200);
+		});
 		this.expressApp.post('/firmware/overwrite', async (request: express.Request, response: express.Response) => {
 			const { imgUrl } = request.body;
 			if (imgUrl) {
@@ -145,7 +150,6 @@ export default class BridgeServer {
 
 	private handleSocketMessage() {
 		const debug = Debug('@signageos/display-linux:Bridge:BridgeServer:websocket');
-		const clientWatchdog = new ClientWatchdog(this.systemAPI);
 		this.socketServer.server.bindConnection((socket: ISocket) => {
 			debug('websocket client connected');
 			socketHandleMessage(
@@ -157,12 +161,11 @@ export default class BridgeServer {
 				this.systemSettings,
 				this.overlayRenderer,
 				this.systemAPI,
-				clientWatchdog,
+				this.clientWatchdog,
 			);
 			socketHandleVideo(socket, this.videoPlayer);
 			socketHandleBrowser(socket, this.systemAPI);
 			socketHandleCEC(socket, this.cecListener);
-			socketHandleApplication(socket, clientWatchdog);
 			socketHandleStorageUnitsChanged(socket, this.fileSystem);
 			socketHandleSensors(socket, this.nativeDriver);
 			socket.getDisconnectedPromise().then(() => debug('websocket client disconnected'));

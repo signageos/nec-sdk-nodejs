@@ -8,49 +8,15 @@ DATA_PARTITION_FIRST_SECTOR=3147776
 
 create_and_initialize_data_partition() {
     echo 'create data partition'
-    sync
-    echo "n
-    p
-    $DATA_PARTITION_NUM
-    $DATA_PARTITION_FIRST_SECTOR
-
-    w
-    " | fdisk "$DISK" -W always
-    sync
+    create_partition "$DISK" "$DATA_PARTITION_NUM" "$DATA_PARTITION_FIRST_SECTOR"
+    echo 'data partition created, formatting...'
     mkfs.ext4 -F "$DATA_PARTITION"
     echo 'data partition created and initialized'
 }
 
-delete_data_partition() {
-    echo 'deleting data partition'
-    sync
-    echo "d
-    $DATA_PARTITION_NUM
-    w
-    " | fdisk "$DISK" -W always
-    sync
-    echo 'data partition deleted'
-}
-
-is_data_partition_valid() {
-    data_partition_start_sector=`get_start_sector_of_partition $DISK $DATA_PARTITION`
-    test "$data_partition_start_sector" = "$DATA_PARTITION_FIRST_SECTOR"
-}
-
-prepare_data() {
-    if partitition_exists "$DATA_PARTITION"; then
-        delete_data_partition
-        reboot
-        exit 0
-    else
-        create_and_initialize_data_partition
-    fi
-}
-
-
 # =========== DO IT =============
 
-prepare_data
+create_and_initialize_data_partition
 
 mount "$DATA_PARTITION" /mnt # The second partition, in ext4 format, where Alpine Linux is installing in sys mode
 signageos-setupdisk -m sys -k rpi2 /mnt
@@ -63,11 +29,6 @@ cp /media/mmcblk0p1/boot/* /media/mmcblk0p1/boot.diskless/
 cd /mnt # We are in the second partition
 rm boot/boot # Drop the unused symbolink link
 
-mv -f boot/* /media/mmcblk0p1/boot/
-rm -Rf boot
-mkdir media/mmcblk0p1 # It's the mount point for the first partition on the next reboot
-
-ln -s media/mmcblk0p1/boot boot
 
 rm etc/apk/cache # we don't want cache in sys mode
 
@@ -76,5 +37,20 @@ echo "$BOOT_PARTITION /media/mmcblk0p1 vfat ro 0 0" >> etc/fstab
 echo "$SWAP_PARTITION none swap sw 0 0" >> etc/fstab
 echo "$DATA_PARTITION / ext4 rw,relatime,errors=remount-ro 0 1" >> etc/fstab
 
-cd /media/mmcblk0p1
+# WARNING: FROM HERE IT THE DANGEROUS PART STARTS
+#
+# - replacing diskless boot binaries (kernel, initramfs, etc.) with sysmode versions
+# - changing cmdline.txt to mount root file system from disk
+#
+# These operations have to be performed all together.
+# If there was a crash in the middle it would end up in the device not being able to boot anymore
+# and would require a manual intervention.
+# Therefore, these operations have to be done as fast and minimal as possible.
+# That way, the possible window when it could break by, for example unplugging the power, is only a split second.
+
+mv -f boot/* /media/mmcblk0p1/boot/ # replace diskless kernel and supporting binaries with sysmode version
+rm -Rf boot
+mkdir media/mmcblk0p1 # It's the mount point for the first partition on the next reboot
+ln -s media/mmcblk0p1/boot boot
 sed -i 's/^/root=\/dev\/mmcblk0p3 /' /media/mmcblk0p1/cmdline.txt
+sync
