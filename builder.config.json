@@ -1,7 +1,8 @@
 {
   "version": "1.0.0",
   "outputIncludedFiles": [
-    "packages"
+    "packages",
+    "version"
   ],
   "outputFolderPath": "dist",
   "preBuildCommand": "tools/builder-prebuild.sh",
