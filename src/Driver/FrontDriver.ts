@@ -226,7 +226,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	}
 
 	public getOSDUri(): string {
-		return "osd.html";
+		return "osd/index.html";
 	}
 
 	private async isWifiSupported() {
