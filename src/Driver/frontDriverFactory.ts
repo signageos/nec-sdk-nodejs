@@ -12,6 +12,7 @@ import { adaptVideoPlayer, adaptStreamPlayer } from '@signageos/front-display/es
 
 export function createFrontDrivers(
 	window: Window,
+	version: string,
 	serverUri: string,
 	fileSystemUrl: string,
 	frontAppletPrefix: string,
@@ -29,7 +30,7 @@ export function createFrontDrivers(
 	const fileSystem = new FrontFileSystem(fileSystemUrl, bridge, socketClient);
 	const browser = new Browser(window, bridge);
 	const frontDriver = new FrontDriver(
-		window, frontAppletPrefix, bridge, systemSettings, socketClient, videoPlayer, streamPlayer, fileSystem, browser,
+		window, version, frontAppletPrefix, bridge, systemSettings, socketClient, videoPlayer, streamPlayer, fileSystem, browser,
 	);
 	const managementDriver = new FrontManagementDriver(
 		bridge,

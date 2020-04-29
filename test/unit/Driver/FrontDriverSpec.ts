@@ -46,6 +46,7 @@ describe('Driver.FrontDriver', function () {
 
 			const frontDriver = new FrontDriver(
 				createWindow(),
+				'1.0.0',
 				'hug',
 				bridge as any,
 				{} as any,

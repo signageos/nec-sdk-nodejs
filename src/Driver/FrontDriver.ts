@@ -45,6 +45,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 
 	constructor(
 		private window: Window,
+		private version: string,
 		private frontAppletPrefix: string,
 		private bridge: BridgeClient,
 		private systemSettings: ISystemSettings,
@@ -226,7 +227,7 @@ export default class FrontDriver implements IFrontDriver, ICacheDriver {
 	}
 
 	public getOSDUri(): string {
-		return "osd.html";
+		return `osd/index.html?v=${this.version}`;
 	}
 
 	private async isWifiSupported() {

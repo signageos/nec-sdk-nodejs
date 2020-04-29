@@ -30,7 +30,7 @@
   "author": "signageOS.io <dev@signageos.io>",
   "devDependencies": {
     "@signageos/front-display": "7.2.0-master.3641",
-    "@signageos/front-osd": "^0.1.0",
+    "@signageos/front-osd": "0.2.0-master.123",
     "@signageos/lib": "3.0.0-master.771",
     "@signageos/nec-sdk": "0.0.0-master.26",
     "@types/async-lock": "0.0.19",
