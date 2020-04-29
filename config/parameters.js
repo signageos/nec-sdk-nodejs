@@ -21,8 +21,8 @@ try {
 
 const ravenEnabled = typeof process.env.raven_enabled !== 'undefined' ? !!parseInt(process.env.raven_enabled) : false;
 
-let bundledApplet;
-let autoVerification;
+let bundledApplet = null;
+let autoVerification = null;
 if (typeof window !== 'undefined') {
 	if (typeof window.__SOS_BUNDLED_APPLET !== 'undefined') {
 		bundledApplet = window.__SOS_BUNDLED_APPLET;
@@ -37,8 +37,8 @@ if (typeof window !== 'undefined') {
 		bundledApplet = bundledAppletConfig.applet;
 		autoVerification = bundledAppletConfig.autoVerification;
 	} catch (error) {
-		bundledApplet = process.env.bundledApplet ? JSON.parse(process.env.bundledApplet) : undefined;
-		autoVerification = process.env.autoVerification ? JSON.parse(process.env.autoVerification) : undefined;
+		bundledApplet = process.env.bundledApplet ? JSON.parse(process.env.bundledApplet) : null;
+		autoVerification = process.env.autoVerification ? JSON.parse(process.env.autoVerification) : null;
 	}
 }
 
