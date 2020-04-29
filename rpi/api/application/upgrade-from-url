@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# install signageOS Display Linux app from URL
+
+set -e
+
+if [ "$1" = "" ]; then
+    echo "Usage: $0 <url>"
+    exit 1
+fi
+
+URL="$1"
+
+wget --spider "$URL" # check url first
+
+mkdir -p /tmp/signageos
+echo "$URL" > /tmp/signageos/app_upgrade_url
+
+# switch to app_upgrade runlevel
+# has to be detached because it's parent process (signageos-server) will get stopped while switching runlevels
+nohup openrc app_upgrade | /usr/bin/logger -p local0.info &

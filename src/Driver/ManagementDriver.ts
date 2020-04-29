@@ -88,11 +88,12 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		return this.deviceUid;
 	}
 
-	public async appUpgrade(_baseUrl: string, version?: string) {
-		if (!version) {
-			throw new Error('App upgrade from absolute URL isn\'t supported at the moment');
+	public async appUpgrade(baseUrl: string, version?: string) {
+		if (version) {
+			await this.systemAPI.upgradeApp(version);
+		} else {
+			await this.systemAPI.upgradeAppFromURL(baseUrl);
 		}
-		await this.systemAPI.upgradeApp(version);
 	}
 
 	public async firmwareGetVersion(): Promise<string> {
