@@ -12,6 +12,7 @@ export interface ISystemAPI {
 	restartApplication(): Promise<void>;
 	restartServer(): Promise<void>;
 	upgradeApp(version: string): Promise<void>;
+	upgradeAppFromURL(url: string): Promise<void>;
 	getFirmwareVersion(): Promise<string>;
 	overwriteFirmware(imgUrl: string): Promise<void>;
 	factoryReset(): Promise<void>;
@@ -91,6 +92,10 @@ export function createSystemAPI(): ISystemAPI {
 
 		async upgradeApp(version: string) {
 			await execApiCommand('application', 'upgrade', [version], { asRoot: true, verbose: true });
+		},
+
+		async upgradeAppFromURL(url: string): Promise<void> {
+			await execApiCommand('application', 'upgrade-from-url', [url], { asRoot: true, verbose: true });
 		},
 
 		async getFirmwareVersion() {

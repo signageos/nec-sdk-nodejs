@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "outputIncludedFiles": [
+    "packages",
+    "version"
+  ],
+  "outputFolderPath": "dist",
+  "preBuildCommand": "tools/builder-prebuild.sh",
+  "buildCommand": "tools/builder-build.sh",
+  "versions": [
+    {
+      "appletFolderPath": "dist/rpi/signageos-rpi/client/applet",
+      "entryPointFilePath": "dist/rpi/signageos-rpi/client/index.html",
+      "appletConfigPath": "dist/rpi/signageos-rpi/server/applet.json"
+    }
+  ]
+}

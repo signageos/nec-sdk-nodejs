@@ -6,7 +6,11 @@
     "README.md",
     "LICENSE",
     "package.json",
-    "package-lock.json"
+    "package-lock.json",
+    "tools/build-apk.sh",
+    "tools/builder-prebuild.sh",
+    "tools/builder-build.sh",
+    "builder.config.json"
   ],
   "repository": {
     "url": "git@gitlab.com:signageos/display-linux",

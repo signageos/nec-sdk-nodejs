@@ -5,16 +5,40 @@ set -e
 source /etc/signageos/signageos.conf
 
 VERSION_FILE='/tmp/signageos/app_upgrade_version'
+URL_FILE='/tmp/signageos/app_upgrade_url'
 
-upgrade_app() {
+cleanup() {
+    rm -rf "$VERSION_FILE" "$URL_FILE"
+}
+
+upgrade_app_to_version() {
     VERSION=`cat "$VERSION_FILE"`
-    rm -rf "$VERSION_FILE"
+    cleanup
     apk update
     apk add "signageos-$platform=$VERSION"
 }
 
+upgrade_app_from_url() {
+    local url=`cat "$URL_FILE"`
+    cleanup
+    # download and extract archive
+    local dist=/tmp/signageos/upgrade-from-file
+    rm -rf "$dist"
+    mkdir -p "$dist"
+    wget -O "$dist/app.zip" "$url"
+    unzip -d "$dist" "$dist/app.zip"
+    # install app
+    local version=`cat "$dist/version"`
+    apk add --repository "$dist/packages" "signageos-$platform=$version"
+    rm -rf "$dist"
+}
+
 if [ -f "$VERSION_FILE" ]; then
-    upgrade_app || true
+    upgrade_app_to_version || true
+fi
+
+if [ -f "$URL_FILE" ]; then
+    upgrade_app_from_url || true
 fi
 
 reboot
