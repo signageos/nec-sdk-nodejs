@@ -49,6 +49,7 @@ test:general:
     fs_system_path: /test_system_fs
   script:
     - npm test
+    - make test
   cache:
     <<: *cache
     policy: pull
