@@ -6,7 +6,7 @@ if [[ "$@" = "--version" ]]; then
     exit 0
 fi
 
-SCRIPT_PATH=`readlink $0`
+SCRIPT_PATH=`readlink -f $0`
 SCRIPT_DIR=`dirname $SCRIPT_PATH`
 
 DIR=$1
