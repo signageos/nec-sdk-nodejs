@@ -12,6 +12,7 @@ import {
 	ResetSettings,
 	FactoryReset,
 	AppUpgrade,
+	SetDebug,
 } from './bridgeSystemMessages';
 import * as FirmwareMessages from './bridgeFirmwareMessages';
 import * as NetworkMessages from './bridgeNetworkMessages';
@@ -57,6 +58,7 @@ export default async function handleMessage(
 		ResetSettings |
 		FactoryReset |
 		AppUpgrade |
+		SetDebug |
 		ScreenMessages.SetOrientation |
 		PowerMessages.AppRestart |
 		PowerMessages.SystemReboot |
@@ -153,6 +155,10 @@ export default async function handleMessage(
 
 		case AppUpgrade:
 			await nativeDriver.appUpgrade(message.baseUrl, message.version);
+			return {};
+
+		case SetDebug:
+			await nativeDriver.setDebug(message.enabled);
 			return {};
 
 		case ScreenMessages.GetOrientation:

@@ -355,6 +355,7 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 		} else {
 			await this.systemAPI.disableNativeDebug();
 		}
+		setTimeout(() => this.systemAPI.restartApplication(), 1e3);
 	}
 
 	public cacheGetAll(): Promise<{ [p: string]: string }> {
