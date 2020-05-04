@@ -58,7 +58,7 @@ mount_boot_partition() {
 copy_files_to_boot_partition() {
     cp -rT "boot/$TARGET" mnt
     cp sos.apkovl.tar.gz mnt
-    docker save wpewebkit:2.26.4 -o mnt/wpewebkit.2.26.4.tar.gz
+    docker save wpewebkit:2.26.4-r1 -o mnt/wpewebkit.2.26.4-r1.tar.gz
     tar -xzf cache.tar.gz -C mnt
     tar -xzf $apks_archive -C mnt
     echo "$version" > mnt/sos_version

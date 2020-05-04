@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # disables native debug
 
-TODO implement
-exit 1
+set -e
+
+mkdir -p $SIGNAGEOS_PREFIX/etc/wpewebkit
+touch $SIGNAGEOS_PREFIX/etc/wpewebkit/.profile
+sed -i '/^export WEBKIT_INSPECTOR_SERVER=/d' $SIGNAGEOS_PREFIX/etc/wpewebkit/.profile

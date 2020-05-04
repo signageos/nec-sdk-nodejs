@@ -56,6 +56,9 @@ package() {
     cp init.d/* "$pkgdir"/etc/init.d/
     chmod 755 "$pkgdir"/etc/init.d/*
 
+    mkdir -p "$pkgdir"/etc/wpewebkit/
+    install -m644 -D etc/wpewebkit/.profile "$pkgdir"/etc/wpewebkit/.profile
+
 	install -m644 -D etc/nginx/conf.d/signageos.conf "$pkgdir"/etc/nginx/conf.d/signageos.conf
 
     install -m644 -D etc/logrotate.d/syslog "$pkgdir"/etc/logrotate.d/syslog

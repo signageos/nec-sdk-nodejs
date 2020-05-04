@@ -2,8 +2,8 @@
 
 set -e
 
-WPE_WEBKIT_FILENAME='wpewebkit.2.26.4.tar.gz'
-DOCKER_IMAGE_NAME='wpewebkit:2.26.4'
+WPE_WEBKIT_FILENAME='wpewebkit.2.26.4-r1.tar.gz'
+DOCKER_IMAGE_NAME='wpewebkit:2.26.4-r1'
 DOCKER_CONTAINER_NAME='wpewebkit'
 
 # if the process failed before in the middle (for example due to power loss), first clear all unfinished results and start over
@@ -28,6 +28,7 @@ docker create --name "$DOCKER_CONTAINER_NAME" --privileged --net=host \
         -v /usr/share/fonts:/usr/share/fonts \
         -v /etc/signageos/time:/etc/time:ro \
         -v /usr/share/signageos/server/package.json:/tmp/signageos-version-file \
+        -v /etc/wpewebkit/.profile:/root/.profile:ro \
         -e WPE_BCMRPI_TOUCH=1 \
         -e VERSION_FILE=/tmp/signageos-version-file \
         "$DOCKER_IMAGE_NAME" \

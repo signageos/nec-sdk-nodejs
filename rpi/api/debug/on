@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # enables native debug
 
-# TODO implement
-exit 1
+set -e
+
+mkdir -p $SIGNAGEOS_PREFIX/etc/wpewebkit
+touch $SIGNAGEOS_PREFIX/etc/wpewebkit/.profile
+sed -i '/^export WEBKIT_INSPECTOR_SERVER=/d' $SIGNAGEOS_PREFIX/etc/wpewebkit/.profile
+echo "export WEBKIT_INSPECTOR_SERVER='0.0.0.0:9998'" >> $SIGNAGEOS_PREFIX/etc/wpewebkit/.profile

@@ -49,6 +49,7 @@ test:general:
     fs_system_path: /test_system_fs
   script:
     - npm test
+    - make test
   cache:
     <<: *cache
     policy: pull
@@ -229,8 +230,8 @@ build:overlay-and-cache-rpi:
   script:
     - VERSION=`cat ./VERSION`
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-    - docker pull $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-$ARCHITECTURE
-    - docker tag $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-$ARCHITECTURE wpewebkit:2.26.4
+    - docker pull $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-r1-$ARCHITECTURE
+    - docker tag $CI_REGISTRY/signageos/docker-wpewebkit:2.26.4-r1-$ARCHITECTURE wpewebkit:2.26.4-r1
     - tools/build-image.sh $ARCHITECTURE $VERSION apks-$TARGET.tar.gz alpine-$TARGET.img
   artifacts:
     when: on_success
