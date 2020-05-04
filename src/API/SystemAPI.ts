@@ -111,11 +111,11 @@ export function createSystemAPI(): ISystemAPI {
 		},
 
 		async enableNativeDebug() {
-			await execApiCommand('debug', 'on');
+			await execApiCommand('debug', 'on', [], { asRoot: true });
 		},
 
 		async disableNativeDebug() {
-			await execApiCommand('debug', 'off');
+			await execApiCommand('debug', 'off', [], { asRoot: true });
 		},
 
 		async turnScreenOff() {
