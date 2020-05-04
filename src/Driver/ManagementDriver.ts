@@ -350,6 +350,10 @@ export default class ManagementDriver implements IBasicDriver, IManagementDriver
 	}
 
 	public async setDebug(enabled: boolean): Promise<void> {
+		const currentState = await this.systemAPI.isNativeDebugEnabled();
+		if (currentState === enabled) {
+			return;
+		}
 		if (enabled) {
 			await this.systemAPI.enableNativeDebug();
 		} else {

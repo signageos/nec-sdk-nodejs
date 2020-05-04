@@ -2,7 +2,7 @@
 # returns 1 if native debug is enabled, otherwise returns 0
 
 if [ $(cat $SIGNAGEOS_PREFIX/etc/wpewebkit/.profile | grep "export WEBKIT_INSPECTOR_SERVER=" | wc -l) -eq 0 ]; then
-	exit 0
+	echo 0
 else
-	exit 1
+	echo 1
 fi

@@ -43,13 +43,16 @@ teardown() {
 }
 
 @test "debug is_enabled returns current state of .profile config file of wpewebkit" {
-	signageos debug is_enabled && echo "OK" || exit 1
+	result1=$(signageos debug is_enabled)
+	[ "$result1" = "0" ]
 
 	signageos debug on
 
-	signageos debug is_enabled && exit 1 || echo "OK"
+	result2=$(signageos debug is_enabled)
+    [ "$result2" = "1" ]
 
 	signageos debug off
 
-	signageos debug is_enabled && echo "OK" || exit 1
+	result3=$(signageos debug is_enabled)
+    [ "$result3" = "0" ]
 }
