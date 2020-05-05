@@ -1,5 +1,5 @@
 {
-  "name": "@signageos/nec-sdk",
+  "name": "@signageos/nec-pd-sdk",
   "version": "0.0.0",
   "main": "./dist/NECPD",
   "files": [
