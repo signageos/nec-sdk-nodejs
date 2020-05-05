@@ -7,8 +7,8 @@ export default class NECPD {
 
 	private readonly necSerialPort: NECSerialPort;
 
-	constructor() {
-		this.necSerialPort = new NECSerialPort();
+	constructor(serialPort: string) {
+		this.necSerialPort = new NECSerialPort(serialPort);
 	}
 
 	public async isAlive(): Promise<boolean> {

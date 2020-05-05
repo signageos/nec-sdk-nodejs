@@ -37,6 +37,8 @@ function wait(timeout: number) {
 
 export default class NECSerialPort {
 
+	constructor(private serialPort: string) {}
+
 	public async getOrSetParameter(monitorId: string | number, opcode: Opcode, value?: number): Promise<IGetOrSetParameterResponse> {
 		return await this.sendRetriableRequest(async (serialPort: SerialPort, getReply: () => Promise<number[]>) => {
 			const address = convertMonitorIdToAddress(monitorId);
@@ -176,7 +178,7 @@ export default class NECSerialPort {
 	}
 
 	private async sendRequest<T>(callback: (serialPort: SerialPort, getReply: () => Promise<number[]>) => Promise<T>) {
-		const serialPort = new SerialPort('/dev/ttyS0', { baudRate: 9600, autoOpen: false });
+		const serialPort = new SerialPort(this.serialPort, { baudRate: 9600, autoOpen: false });
 		try {
 			return await Promise.race([
 				new Promise((resolve: (result: T) => void, reject: (error: Error) => void) => {
