@@ -67,7 +67,7 @@
     "fs-extra": "^7.0.1",
     "html2canvas": "^1.0.0-alpha.12",
     "hugport-codestyle": "0.0.10",
-    "lodash": "^4.17.10",
+    "lodash": "^4.17.13",
     "mkdirp": "^0.5.1",
     "mocha": "^5.0.4",
     "mocha-webpack": "2.0.0-beta.0",
