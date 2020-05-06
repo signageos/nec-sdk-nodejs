@@ -1,3 +1,10 @@
+/* tslint:disable:typedef */
+/*
+ * TODO add types
+ * this file is a direct port of the original core functions from the Python SDK and since these functions are quite tricky to do right
+ * I omitted the types and just made it work as is.
+ * Hopefully in the future the types can be added and the tslint:disable directive can be removed.
+ */
 import {
 	UnexpectedReplyError,
 	readInt8ListFromBuffer,
@@ -163,17 +170,16 @@ export interface ISchedule {
 function parseScheduleReply (command, reply) {
 	let status = 0;
 	let offset = 4;
-	// read command
 	if (command === 0xc23d) {
+		// read command
 		if (reply.payload.length !== 34) {
 			throw new UnexpectedReplyError(`unexpected reply length: ${reply.payload.length} but expected 34`);
 		}
 		if (asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 4, 0)) !== 0xc33d) {
 			throw new UnexpectedReplyError('unexpected reply received');
 		}
-	}
-	// write command
-	else if (command === 0xc23e) {
+	} else if (command === 0xc23e) {
+		// write command
 		if (reply.payload.length !== 36) {
 			throw new UnexpectedReplyError(`unexpected reply length: ${reply.payload.length} but expected 36`);
 		}
@@ -455,12 +461,12 @@ export function setDateAndTime(port, address, getReply, date) {
 		if (status !== 0) {
 			throw new Error('reply status is not 0');
 		}
-		const year = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 6));
-		const month = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 8));
-		const day = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 10));
-		const hour = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 14));
-		const minute = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 16));
-		return new Date(year + 2000, month - 1, day, hour, minute);
+		const replyYear = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 6));
+		const replyMonth = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 8));
+		const replyDay = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 10));
+		const replyHour = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 14));
+		const replyMinute = asciiDecodeValue(readInt8ListFromBuffer(reply.payload, 2, 16));
+		return new Date(replyYear + 2000, replyMonth - 1, replyDay, replyHour, replyMinute);
 	});
 }
 

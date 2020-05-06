@@ -204,6 +204,6 @@ export default class NECSerialPort {
 		return () => new Promise((resolve: (data: number[]) => void, reject: (error: Error) => void) => {
 			parser.once('data', resolve);
 			parser.once('error', reject);
-		})
+		});
 	}
 }

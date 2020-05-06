@@ -1,3 +1,10 @@
+/* tslint:disable:typedef */
+/*
+ * TODO add types
+ * this file is a direct port of the original core functions from the Python SDK and since these functions are quite tricky to do right
+ * I omitted the types and just made it work as is.
+ * Hopefully in the future the types can be added and the tslint:disable directive can be removed.
+ */
 export class UnexpectedReplyError extends Error {}
 export class NullMessageReplyError extends Error {}
 export class TimeoutError extends Error {}

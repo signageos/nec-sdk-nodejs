@@ -18,6 +18,7 @@
   "repository": "https://github.com/signageos/nec-pd-sdk",
   "scripts": {
     "build": "tsc",
+    "lint": "tslint src/**/*.ts",
     "prebuild": "rm -rf dist/*",
     "prepublish": "npm run prebuild && npm run build",
     "watch": "tsc --watch"
@@ -41,7 +42,7 @@
     "@types/async-lock": "^1.1.1",
     "@types/node": "^12.12.14",
     "@types/serialport": "^7.0.4",
-    "tslint": "^5.20.1",
+    "tslint": "^6.0.0",
     "typescript": "^3.7.3"
   }
 }
