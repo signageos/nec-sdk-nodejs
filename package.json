@@ -26,6 +26,9 @@
   "author": "signageOS Inc. <dev@signageos.io>",
   "homepage": "https://github.com/signageos/nec-pd-sdk",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=8.9.0"
   },
