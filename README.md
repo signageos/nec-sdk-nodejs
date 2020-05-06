@@ -2,6 +2,8 @@
 
 Node.js library interface for communication via RS232 with NEC large-screen displays.
 
+This library is a Node.js port of [NEC PD Python SDK](https://github.com/NECDisplaySolutions/necpdsdk). At the moment it doesn't implement the entire protocol, only functions that we needed for our project. Contributions are welcome.
+
 ## Installation
 
 ```
