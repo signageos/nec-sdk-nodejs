@@ -5,9 +5,29 @@
  * I omitted the types and just made it work as is.
  * Hopefully in the future the types can be added and the tslint:disable directive can be removed.
  */
-export class UnexpectedReplyError extends Error {}
-export class NullMessageReplyError extends Error {}
-export class TimeoutError extends Error {}
+export class UnexpectedReplyError extends Error {
+	constructor(message: string) {
+		super(message);
+		// https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+		Object.setPrototypeOf(this, UnexpectedReplyError.prototype);
+	}
+}
+
+export class NullMessageReplyError extends Error {
+	constructor(message: string) {
+		super(message);
+		// https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+		Object.setPrototypeOf(this, NullMessageReplyError.prototype);
+	}
+}
+
+export class TimeoutError extends Error {
+	constructor(message: string) {
+		super(message);
+		// https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+		Object.setPrototypeOf(this, TimeoutError.prototype);
+	}
+}
 
 export function readInt8ListFromBuffer (buffer, bytesCount, index) {
 	const result: number[] = [];
