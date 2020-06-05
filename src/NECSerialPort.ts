@@ -196,6 +196,7 @@ export default class NECSerialPort {
 				}),
 			]);
 		} finally {
+			serialPort.flush();
 			serialPort.close();
 		}
 	}
