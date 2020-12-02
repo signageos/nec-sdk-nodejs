@@ -2,6 +2,7 @@ import Opcode from './Opcode';
 import NECSerialPort from './NECSerialPort';
 import { PowerStatus } from './constants';
 import { ISchedule } from './facade';
+import { UnsupportedParameterError, SetParameterError } from './errors';
 
 export default class NECPD {
 
@@ -25,15 +26,23 @@ export default class NECPD {
 		return maxValue;
 	}
 
+	public async isParameterSupported(opcode: Opcode): Promise<boolean> {
+		const { result } = await this.getOrSetParameter(opcode);
+		return result === 0;
+	}
+
 	public async getParameter(opcode: Opcode): Promise<number> {
 		const { currentValue } = await this.getOrSetParameter(opcode);
 		return currentValue;
 	}
 
 	public async setParameter(opcode: Opcode, value: number) {
-		const { result, currentValue } = await this.getOrSetParameter(opcode, value);
-		if (result > 0 || currentValue !== value) {
-			throw new Error('failed to set parameter');
+		const { result, currentValue, maxValue } = await this.getOrSetParameter(opcode, value);
+		if (result !== 0 || value > maxValue) {
+			throw new UnsupportedParameterError(opcode);
+		}
+		if (currentValue !== value) {
+			throw new SetParameterError(opcode, value);
 		}
 	}
 
