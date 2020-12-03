@@ -20,6 +20,7 @@ enum Opcode {
 	COMPUTE_MODULE_SHUTDOWN_SIGNAL = 0x1181,
 	USB_PC_SOURCE = 0x1174,
 	HDMI_SIGNAL = 0x1040,
+	G_SENSOR = 0x11b4,
 }
 
 export default Opcode;

@@ -108,4 +108,12 @@ export enum OSDInformation {
 export enum OSDOrientation {
 	LANDSCAPE = 0,
 	PORTRAIT = 1,
+	AUTO = 2,
+}
+
+export enum GSensorReading {
+	LANDSCAPE = 1, // NEC logo at the bottom
+	WRONG_PORTRAIT = 2, // NEC logo on the left, not supported
+	UPSIDE_DOWN = 3, // NEC logo on the top, not supported
+	PORTRAIT = 4, // NEC logo on the right
 }
