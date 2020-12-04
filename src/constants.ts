@@ -4,6 +4,8 @@ export enum AudioMutedStatus {
 }
 
 export enum InputChangeType {
+	NORMAL = 1,
+	QUICK = 2,
 	SUPER_QUICK = 3,
 }
 
