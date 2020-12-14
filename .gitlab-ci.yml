@@ -5,6 +5,7 @@ stages:
   - test
   - build
   - publish
+  - release
 
 cache:
   untracked: true
@@ -51,3 +52,22 @@ publish:npm:
     - build
   script:
     - npm publish --ignore-scripts --tag $TAG
+
+release:tag:
+  image: $CI_REGISTRY/signageos/docker:master
+  stage: release
+  only:
+    - master
+  when: manual
+  allow_failure: false
+  before_script: []
+  script:
+    - ci-release-tag
+
+release:notes:
+  image: $CI_REGISTRY/signageos/docker:master
+  stage: release
+  only:
+    - tags
+  script:
+    - ci-release-notes
