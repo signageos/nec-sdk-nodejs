@@ -1,6 +1,6 @@
 {
   "name": "@signageos/nec-pd-sdk",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Node.js library interface for communication via RS232 with NEC large-screen displays.",
   "keywords": [
     "sdk",
