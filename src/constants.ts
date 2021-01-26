@@ -70,7 +70,7 @@ export enum ScheduleEnabledStatus {
 	ENABLED = 1,
 }
 
-export const MAX_SCHEDULE_INDEX_CM3 = 30;
+export const MAX_SCHEDULE_INDEX_CM3 = 29;
 export const MAX_SCHEDULE_INDEX_CM4 = 13;
 
 export enum USBPCSource {

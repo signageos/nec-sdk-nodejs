@@ -2,6 +2,10 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Fixed
+- Corrected CM3 max schedule index to 29
+
 ## [0.4.0] - 2021-01-26
 ### Added
 - Specify different max schedule index for older displays with CM3 and new displays with CM4
