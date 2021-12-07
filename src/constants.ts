@@ -62,7 +62,13 @@ export enum ScheduleEvent {
 }
 
 export enum ScheduleType {
-	SPECIFIC_DAYS = 6,
+	EVERY_DAY = 0x01,
+	SPECIFIC_DAYS = 0x02,
+	ENABLED = 0x04,
+	WEEKDAYS = 0x08,
+	WEEKENDS = 0x10,
+	HOLIDAYS = 0x20,
+	ONE_DAY_ON = 0x40,
 }
 
 export enum ScheduleEnabledStatus {
