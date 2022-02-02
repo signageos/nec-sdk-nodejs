@@ -446,7 +446,7 @@ export function setDateAndTime(port, address, getReply, date) {
 	sendData = sendData.concat(asciiEncodeValue2Bytes(minute));
 	sendData = sendData.concat(asciiEncodeValue2Bytes(daylightSavings));
 	writeCommand(port, sendData, address, 0x41);
-	getReply(true).then(function(replyBuffer) {
+	return getReply(true).then(function(replyBuffer) {
 		const reply = parseCommandReply(replyBuffer);
 		if (reply.payload.length !== 20) {
 			throw new Error(`unexpected reply length: ${reply.payload.length} but expected 20`);
