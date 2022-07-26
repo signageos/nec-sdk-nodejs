@@ -8,5 +8,5 @@ necpd.getParameter(Opcode.SCREEN_BRIGHTNESS)
 		 console.log('brightness: ' + brightness);
 	 })
 	 .catch(function (error) {
-		 console.error('set brightness failed', error);
+		 console.error('get brightness failed', error);
 	 });
